@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { useUnit } from '../context/UnitContext';
 import { useTheme } from '../context/ThemeContext';
 import '@shoelace-style/shoelace/dist/components/switch/switch.js';
@@ -6,6 +7,20 @@ import './SettingsPage.css';
 const SettingsPage = () => {
   const { unit, setUnit } = useUnit();
   const { theme, setTheme } = useTheme();
+  const switchRef = useRef<any>(null);
+
+  useEffect(() => {
+    const switchElement = switchRef.current;
+    if (!switchElement) return;
+
+    const handleChange = (e: Event) => {
+      const target = e.target as any;
+      setTheme(target.checked ? 'dark' : 'light');
+    };
+
+    switchElement.addEventListener('sl-change', handleChange);
+    return () => switchElement.removeEventListener('sl-change', handleChange);
+  }, [setTheme]);
 
   return (
     <div className="settings-page">
@@ -19,8 +34,8 @@ const SettingsPage = () => {
         <div className="appearance-toggle">
           <span className="toggle-label">Dark Mode</span>
           <sl-switch
+            ref={switchRef}
             checked={theme === 'dark'}
-            onsl-change={(e: any) => setTheme(e.target.checked ? 'dark' : 'light')}
           ></sl-switch>
         </div>
       </section>
