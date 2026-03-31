@@ -164,6 +164,12 @@
   border-radius: 6px;
   background: var(--color-surface);
   color: var(--color-text-strong);
+  text-align: left;
+}
+
+.input-with-previous input::placeholder {
+  text-align: right;
+  opacity: 0.6;
 }
 
 .input-with-previous input:disabled {

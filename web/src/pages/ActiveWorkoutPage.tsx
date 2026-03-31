@@ -329,8 +329,8 @@ const ActiveWorkoutPage = () => {
         <div className="set-table">
           <div className="set-table-header">
             <span>Set #</span>
-            <span>Weight ({unit})</span>
-            <span>Reps</span>
+            <span>Weight ({unit}) (prev)</span>
+            <span>Reps (prev)</span>
             <span>Action</span>
           </div>
           {setDrafts.map((draft, index) => {
@@ -358,27 +358,17 @@ const ActiveWorkoutPage = () => {
                   <input
                     value={draft.weight}
                     onChange={(e) => handleSetFieldChange(index, 'weight', e.target.value)}
-                    placeholder="e.g. 10,5"
+                    placeholder={prevForThisSet ? `(${formatWeight(prevForThisSet.weight)})` : "e.g. 10,5"}
                     disabled={isButtonDisabled}
                   />
-                  {prevForThisSet && (
-                    <span className="previous-value">
-                      Prev: {formatWeight(prevForThisSet.weight)}
-                    </span>
-                  )}
                 </div>
                 <div className="input-with-previous">
                   <input
                     value={draft.reps}
                     onChange={(e) => handleSetFieldChange(index, 'reps', e.target.value)}
-                    placeholder="e.g. 8"
+                    placeholder={prevForThisSet ? `(${prevForThisSet.reps})` : "e.g. 8"}
                     disabled={isButtonDisabled}
                   />
-                  {prevForThisSet && (
-                    <span className="previous-value">
-                      Prev: {prevForThisSet.reps} reps
-                    </span>
-                  )}
                 </div>
                 <button
                   className={`btn-set-action ${isSaved ? 'btn-saved' : 'btn-primary'}`}
