@@ -15,32 +15,22 @@ const Stack = createNativeStackNavigator();
 
 const ProgramsStackNavigator = () => {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen
         name="ProgramsList"
         component={ProgramsScreen}
-        options={{ title: 'Programs' }}
       />
       <Stack.Screen
         name="ProgramDetail"
         component={ProgramDetailScreen}
-        options={({ route }: any) => ({
-          title: route.params?.programName || 'Program',
-        })}
       />
       <Stack.Screen
         name="WorkoutDetail"
         component={WorkoutDetailScreen}
-        options={({ route }: any) => ({
-          title: route.params?.workoutName || 'Workout',
-        })}
       />
       <Stack.Screen
         name="ExercisesCatalog"
         component={ExercisesCatalogScreen}
-        options={() => ({
-          title: 'Add Exercises',
-        })}
       />
     </Stack.Navigator>
   );
@@ -48,11 +38,10 @@ const ProgramsStackNavigator = () => {
 
 const ExercisesStackNavigator = () => {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen
         name="ExercisesList"
         component={ExercisesScreen}
-        options={{ title: 'Exercises' }}
       />
     </Stack.Navigator>
   );
