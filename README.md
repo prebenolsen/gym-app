@@ -335,3 +335,6 @@ For issues or questions, check the terminal output for detailed error messages.
 ---
 
 **Happy lifting! 💪**
+
+npm run backend:dev
+npm run -w shared build

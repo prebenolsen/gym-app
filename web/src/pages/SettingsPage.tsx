@@ -22,6 +22,12 @@ const SettingsPage = () => {
     return () => switchElement.removeEventListener('sl-change', handleChange);
   }, [setTheme]);
 
+  useEffect(() => {
+    if (switchRef.current) {
+      switchRef.current.checked = theme === 'dark';
+    }
+  }, [theme]);
+
   return (
     <div className="settings-page">
       <h1>Settings</h1>

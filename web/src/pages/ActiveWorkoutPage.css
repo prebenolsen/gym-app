@@ -24,7 +24,7 @@
 }
 
 .exercise-hero {
-  background: linear-gradient(135deg, var(--color-accent-100) 0%, #fbe7da 100%);
+  background: linear-gradient(135deg, var(--color-accent-100) 0%, var(--color-app-glow) 100%);
   border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 18px;
@@ -78,13 +78,13 @@
 }
 
 .btn-secondary {
-  background-color: #e5e7eb;
-  color: #1f2937;
+  background-color: var(--color-surface-soft);
+  color: var(--color-text-strong);
 }
 
 .btn-secondary:disabled {
-  background-color: #f3f4f6;
-  color: #9ca3af;
+  background-color: var(--color-border);
+  color: var(--color-text-muted);
   cursor: not-allowed;
 }
 
@@ -117,8 +117,8 @@
 }
 
 .set-table {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -133,19 +133,22 @@
 }
 
 .set-table-header {
-  background-color: #f3f4f6;
+  background-color: var(--color-surface-soft);
   font-weight: 700;
+  color: var(--color-text-strong);
 }
 
 .set-row {
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--color-border);
 }
 
 .set-row input {
   width: 100%;
   padding: 8px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-strong);
 }
 
 .input-with-previous {
@@ -157,20 +160,22 @@
 .input-with-previous input {
   width: 100%;
   padding: 8px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-strong);
 }
 
 .input-with-previous input:disabled {
-  background-color: #f3f4f6;
-  color: #9ca3af;
+  background-color: var(--color-surface-soft);
+  color: var(--color-text-muted);
   cursor: not-allowed;
-  border-color: #e5e7eb;
+  border-color: var(--color-border);
 }
 
 .previous-value {
   font-size: 11px;
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-weight: 500;
   padding-left: 2px;
 }
@@ -209,9 +214,9 @@
 }
 
 .active-empty-state {
-  background-color: white;
+  background-color: var(--color-surface);
   border-radius: 10px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   padding: 22px;
 }
 
