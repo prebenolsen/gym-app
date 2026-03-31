@@ -1,5 +1,6 @@
 import { useUnit } from '../context/UnitContext';
 import { useTheme } from '../context/ThemeContext';
+import '@shoelace-style/shoelace/dist/components/switch/switch.js';
 import './SettingsPage.css';
 
 const SettingsPage = () => {
@@ -15,28 +16,12 @@ const SettingsPage = () => {
 
       <section className="settings-card">
         <h2>Appearance</h2>
-        <div className="unit-options" role="radiogroup" aria-label="Theme mode">
-          <label className={`unit-option ${theme === 'light' ? 'selected' : ''}`}>
-            <input
-              type="radio"
-              name="themeMode"
-              value="light"
-              checked={theme === 'light'}
-              onChange={() => setTheme('light')}
-            />
-            <span>Light Mode</span>
-          </label>
-
-          <label className={`unit-option ${theme === 'dark' ? 'selected' : ''}`}>
-            <input
-              type="radio"
-              name="themeMode"
-              value="dark"
-              checked={theme === 'dark'}
-              onChange={() => setTheme('dark')}
-            />
-            <span>Dark Mode</span>
-          </label>
+        <div className="appearance-toggle">
+          <span className="toggle-label">Dark Mode</span>
+          <sl-switch
+            checked={theme === 'dark'}
+            onsl-change={(e: any) => setTheme(e.target.checked ? 'dark' : 'light')}
+          ></sl-switch>
         </div>
       </section>
 

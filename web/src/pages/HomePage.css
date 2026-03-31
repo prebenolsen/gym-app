@@ -225,7 +225,7 @@
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: var(--color-text-strong);
+  color: var(--color-accent-500);
   word-wrap: break-word;
   word-break: break-word;
   hyphens: auto;

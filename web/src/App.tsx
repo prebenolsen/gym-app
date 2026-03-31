@@ -11,6 +11,8 @@ import WorkoutHistoryDetail from './pages/WorkoutHistoryDetail';
 import SettingsPage from './pages/SettingsPage';
 import { UnitProvider } from './context/UnitContext';
 import { ThemeProvider } from './context/ThemeContext';
+import '@shoelace-style/shoelace/dist/themes/light.css';
+import '@shoelace-style/shoelace/dist/themes/dark.css';
 import './App.css';
 
 function App() {

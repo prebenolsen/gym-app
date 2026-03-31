@@ -56,7 +56,45 @@
   accent-color: var(--color-accent-500);
 }
 
+.appearance-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.toggle-label {
+  font-weight: 500;
+  color: var(--color-text-strong);
+}
+
 .unit-option span {
   font-weight: 600;
   color: var(--color-text-strong);
+}
+
+.appearance-toggle {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+  padding: 20px;
+}
+
+.appearance-toggle span {
+  font-weight: 500;
+  color: var(--color-text-strong);
+}
+
+.appearance-toggle sl-switch {
+  --thumb-size: 24px;
+}
+
+.appearance-toggle sl-switch::part(base) {
+  --height: 32px;
+}
+
+/* Apply burnt orange color to Shoelace switch when checked */
+.appearance-toggle sl-switch[checked]::part(control) {
+  background-color: var(--color-accent-500);
 }

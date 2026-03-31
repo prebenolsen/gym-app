@@ -14,18 +14,18 @@
 .active-header h1 {
   margin: 0;
   font-size: 28px;
-  color: #1f2937;
+  color: var(--color-text-strong);
 }
 
 .active-header p {
   margin: 0;
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-weight: 600;
 }
 
 .exercise-hero {
-  background: linear-gradient(135deg, #fdf2ea 0%, #fbe7da 100%);
-  border: 1px solid #e6bda3;
+  background: linear-gradient(135deg, var(--color-accent-100) 0%, #fbe7da 100%);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 18px;
   margin-bottom: 16px;
