@@ -386,7 +386,7 @@ const ActiveWorkoutPage = () => {
                   disabled={isButtonDisabled || savingSet === index}
                   title={isSaved ? 'Click to overwrite' : 'Save this set'}
                 >
-                  {savingSet === index ? 'Saving...' : isSaved ? 'Saved ✓' : 'Save set'}
+                  {savingSet === index ? 'Saving...' : isSaved ? 'Saved ✓' : 'Save'}
                 </button>
               </div>
             );

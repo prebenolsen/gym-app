@@ -91,7 +91,7 @@
 .btn-set-action {
   background-color: var(--color-accent-500);
   color: white;
-  min-width: 160px;
+  min-width: 80px;
   transition: all 0.2s;
 }
 
