@@ -10,6 +10,7 @@ import ExercisesPage from './pages/ExercisesPage';
 import ActiveWorkoutPage from './pages/ActiveWorkoutPage';
 import CalendarPage from './pages/CalendarPage';
 import WorkoutHistoryDetail from './pages/WorkoutHistoryDetail';
+import ExerciseProgressPage from './pages/ExerciseProgressPage';
 import SettingsPage from './pages/SettingsPage';
 import { UnitProvider } from './context/UnitContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -44,6 +45,7 @@ function AppContent() {
             <Route path="/active-workout" element={<ActiveWorkoutPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/workout-history/:sessionId" element={<WorkoutHistoryDetail />} />
+            <Route path="/exercise-progress/:exerciseId" element={<ExerciseProgressPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Routes>
         </div>

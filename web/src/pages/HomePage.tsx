@@ -6,6 +6,7 @@ import {
   type Workout,
   type WorkoutSession,
   type WorkoutStats,
+  type ExerciseHistorySummary,
 } from '@gym-app/shared';
 import './HomePage.css';
 
@@ -18,6 +19,8 @@ const HomePage = () => {
   const [stats, setStats] = useState<WorkoutStats | null>(null);
   const [programTree, setProgramTree] = useState<ProgramWithWorkouts[]>([]);
   const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null);
+  const [workouts7Days, setWorkouts7Days] = useState<number>(0);
+  const [exercises, setExercises] = useState<ExerciseHistorySummary[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -26,10 +29,12 @@ const HomePage = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [statsData, programs, session] = await Promise.all([
+        const [statsData, programs, session, workouts7, exercisesData] = await Promise.all([
           api.getStats(),
           api.getPrograms(),
           api.getActiveSession(),
+          api.getWorkouts7Days(),
+          api.getExerciseHistory(),
         ]);
 
         const workoutsByProgram = await Promise.all(
@@ -45,6 +50,8 @@ const HomePage = () => {
         setStats(statsData);
         setProgramTree(workoutsByProgram);
         setActiveSession(session);
+        setWorkouts7Days(workouts7.count);
+        setExercises(exercisesData);
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
       } finally {
@@ -113,6 +120,14 @@ const HomePage = () => {
             <p>Exercises</p>
           </div>
         </button>
+
+        <button className="stat-card" onClick={() => navigate('/calendar')}>
+          <div className="stat-icon">📅</div>
+          <div className="stat-content">
+            <h3>{workouts7Days}</h3>
+            <p>Last 7 Days</p>
+          </div>
+        </button>
       </div>
 
       <div className="start-workout-section">
@@ -146,6 +161,30 @@ const HomePage = () => {
           </div>
         )}
       </div>
+
+      {exercises.length > 0 && (
+        <div className="exercise-progress-section">
+          <h2>Your Exercise Progress</h2>
+          <p className="section-subtitle">Click an exercise to view your progress</p>
+          <div className="exercises-grid">
+            {exercises.map((exercise) => (
+              <button
+                key={exercise.exercise_id}
+                className="exercise-card"
+                onClick={() => navigate(`/exercise-progress/${exercise.exercise_id}`)}
+              >
+                <div className="exercise-card-content">
+                  <h4>{exercise.exercise_name}</h4>
+                  <div className="exercise-stats">
+                    <span className="stat">Times: {exercise.times_done}</span>
+                    <span className="stat">Best: {exercise.personal_best.toFixed(1)} kg</span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -19,6 +19,8 @@ import type {
   WorkoutSessionDetail,
   WorkoutHistoryByDate,
   ExerciseLastPerformance,
+  ExerciseHistorySummary,
+  ExerciseProgressHistory,
 } from './types';
 
 class ApiClient {
@@ -251,6 +253,19 @@ class ApiClient {
 
   async getStats(): Promise<WorkoutStats> {
     return this.request('GET', '/stats');
+  }
+
+  async getWorkouts7Days(): Promise<{ count: number }> {
+    return this.request('GET', '/stats/workouts-7-days');
+  }
+
+  async getExerciseHistory(): Promise<ExerciseHistorySummary[]> {
+    return this.request('GET', '/exercises/history');
+  }
+
+  async getExerciseProgress(exerciseId: string, days?: number): Promise<ExerciseProgressHistory> {
+    const path = days ? `/exercises/${exerciseId}/progress?days=${days}` : `/exercises/${exerciseId}/progress`;
+    return this.request('GET', path);
   }
 }
 

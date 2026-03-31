@@ -137,3 +137,29 @@ export interface ExerciseLastPerformance {
   weight: number;
   reps: number;
 }
+
+/**
+ * Exercise Progress Tracking
+ */
+export interface ExerciseHistorySummary {
+  exercise_id: string;
+  exercise_name: string;
+  times_done: number;
+  last_date: string;
+  personal_best: number;
+}
+
+export interface ExerciseProgressEntry {
+  date: string;
+  session_id: string;
+  max_weight: number;
+  total_volume: number;
+  sets: number;
+  total_reps: number;
+}
+
+export interface ExerciseProgressHistory {
+  exercise_id: string;
+  exercise_name: string;
+  history: ExerciseProgressEntry[];
+}

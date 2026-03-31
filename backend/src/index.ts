@@ -868,6 +868,205 @@ app.get('/stats', async (req, res) => {
   }
 });
 
+// Get workouts count for last 7 days
+app.get('/stats/workouts-7-days', async (req, res) => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgoISO = sevenDaysAgo.toISOString();
+
+    const { count, error } = await supabase
+      .from('workout_sessions')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', MOCK_USER_ID)
+      .eq('status', 'finished')
+      .gte('started_at', sevenDaysAgoISO);
+
+    if (error) throw error;
+
+    res.json({ count: count || 0 });
+  } catch (err: unknown) {
+    const errorMsg = formatError(err);
+    res.status(500).json({ error: errorMsg });
+  }
+});
+
+// Get all exercises with history (times done, last date, personal best)
+app.get('/exercises/history', async (req, res) => {
+  try {
+    const { data: sets, error } = await supabase
+      .from('workout_session_sets')
+      .select('exercise_id, weight')
+      .eq('is_deleted', false);
+
+    if (error) throw error;
+
+    const { data: sessions, error: sessionsError } = await supabase
+      .from('workout_sessions')
+      .select('id, started_at')
+      .eq('user_id', MOCK_USER_ID)
+      .eq('status', 'finished');
+
+    if (sessionsError) throw sessionsError;
+
+    const sessionMap = new Map(sessions?.map((s: any) => [s.id, s]) || []);
+
+    // Group sets by exercise
+    const exerciseMap = new Map<string, { count: number; maxWeight: number; lastDate: string; sessionIds: Set<string> }>();
+
+    for (const set of sets || []) {
+      const session = sessionMap.get(set.session_id || '');
+      if (!session) continue;
+
+      if (!exerciseMap.has(set.exercise_id)) {
+        exerciseMap.set(set.exercise_id, {
+          count: 0,
+          maxWeight: 0,
+          lastDate: session.started_at,
+          sessionIds: new Set(),
+        });
+      }
+
+      const entry = exerciseMap.get(set.exercise_id)!;
+      entry.sessionIds.add(session.id);
+      entry.count = entry.sessionIds.size;
+      entry.maxWeight = Math.max(entry.maxWeight, set.weight);
+      if (new Date(session.started_at) > new Date(entry.lastDate)) {
+        entry.lastDate = session.started_at;
+      }
+    }
+
+    // Enrich with exercise names
+    const result = [];
+    for (const [exerciseId, stats] of exerciseMap.entries()) {
+      const { data: exercise } = await supabase
+        .from('exercises')
+        .select('name')
+        .eq('id', exerciseId)
+        .single();
+
+      result.push({
+        exercise_id: exerciseId,
+        exercise_name: exercise?.name || 'Unknown',
+        times_done: stats.count,
+        last_date: stats.lastDate.split('T')[0],
+        personal_best: stats.maxWeight,
+      });
+    }
+
+    // Sort by most recent
+    result.sort((a, b) => new Date(b.last_date).getTime() - new Date(a.last_date).getTime());
+
+    res.json(result);
+  } catch (err: unknown) {
+    const errorMsg = formatError(err);
+    res.status(500).json({ error: errorMsg });
+  }
+});
+
+// Get exercise progress history (with max weight and total volume per session)
+app.get('/exercises/:exerciseId/progress', async (req, res) => {
+  try {
+    const { exerciseId } = req.params;
+    const { days = '90' } = req.query;
+    const daysNum = parseInt(String(days), 10);
+
+    if (isNaN(daysNum) || daysNum < 1) {
+      return res.status(400).json({ error: 'days parameter must be positive number' });
+    }
+
+    const lookbackDate = new Date();
+    lookbackDate.setDate(lookbackDate.getDate() - daysNum);
+    const lookbackISO = lookbackDate.toISOString();
+
+    // Get all sets for this exercise in finished sessions
+    const { data: sets, error: setsError } = await supabase
+      .from('workout_session_sets')
+      .select('session_id, weight, reps, set_number')
+      .eq('exercise_id', exerciseId)
+      .eq('is_deleted', false);
+
+    if (setsError) throw setsError;
+
+    // Get the sessions for those sets
+    const sessionIds = [...new Set((sets || []).map((s: any) => s.session_id))];
+    
+    if (sessionIds.length === 0) {
+      return res.json({
+        exercise_id: exerciseId,
+        exercise_name: 'Unknown',
+        history: [],
+      });
+    }
+
+    const { data: sessions, error: sessionsError } = await supabase
+      .from('workout_sessions')
+      .select('id, started_at')
+      .eq('user_id', MOCK_USER_ID)
+      .eq('status', 'finished')
+      .in('id', sessionIds)
+      .gte('started_at', lookbackISO);
+
+    if (sessionsError) throw sessionsError;
+
+    const sessionMap = new Map(sessions?.map((s: any) => [s.id, s]) || []);
+
+    // Calculate stats per session
+    const sessionStats = new Map<string, { date: string; maxWeight: number; totalVolume: number; sets: number; totalReps: number }>();
+
+    for (const set of sets || []) {
+      const session = sessionMap.get(set.session_id);
+      if (!session) continue;
+
+      const date = session.started_at.split('T')[0];
+
+      if (!sessionStats.has(set.session_id)) {
+        sessionStats.set(set.session_id, {
+          date,
+          maxWeight: 0,
+          totalVolume: 0,
+          sets: 0,
+          totalReps: 0,
+        });
+      }
+
+      const stats = sessionStats.get(set.session_id)!;
+      stats.maxWeight = Math.max(stats.maxWeight, set.weight);
+      stats.totalVolume += set.weight * set.reps;
+      stats.sets = Math.max(stats.sets, set.set_number || 1);
+      stats.totalReps += set.reps;
+    }
+
+    // Convert to array and sort by date
+    const history = Array.from(sessionStats.entries())
+      .map(([sessionId, stats]) => ({
+        date: stats.date,
+        session_id: sessionId,
+        max_weight: stats.maxWeight,
+        total_volume: stats.totalVolume,
+        sets: stats.sets,
+        total_reps: stats.totalReps,
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // Get exercise name
+    const { data: exercise } = await supabase
+      .from('exercises')
+      .select('name')
+      .eq('id', exerciseId)
+      .single();
+
+    res.json({
+      exercise_id: exerciseId,
+      exercise_name: exercise?.name || 'Unknown',
+      history,
+    });
+  } catch (err: unknown) {
+    const errorMsg = formatError(err);
+    res.status(500).json({ error: errorMsg });
+  }
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
