@@ -1,0 +1,168 @@
+.program-detail-page {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.btn-back {
+  background-color: #6c757d;
+  padding: 8px 16px;
+  flex-shrink: 0;
+}
+
+.btn-back:hover {
+  background-color: #5a6268;
+}
+
+.title-section {
+  flex: 1;
+}
+
+.title-section h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #333;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.title-section h1:hover {
+  background-color: #e9ecef;
+}
+
+.edit-input-group {
+  display: flex;
+}
+
+.edit-input-group input {
+  flex: 1;
+  font-size: 28px;
+  padding: 10px;
+  border: 2px solid #007bff;
+}
+
+.workouts-section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.workouts-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.workout-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  min-height: 150px;
+}
+
+.workout-info h3 {
+  margin: 0;
+  color: #333;
+}
+
+.workout-item-new {
+  border: 2px dashed #28a745;
+  background-color: #f0fff4;
+}
+
+.new-workout-input {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 15px;
+  border: 1px solid #28a745;
+  border-radius: 4px;
+  outline: none;
+}
+
+.new-workout-input:focus {
+  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2);
+}
+
+.workout-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.workout-actions button {
+  flex: 1;
+}
+
+.btn-view {
+  background-color: #007bff;
+}
+
+.btn-view:hover {
+  background-color: #0056b3;
+}
+
+.btn-delete {
+  background-color: #dc3545;
+}
+
+.btn-delete:hover {
+  background-color: #c82333;
+}
+
+.no-data {
+  padding: 15px;
+  background-color: #d1ecf1;
+  border: 1px solid #bee5eb;
+  border-radius: 4px;
+  color: #0c5460;
+  margin: 0;
+}
+
+.program-danger-zone {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #fee2e2;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-delete-program {
+  border: none;
+  background-color: #dc2626;
+  color: white;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-delete-program:hover {
+  background-color: #b91c1c;
+}

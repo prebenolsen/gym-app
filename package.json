@@ -1,0 +1,21 @@
+{
+  "name": "gym-app",
+  "version": "0.0.1",
+  "description": "Gym workout tracker app - web, mobile, and backend",
+  "private": true,
+  "workspaces": [
+    "web",
+    "mobile",
+    "backend",
+    "shared"
+  ],
+  "scripts": {
+    "web:dev": "npm run dev -w web",
+    "web:build": "npm run build -w web",
+    "mobile:dev": "npm run dev -w mobile",
+    "mobile:start": "npm run start -w mobile",
+    "backend:dev": "npm run dev -w backend",
+    "backend:build": "npm run build -w backend",
+    "shared:build": "npm run build -w shared"
+  }
+}

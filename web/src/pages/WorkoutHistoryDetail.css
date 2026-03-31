@@ -1,0 +1,234 @@
+.workout-history-detail {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #1066e0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 0;
+  margin-bottom: 20px;
+  transition: opacity 0.2s;
+}
+
+.back-button:hover {
+  opacity: 0.8;
+}
+
+.session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.session-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  color: #333;
+}
+
+.session-date {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.session-stats {
+  display: flex;
+  gap: 30px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.exercises-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.exercise-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.exercise-card h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  color: #333;
+  font-weight: 600;
+}
+
+.sets-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+}
+
+.sets-table thead {
+  background: #f5f5f5;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.sets-table th {
+  padding: 12px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sets-table tbody tr {
+  border-bottom: 1px solid #e0e0e0;
+  transition: background 0.2s;
+}
+
+.sets-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.sets-table td {
+  padding: 12px;
+  font-size: 14px;
+  color: #333;
+}
+
+.set-number {
+  font-weight: 600;
+  color: #666;
+}
+
+.weight {
+  font-weight: 500;
+  color: #1066e0;
+}
+
+.reps {
+  color: #666;
+}
+
+.exercise-totals {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid #e0e0e0;
+  font-size: 13px;
+  color: #666;
+}
+
+.total-sets {
+  font-weight: 600;
+}
+
+.avg-weight {
+  color: #1066e0;
+  font-weight: 600;
+}
+
+.error-state {
+  background: white;
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+}
+
+.error-state p {
+  color: #999;
+  margin-bottom: 20px;
+}
+
+.error-state button {
+  background: #1066e0;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.error-state button:hover {
+  background: #0852b8;
+}
+
+.empty-exercises {
+  background: white;
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  color: #999;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .workout-history-detail {
+    padding: 10px;
+  }
+
+  .session-header {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .session-stats {
+    width: 100%;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .stat {
+    align-items: flex-start;
+  }
+
+  .stat-value {
+    font-size: 16px;
+  }
+
+  .exercise-card {
+    padding: 15px;
+  }
+
+  .sets-table th,
+  .sets-table td {
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+
+  .exercise-totals {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

@@ -1,0 +1,202 @@
+.active-workout-page {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.active-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.active-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #1f2937;
+}
+
+.active-header p {
+  margin: 0;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.exercise-hero {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.exercise-hero h2 {
+  margin: 10px 0 0;
+  font-size: 24px;
+}
+
+.rest-timer-bar {
+  position: sticky;
+  top: 0;
+  background-color: #1d4ed8;
+  color: white;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 8px;
+  width: fit-content;
+}
+
+.exercise-nav-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-success,
+.btn-set-action {
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 10px 14px;
+}
+
+.btn-primary {
+  background-color: #2563eb;
+  color: white;
+}
+
+.btn-primary:disabled {
+  background-color: #cbd5e1;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: #e5e7eb;
+  color: #1f2937;
+}
+
+.btn-secondary:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn-set-action {
+  background-color: #2563eb;
+  color: white;
+  min-width: 160px;
+  transition: all 0.2s;
+}
+
+.btn-set-action:disabled {
+  background-color: #cbd5e1;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.btn-set-action.btn-saved {
+  background-color: #16a34a;
+  color: white;
+}
+
+.btn-set-action.btn-saved:hover:not(:disabled) {
+  background-color: #15803d;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
+}
+
+.btn-set-action:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.set-table {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.set-table-header,
+.set-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr 140px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+}
+
+.set-table-header {
+  background-color: #f3f4f6;
+  font-weight: 700;
+}
+
+.set-row {
+  border-top: 1px solid #f3f4f6;
+}
+
+.set-row input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+}
+
+.input-with-previous {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.input-with-previous input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+}
+
+.input-with-previous input:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+  border-color: #e5e7eb;
+}
+
+.previous-value {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+  padding-left: 2px;
+}
+
+.active-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.active-empty-state {
+  background-color: white;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  padding: 22px;
+}
+
+@media (max-width: 700px) {
+  .set-table-header,
+  .set-row {
+    grid-template-columns: 60px 1fr 1fr;
+  }
+
+  .set-table-header span:last-child,
+  .set-row button {
+    grid-column: 1 / -1;
+  }
+}

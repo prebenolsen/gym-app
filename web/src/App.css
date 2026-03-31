@@ -1,0 +1,21 @@
+.app {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .app-content {
+    padding: 10px;
+  }
+}
