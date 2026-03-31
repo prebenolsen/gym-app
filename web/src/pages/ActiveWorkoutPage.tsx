@@ -348,8 +348,8 @@ const ActiveWorkoutPage = () => {
               }
             }
             
-            // Disable button if there's an unsaved set before this one
-            const isButtonDisabled = firstUnsavedIndex >= 0 && index > firstUnsavedIndex;
+            // Show button if: next unsaved set OR already saved
+            const showButton = firstUnsavedIndex === index || isSaved;
 
             return (
               <div key={index} className="set-row">
@@ -359,7 +359,7 @@ const ActiveWorkoutPage = () => {
                     value={draft.weight}
                     onChange={(e) => handleSetFieldChange(index, 'weight', e.target.value)}
                     placeholder={prevForThisSet ? `(${formatWeight(prevForThisSet.weight)})` : "e.g. 10,5"}
-                    disabled={isButtonDisabled}
+                    disabled={!showButton}
                   />
                 </div>
                 <div className="input-with-previous">
@@ -367,17 +367,19 @@ const ActiveWorkoutPage = () => {
                     value={draft.reps}
                     onChange={(e) => handleSetFieldChange(index, 'reps', e.target.value)}
                     placeholder={prevForThisSet ? `(${prevForThisSet.reps})` : "e.g. 8"}
-                    disabled={isButtonDisabled}
+                    disabled={!showButton}
                   />
                 </div>
-                <button
-                  className={`btn-set-action ${isSaved ? 'btn-saved' : 'btn-primary'}`}
-                  onClick={() => handleSaveSet(index)}
-                  disabled={isButtonDisabled || savingSet === index}
-                  title={isSaved ? 'Click to overwrite' : 'Save this set'}
-                >
-                  {savingSet === index ? 'Saving...' : isSaved ? 'Saved ✓' : 'Save'}
-                </button>
+                {showButton && (
+                  <button
+                    className={`btn-set-action ${isSaved ? 'btn-saved' : 'btn-primary'}`}
+                    onClick={() => handleSaveSet(index)}
+                    disabled={savingSet === index}
+                    title={isSaved ? 'Click to overwrite' : 'Save this set'}
+                  >
+                    {savingSet === index ? 'Saving...' : isSaved ? 'Saved ✓' : 'Save'}
+                  </button>
+                )}
               </div>
             );
           })}
