@@ -11,6 +11,7 @@ const CalendarPage = () => {
   const api = new ApiClient('http://localhost:3000');
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
   const [datesWithWorkouts, setDatesWithWorkouts] = useState<Set<string>>(
     new Set()
   );
@@ -29,10 +30,10 @@ const CalendarPage = () => {
     try {
       setLoadingDates(true);
       // Load dates for current month and surrounding months
-      const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+      const startOfMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
       const endOfMonth = new Date(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth() + 1,
+        calendarMonth.getFullYear(),
+        calendarMonth.getMonth() + 1,
         0
       );
 
@@ -72,7 +73,7 @@ const CalendarPage = () => {
 
   useEffect(() => {
     loadDatesWithWorkouts();
-  }, [selectedDate]);
+  }, [calendarMonth]);
 
   useEffect(() => {
     loadWorkoutsForDay(selectedDate);
@@ -84,6 +85,13 @@ const CalendarPage = () => {
       setSelectedDate(value);
     } else if (Array.isArray(value) && value.length > 0 && value[0] instanceof Date) {
       setSelectedDate(value[0]);
+    }
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleActiveStartDateChange = (value: any) => {
+    if (value instanceof Date) {
+      setCalendarMonth(value);
     }
   };
 
@@ -128,7 +136,8 @@ const CalendarPage = () => {
             value={selectedDate}
             onChange={handleDateChange}
             tileClassName={tileClassName}
-            activeStartDate={selectedDate}
+            activeStartDate={calendarMonth}
+            onActiveStartDateChange={handleActiveStartDateChange}
           />
 
           <div className="calendar-legend">
