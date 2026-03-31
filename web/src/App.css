@@ -3,8 +3,9 @@
   justify-content: center;
   height: 100vh;
   width: 100%;
-  background: radial-gradient(circle at 8% 5%, #fcf1e8 0%, #f5f3f1 45%);
+  background: radial-gradient(circle at 8% 5%, var(--color-app-glow) 0%, var(--color-bg) 45%);
   padding-inline: clamp(16px, 4vw, 56px);
+  transition: background 0.2s ease;
 }
 
 .app-shell {
