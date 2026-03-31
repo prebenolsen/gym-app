@@ -87,6 +87,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--color-text-strong);
 }
 
 .react-calendar__tile:hover {
@@ -94,8 +95,9 @@
 }
 
 .react-calendar__tile--now {
-  background: var(--color-accent-100);
+  background: var(--color-surface-soft);
   border-color: var(--color-accent-500);
+  color: var(--color-text-strong);
 }
 
 .react-calendar__tile--active {

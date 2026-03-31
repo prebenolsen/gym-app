@@ -43,10 +43,14 @@ const CalendarPage = () => {
         new Date(endOfMonth.getTime() + 7 * 24 * 60 * 60 * 1000)
       );
 
-      const dates = await api.getDatesWithWorkouts(startDate, endDate);
-      setDatesWithWorkouts(new Set(dates));
-    } catch (err) {
-      console.error('Failed to load dates with workouts:', err);
+      try {
+        const dates = await api.getDatesWithWorkouts(startDate, endDate);
+        setDatesWithWorkouts(new Set(dates));
+      } catch (apiErr) {
+        // If API call fails, just clear the dates (user can still browse)
+        console.error('Failed to load dates with workouts:', apiErr);
+        setDatesWithWorkouts(new Set());
+      }
     } finally {
       setLoadingDates(false);
     }
