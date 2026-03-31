@@ -5,14 +5,14 @@ const Navigation = () => {
   const location = useLocation();
 
   const isActive = (path: string) => {
-    if (path === '/exercises') {
-      return location.pathname === '/exercises';
-    }
     if (path === '/active-workout') {
       return location.pathname === '/active-workout';
     }
     if (path === '/calendar') {
       return location.pathname === '/calendar' || location.pathname.startsWith('/workout-history');
+    }
+    if (path === '/settings') {
+      return location.pathname === '/settings';
     }
     return location.pathname === path;
   };
@@ -30,16 +30,6 @@ const Navigation = () => {
           </Link>
         </li>
         <li>
-          <Link className={isActive('/programs') ? 'active' : ''} to="/programs">
-            Programs
-          </Link>
-        </li>
-        <li>
-          <Link className={isActive('/exercises') ? 'active' : ''} to="/exercises">
-            Exercises
-          </Link>
-        </li>
-        <li>
           <Link
             className={isActive('/active-workout') ? 'active' : ''}
             to="/active-workout"
@@ -50,6 +40,11 @@ const Navigation = () => {
         <li>
           <Link className={isActive('/calendar') ? 'active' : ''} to="/calendar">
             Calendar
+          </Link>
+        </li>
+        <li>
+          <Link className={isActive('/settings') ? 'active' : ''} to="/settings">
+            Settings
           </Link>
         </li>
       </ul>

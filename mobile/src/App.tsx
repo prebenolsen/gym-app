@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -9,6 +8,7 @@ import ProgramDetailScreen from './screens/ProgramDetailScreen';
 import WorkoutDetailScreen from './screens/WorkoutDetailScreen';
 import ExercisesScreen from './screens/ExercisesScreen';
 import ExercisesCatalogScreen from './screens/ExercisesCatalogScreen';
+import { colors } from './theme';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -53,8 +53,20 @@ export default function App() {
       <Tab.Navigator
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: '#007bff',
-          tabBarInactiveTintColor: '#999',
+          tabBarActiveTintColor: colors.accent,
+          tabBarInactiveTintColor: colors.textMuted,
+          tabBarStyle: {
+            backgroundColor: colors.surface,
+            borderTopColor: colors.border,
+            borderTopWidth: 1,
+            height: 64,
+            paddingTop: 6,
+            paddingBottom: 8,
+          },
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: '600',
+          },
         }}
       >
         <Tab.Screen
@@ -62,7 +74,7 @@ export default function App() {
           component={HomeScreen}
           options={{
             tabBarLabel: 'Home',
-            tabBarIcon: ({ color }) => <>{color === '#007bff' ? '??' : '?'}</>,
+            tabBarIcon: ({ color }) => <>{color === colors.accent ? '??' : '?'}</>,
           }}
         />
         <Tab.Screen
@@ -70,7 +82,7 @@ export default function App() {
           component={ProgramsStackNavigator}
           options={{
             tabBarLabel: 'Programs',
-            tabBarIcon: ({ color }) => <>{color === '#007bff' ? '??' : '?'}</>,
+            tabBarIcon: ({ color }) => <>{color === colors.accent ? '??' : '?'}</>,
           }}
         />
         <Tab.Screen
@@ -78,7 +90,7 @@ export default function App() {
           component={ExercisesStackNavigator}
           options={{
             tabBarLabel: 'Exercises',
-            tabBarIcon: ({ color }) => <>{color === '#007bff' ? '??' : '?'}</>,
+            tabBarIcon: ({ color }) => <>{color === colors.accent ? '??' : '?'}</>,
           }}
         />
       </Tab.Navigator>

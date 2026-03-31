@@ -5,7 +5,7 @@
 }
 
 .active-workout-banner {
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  background: linear-gradient(135deg, var(--color-accent-500) 0%, var(--color-accent-600) 100%);
   color: white;
   padding: 16px 20px;
   border-radius: 8px;
@@ -58,13 +58,13 @@
 }
 
 .chip:hover {
-  border-color: #007bff;
-  color: #007bff;
+  border-color: var(--color-accent-500);
+  color: var(--color-accent-500);
 }
 
 .chip.active {
-  background-color: #007bff;
-  border-color: #007bff;
+  background-color: var(--color-accent-500);
+  border-color: var(--color-accent-500);
   color: white;
 }
 
@@ -209,6 +209,6 @@
 
 .selector:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  border-color: var(--color-accent-500);
+  box-shadow: 0 0 0 3px rgba(198, 90, 30, 0.18);
 }

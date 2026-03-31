@@ -90,29 +90,29 @@ const HomePage = () => {
       )}
 
       <div className="stats-grid">
-        <div className="stat-card">
+        <button className="stat-card" onClick={() => navigate('/programs')}>
           <div className="stat-icon">📋</div>
           <div className="stat-content">
             <h3>{stats.total_programs}</h3>
             <p>Programs</p>
           </div>
-        </div>
+        </button>
 
-        <div className="stat-card">
+        <button className="stat-card" onClick={() => navigate('/active-workout')}>
           <div className="stat-icon">🏋️</div>
           <div className="stat-content">
             <h3>{stats.total_workouts}</h3>
-            <p>Workouts</p>
+            <p>Workout</p>
           </div>
-        </div>
+        </button>
 
-        <div className="stat-card">
+        <button className="stat-card" onClick={() => navigate('/exercises')}>
           <div className="stat-icon">💪</div>
           <div className="stat-content">
             <h3>{stats.total_exercises}</h3>
             <p>Exercises</p>
           </div>
-        </div>
+        </button>
       </div>
 
       <div className="start-workout-section">

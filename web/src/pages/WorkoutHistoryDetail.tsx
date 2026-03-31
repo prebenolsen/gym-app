@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ApiClient, type WorkoutSessionDetail } from '@gym-app/shared';
+import { useUnit } from '../context/UnitContext';
 import './WorkoutHistoryDetail.css';
 
 const WorkoutHistoryDetail = () => {
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string }>();
   const api = new ApiClient('http://localhost:3000');
+  const { formatWeight } = useUnit();
 
   const [sessionDetail, setSessionDetail] = useState<WorkoutSessionDetail | null>(
     null
@@ -152,7 +154,7 @@ const WorkoutHistoryDetail = () => {
                     <tr key={`${set.id}`}>
                       <td className="set-number">#{set.set_number}</td>
                       <td className="weight">
-                        {set.weight.toLocaleString()} kg
+                        {formatWeight(set.weight)}
                       </td>
                       <td className="reps">{set.reps} reps</td>
                     </tr>
@@ -164,7 +166,7 @@ const WorkoutHistoryDetail = () => {
                   {sets.length} {sets.length === 1 ? 'set' : 'sets'}
                 </span>
                 <span className="avg-weight">
-                  Avg: {(sets.reduce((sum, s) => sum + s.weight, 0) / sets.length).toFixed(1)} kg
+                  Avg: {formatWeight(sets.reduce((sum, s) => sum + s.weight, 0) / sets.length)}
                 </span>
               </div>
             </div>

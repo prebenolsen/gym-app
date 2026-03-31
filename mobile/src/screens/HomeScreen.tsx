@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { ApiClient, type WorkoutStats } from '@gym-app/shared';
+import { colors, radius, shadow } from '../theme';
 
 const HomeScreen = () => {
   const [stats, setStats] = useState<WorkoutStats | null>(null);
@@ -32,7 +33,7 @@ const HomeScreen = () => {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007bff" />
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
@@ -73,20 +74,22 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     padding: 16,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 24,
-    color: '#333',
+    color: colors.textStrong,
   },
   noData: {
     padding: 16,
-    backgroundColor: '#fff3cd',
-    borderRadius: 4,
-    color: '#856404',
+    backgroundColor: colors.accentSoft,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    color: colors.textStrong,
     textAlign: 'center',
   },
   statsGrid: {
@@ -97,16 +100,14 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: 'white',
-    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadow.card,
   },
   statIcon: {
     fontSize: 32,
@@ -115,11 +116,11 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#007bff',
+    color: colors.accent,
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
+    color: colors.textMuted,
     marginTop: 8,
   },
 });

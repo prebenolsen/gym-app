@@ -46,7 +46,7 @@
   flex: 1;
   font-size: 28px;
   padding: 10px;
-  border: 2px solid #007bff;
+  border: 2px solid var(--color-accent-500);
 }
 
 .workouts-section {
@@ -121,11 +121,11 @@
 }
 
 .btn-view {
-  background-color: #007bff;
+  background-color: var(--color-accent-500);
 }
 
 .btn-view:hover {
-  background-color: #0056b3;
+  background-color: var(--color-accent-600);
 }
 
 .btn-delete {

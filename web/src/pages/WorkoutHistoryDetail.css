@@ -7,7 +7,7 @@
 .back-button {
   background: none;
   border: none;
-  color: #1066e0;
+  color: var(--color-accent-500);
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
@@ -132,7 +132,7 @@
 
 .weight {
   font-weight: 500;
-  color: #1066e0;
+  color: var(--color-accent-500);
 }
 
 .reps {
@@ -153,7 +153,7 @@
 }
 
 .avg-weight {
-  color: #1066e0;
+  color: var(--color-accent-500);
   font-weight: 600;
 }
 
@@ -170,7 +170,7 @@
 }
 
 .error-state button {
-  background: #1066e0;
+  background: var(--color-accent-500);
   color: white;
   border: none;
   border-radius: 4px;
@@ -181,7 +181,7 @@
 }
 
 .error-state button:hover {
-  background: #0852b8;
+  background: var(--color-accent-600);
 }
 
 .empty-exercises {

@@ -1,21 +1,48 @@
 .app {
   display: flex;
+  justify-content: center;
   height: 100vh;
   width: 100%;
+  background: radial-gradient(circle at 8% 5%, #fcf1e8 0%, #f5f3f1 45%);
+  padding-inline: clamp(16px, 4vw, 56px);
+}
+
+.app-shell {
+  display: flex;
+  width: 100%;
+  max-width: 1280px;
+  min-width: 0;
 }
 
 .app-content {
   flex: 1;
+  display: flex;
+  justify-content: center;
   overflow-y: auto;
-  padding: 20px;
+  padding: clamp(18px, 2.5vw, 34px);
+}
+
+.app-content > * {
+  width: 100%;
+  max-width: 1040px;
+  margin-inline: auto;
 }
 
 @media (max-width: 768px) {
   .app {
+    padding-inline: 0;
+  }
+
+  .app-shell {
     flex-direction: column;
+    max-width: 100%;
   }
 
   .app-content {
     padding: 10px;
+  }
+
+  .app-content > * {
+    max-width: 100%;
   }
 }

@@ -24,8 +24,8 @@
 }
 
 .exercise-hero {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  border: 1px solid #bfdbfe;
+  background: linear-gradient(135deg, #fdf2ea 0%, #fbe7da 100%);
+  border: 1px solid #e6bda3;
   border-radius: 10px;
   padding: 18px;
   margin-bottom: 16px;
@@ -39,7 +39,7 @@
 .rest-timer-bar {
   position: sticky;
   top: 0;
-  background-color: #1d4ed8;
+  background-color: var(--color-accent-600);
   color: white;
   font-weight: 700;
   padding: 8px 12px;
@@ -51,7 +51,7 @@
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-top: 16px;
 }
 
 .btn-primary,
@@ -67,7 +67,7 @@
 }
 
 .btn-primary {
-  background-color: #2563eb;
+  background-color: var(--color-accent-500);
   color: white;
 }
 
@@ -89,7 +89,7 @@
 }
 
 .btn-set-action {
-  background-color: #2563eb;
+  background-color: var(--color-accent-500);
   color: white;
   min-width: 160px;
   transition: all 0.2s;
@@ -112,8 +112,8 @@
 }
 
 .btn-set-action:hover:not(:disabled) {
-  background-color: #1d4ed8;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+  background-color: var(--color-accent-600);
+  box-shadow: 0 2px 8px rgba(169, 74, 22, 0.28);
 }
 
 .set-table {
@@ -176,10 +176,36 @@
 }
 
 .active-actions {
-  margin-top: 16px;
   display: flex;
   justify-content: space-between;
   gap: 10px;
+}
+
+.active-actions.top {
+  margin-bottom: 16px;
+}
+
+.active-actions.bottom {
+  margin-top: 16px;
+}
+
+.btn-success {
+  background-color: var(--color-accent-500);
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: var(--color-accent-600);
+}
+
+.btn-danger {
+  background-color: transparent;
+  color: #c0392b;
+  border: 1px solid #c0392b;
+}
+
+.btn-danger:hover {
+  background-color: rgba(192, 57, 43, 0.08);
 }
 
 .active-empty-state {

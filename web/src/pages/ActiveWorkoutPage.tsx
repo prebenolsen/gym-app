@@ -9,6 +9,7 @@ import {
   type WorkoutSessionSet,
   type ExerciseLastPerformance,
 } from '@gym-app/shared';
+import { useUnit } from '../context/UnitContext';
 import './ActiveWorkoutPage.css';
 
 type SetDraft = {
@@ -27,6 +28,7 @@ type PreviousPerformance = {
 const ActiveWorkoutPage = () => {
   const navigate = useNavigate();
   const api = new ApiClient('http://localhost:3000');
+  const { unit, convertFromKg, convertToKg, formatWeight } = useUnit();
 
   const [loading, setLoading] = useState(true);
   const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null);
@@ -50,11 +52,19 @@ const ActiveWorkoutPage = () => {
     return `${mins}:${secs}`;
   };
 
+  const formatWeightInput = (kg: number): string => {
+    const converted = convertFromKg(kg);
+    if (Number.isInteger(converted)) {
+      return String(converted);
+    }
+    return converted.toFixed(1);
+  };
+
   const hydrateSetDrafts = (exercise: Exercise, savedSets: WorkoutSessionSet[]) => {
     const nextDrafts: SetDraft[] = Array.from({ length: exercise.sets }).map((_, idx) => {
       const found = savedSets.find((set) => set.set_number === idx + 1);
       return {
-        weight: found ? String(found.weight) : '',
+        weight: found ? formatWeightInput(found.weight) : '',
         reps: found ? String(found.reps) : '',
       };
     });
@@ -209,7 +219,9 @@ const ActiveWorkoutPage = () => {
     if (!draft) return;
 
     const reps = Number(draft.reps);
-    if (!draft.weight.trim() || Number.isNaN(reps) || reps <= 0) {
+    const parsedWeight = Number(draft.weight.replace(',', '.'));
+
+    if (!draft.weight.trim() || Number.isNaN(parsedWeight) || parsedWeight <= 0 || Number.isNaN(reps) || reps <= 0) {
       window.alert('Please provide valid Weight and Reps before saving the set.');
       return;
     }
@@ -220,7 +232,7 @@ const ActiveWorkoutPage = () => {
       await api.saveWorkoutSet(activeSession.id, {
         exercise_id: currentExercise.id,
         set_number: setNumber,
-        weight: draft.weight,
+        weight: Number(convertToKg(parsedWeight).toFixed(2)),
         reps,
       });
       // Mark this set as saved
@@ -297,6 +309,15 @@ const ActiveWorkoutPage = () => {
         </p>
       </div>
 
+      <div className="active-actions top">
+        <button className="btn-danger" onClick={handleCancelWorkout}>
+          Cancel Workout
+        </button>
+        <button className="btn-success" onClick={handleFinishWorkout}>
+          Finish Workout
+        </button>
+      </div>
+
       <div className="exercise-hero">
         <div className="rest-timer-bar">
           {restSecondsLeft > 0 ? `Rest Timer: ${formatDuration(restSecondsLeft)}` : 'Rest Timer: Ready'}
@@ -304,28 +325,11 @@ const ActiveWorkoutPage = () => {
         <h2>{currentExercise?.name || 'No exercise available'}</h2>
       </div>
 
-      <div className="exercise-nav-buttons">
-        <button
-          className="btn-secondary"
-          onClick={() => handleNavigateExercise('prev')}
-          disabled={currentIndex === 0}
-        >
-          ◀ Previous
-        </button>
-        <button
-          className="btn-secondary"
-          onClick={() => handleNavigateExercise('next')}
-          disabled={currentIndex >= exercises.length - 1}
-        >
-          Next ▶
-        </button>
-      </div>
-
       {currentExercise && (
         <div className="set-table">
           <div className="set-table-header">
             <span>Set #</span>
-            <span>Weight</span>
+            <span>Weight ({unit})</span>
             <span>Reps</span>
             <span>Action</span>
           </div>
@@ -359,7 +363,7 @@ const ActiveWorkoutPage = () => {
                   />
                   {prevForThisSet && (
                     <span className="previous-value">
-                      Prev: {prevForThisSet.weight} kg
+                      Prev: {formatWeight(prevForThisSet.weight)}
                     </span>
                   )}
                 </div>
@@ -390,12 +394,20 @@ const ActiveWorkoutPage = () => {
         </div>
       )}
 
-      <div className="active-actions">
-        <button className="btn-danger" onClick={handleCancelWorkout}>
-          Cancel Workout
+      <div className="exercise-nav-buttons">
+        <button
+          className="btn-secondary"
+          onClick={() => handleNavigateExercise('prev')}
+          disabled={currentIndex === 0}
+        >
+          ◀ Previous
         </button>
-        <button className="btn-success" onClick={handleFinishWorkout}>
-          Finish Workout
+        <button
+          className="btn-secondary"
+          onClick={() => handleNavigateExercise('next')}
+          disabled={currentIndex >= exercises.length - 1}
+        >
+          Next ▶
         </button>
       </div>
     </div>

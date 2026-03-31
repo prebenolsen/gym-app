@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { ApiClient, type Program } from '@gym-app/shared';
+import { colors, radius, shadow } from '../theme';
 
 const ProgramsScreen = ({ navigation }: any) => {
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -68,7 +69,7 @@ const ProgramsScreen = ({ navigation }: any) => {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007bff" />
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
@@ -123,30 +124,30 @@ const ProgramsScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: colors.border,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.textStrong,
   },
   btnPrimary: {
-    backgroundColor: '#28a745',
+    backgroundColor: colors.accent,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 4,
+    borderRadius: radius.sm,
   },
   btnText: {
-    color: 'white',
+    color: colors.surface,
     fontWeight: '600',
     fontSize: 12,
   },
@@ -156,26 +157,26 @@ const styles = StyleSheet.create({
   },
   noData: {
     padding: 16,
-    backgroundColor: '#d1ecf1',
-    borderRadius: 4,
-    color: '#0c5460',
+    backgroundColor: colors.accentSoft,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    color: colors.textStrong,
     textAlign: 'center',
   },
   programCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'white',
-    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
     padding: 16,
     marginBottom: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#007bff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderLeftColor: colors.accent,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadow.card,
   },
   programContent: {
     flex: 1,
@@ -183,16 +184,16 @@ const styles = StyleSheet.create({
   programName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.textStrong,
   },
   btnSmall: {
-    backgroundColor: '#dc3545',
+    backgroundColor: colors.danger,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 4,
+    borderRadius: radius.sm,
   },
   btnSmallText: {
-    color: 'white',
+    color: colors.surface,
     fontWeight: '600',
     fontSize: 14,
   },

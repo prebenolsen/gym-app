@@ -6,15 +6,15 @@
 .home-page h1 {
   font-size: 32px;
   margin-bottom: 30px;
-  color: #333;
+  color: var(--color-text-strong);
 }
 
 .no-data {
   padding: 20px;
-  background-color: #fff3cd;
-  border: 1px solid #ffeaa7;
-  border-radius: 4px;
-  color: #856404;
+  background-color: var(--color-accent-100);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-strong);
 }
 
 .stats-grid {
@@ -24,19 +24,24 @@
 }
 
 .stat-card {
-  background-color: white;
-  border-radius: 8px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
   padding: 30px;
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
   transition: transform 0.2s, box-shadow 0.2s;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
 }
 
 .stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 26px rgba(31, 26, 23, 0.14);
 }
 
 .stat-icon {
@@ -47,12 +52,12 @@
 .stat-content h3 {
   font-size: 32px;
   margin: 0;
-  color: #007bff;
+  color: var(--color-accent-500);
 }
 
 .stat-content p {
   margin: 8px 0 0 0;
-  color: #666;
+  color: var(--color-text-muted);
   font-size: 14px;
 }
 
@@ -61,9 +66,10 @@
   align-items: center;
   justify-content: center;
   min-height: 400px;
-  background: linear-gradient(135deg, #2f80ed 0%, #1b59c4 100%);
-  border-radius: 12px;
+  background: linear-gradient(135deg, #d87a45 0%, #a94a16 100%);
+  border-radius: var(--radius-md);
   padding: 40px 20px;
+  box-shadow: var(--shadow-card);
 }
 
 .onboarding-content {
@@ -80,10 +86,10 @@
 .btn-get-started {
   font-size: 24px;
   padding: 16px 40px;
-  background-color: white;
-  color: #1b59c4;
+  background-color: var(--color-surface);
+  color: var(--color-accent-600);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-weight: 700;
   transition: all 0.2s;
@@ -100,24 +106,24 @@
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  background: #ecfdf5;
-  border: 1px solid #bbf7d0;
-  border-radius: 10px;
+  background: var(--color-success-soft);
+  border: 1px solid #cde9d9;
+  border-radius: var(--radius-sm);
   padding: 14px 16px;
   margin-bottom: 20px;
 }
 
 .active-session-card p {
   margin: 0;
-  color: #065f46;
+  color: var(--color-success);
   font-weight: 600;
 }
 
 .btn-resume-session {
   border: none;
-  background-color: #16a34a;
-  color: white;
-  border-radius: 6px;
+  background-color: var(--color-success);
+  color: var(--color-surface);
+  border-radius: var(--radius-sm);
   padding: 9px 14px;
   cursor: pointer;
   font-weight: 600;
@@ -125,10 +131,11 @@
 
 .start-workout-section {
   margin-top: 24px;
-  background-color: white;
-  border-radius: 10px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
 }
 
 .start-workout-section h2 {
@@ -145,7 +152,7 @@
 .program-group h3 {
   margin: 0 0 10px;
   font-size: 17px;
-  color: #111827;
+  color: var(--color-text-strong);
 }
 
 .program-group ul {
@@ -161,9 +168,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
-  border: 2px solid #e0e7ff;
-  border-radius: 12px;
+  background: linear-gradient(140deg, #fff8f3 0%, #fbe7da 100%);
+  border: 2px solid #efd2c0;
+  border-radius: var(--radius-md);
   padding: 20px;
   aspect-ratio: 1;
   cursor: pointer;
@@ -171,9 +178,9 @@
 }
 
 .program-group li:hover {
-  background: linear-gradient(135deg, #eef2ff 0%, #ddd6fe 100%);
-  border-color: #818cf8;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  background: linear-gradient(140deg, #fbe7da 0%, #f4d3bf 100%);
+  border-color: #d87a45;
+  box-shadow: 0 10px 20px rgba(169, 74, 22, 0.16);
   transform: translateY(-2px);
 }
 
@@ -188,9 +195,9 @@
 }
 
 .workout-card {
-  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
-  border: 2px solid #e0e7ff;
-  border-radius: 12px;
+  background: linear-gradient(140deg, #fff8f3 0%, #fbe7da 100%);
+  border: 2px solid #efd2c0;
+  border-radius: var(--radius-md);
   padding: 20px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -204,9 +211,9 @@
 }
 
 .workout-card:hover {
-  background: linear-gradient(135deg, #eef2ff 0%, #ddd6fe 100%);
-  border-color: #818cf8;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  background: linear-gradient(140deg, #fbe7da 0%, #f4d3bf 100%);
+  border-color: #d87a45;
+  box-shadow: 0 10px 20px rgba(169, 74, 22, 0.16);
   transform: translateY(-2px);
 }
 
@@ -218,7 +225,7 @@
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--color-text-strong);
   word-wrap: break-word;
   word-break: break-word;
   hyphens: auto;
@@ -227,7 +234,7 @@
 .workout-link {
   border: none;
   background: none;
-  color: #1e293b;
+  color: var(--color-text-strong);
   cursor: pointer;
   font-weight: 600;
   text-align: center;
@@ -243,11 +250,11 @@
   background: none;
   font-size: 22px;
   cursor: pointer;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   line-height: 1;
   display: none;
 }
 
 .favorite-toggle.on {
-  color: #f59e0b;
+  color: var(--color-accent-500);
 }
