@@ -29,12 +29,10 @@ const HomePage = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [statsData, programs, session, workouts7, exercisesData] = await Promise.all([
+        const [statsData, programs, session] = await Promise.all([
           api.getStats(),
           api.getPrograms(),
           api.getActiveSession(),
-          api.getWorkouts7Days(),
-          api.getExerciseHistory(),
         ]);
 
         const workoutsByProgram = await Promise.all(
@@ -50,8 +48,21 @@ const HomePage = () => {
         setStats(statsData);
         setProgramTree(workoutsByProgram);
         setActiveSession(session);
-        setWorkouts7Days(workouts7.count);
-        setExercises(exercisesData);
+
+        // Fetch optional data separately so it doesn't block dashboard
+        try {
+          const workouts7 = await api.getWorkouts7Days();
+          setWorkouts7Days(workouts7.count);
+        } catch (err) {
+          console.error('Failed to fetch 7-day workouts count:', err);
+        }
+
+        try {
+          const exercisesData = await api.getExerciseHistory();
+          setExercises(exercisesData);
+        } catch (err) {
+          console.error('Failed to fetch exercise history:', err);
+        }
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
       } finally {
