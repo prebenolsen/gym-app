@@ -1,0 +1,442 @@
+# Gym App - Testing on Android with Expo Go
+## Complete Step-by-Step Guide
+
+---
+
+## PREPARATION (Do Once)
+
+### Step 1: Install Expo Go on Android Phone
+1. Unlock your Android phone
+2. Open Google Play Store app
+3. Search for "Expo Go"
+4. Look for app by "Expo" (official by Expo, Inc.)
+5. Tap "Install"
+6. Wait for installation to complete (~2 min)
+7. App will appear on home screen or in apps drawer
+
+### Step 2: Ensure Phone & PC on Same WiFi Network
+1. On your phone: Go to Settings → WiFi
+2. Connect to your home/office WiFi network
+3. Note the network name (e.g., "MyHomeWiFi")
+4. On your PC: Connect to the SAME WiFi network
+5. ✅ Verify both are on same WiFi (required for connection)
+
+### Step 3: Install Backend Dependencies
+1. Open PowerShell on your PC
+2. Navigate to project:
+   ```
+   cd D:\Gym-App\gym-app
+   ```
+3. Install dependencies (if not done):
+   ```
+   npm install
+   ```
+4. Wait for completion (2-5 minutes)
+
+---
+
+## STARTING THE APP (Every Test Session)
+
+### Step 4: Start Backend Server (Terminal 1)
+1. Open a PowerShell window
+2. Navigate to project:
+   ```
+   cd D:\Gym-App\gym-app
+   ```
+3. Start backend:
+   ```
+   npm run backend:dev
+   ```
+4. Wait for message:
+   ```
+   🏋️ Gym app backend running on port 3000
+   ```
+5. ✅ Leave this terminal open (DO NOT CLOSE)
+
+### Step 5: Start Mobile Dev Server (Terminal 2)
+1. Open a NEW PowerShell window (keep Terminal 1 running)
+2. Navigate to project:
+   ```
+   cd D:\Gym-App\gym-app
+   ```
+3. Start mobile dev server:
+   ```
+   npm run mobile:dev
+   ```
+4. A menu will appear with options:
+   ```
+   ? How would you like to open Metro?
+   ‣ Scan the QR code above with Expo Go (Android) or Camera app (iOS)
+   ├ Press 'a' to open Android Emulator
+   ├ Press 'i' to open iOS Simulator
+   ├ Press 'w' to open web
+   ├ Press 'r' to reload the app
+   ├ Press 's' to save a copy of app.json
+   ├ Press 'q' to quit
+   ```
+5. ✅ Do NOT press anything yet - wait for QR code
+
+### Step 6: Wait for QR Code
+1. In Terminal 2, you should see:
+   ```
+   › Metro waiting on 8081
+   › Scan QR code above with Expo Go (Android) or Camera app
+   
+   QR Code (displayed as ASCII art):
+   ▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯
+   ▯▯▯ ... QR Code ... ▯▯▯
+   ▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯
+   ```
+2. ✅ If you see this, ready to proceed
+
+---
+
+## SCANNING & LOADING (On Android Phone)
+
+### Step 7: Open Expo Go App
+1. On your Android phone, tap the Expo Go app icon
+2. Wait for app to fully load (white screen with Expo logo)
+3. You should see:
+   - A "Scan QR code" button at the bottom
+   - Possibly "Recent" projects at top
+
+### Step 8: Tap "Scan QR code"
+1. Look for blue or colored button labeled "Scan QR code"
+2. Tap it once
+3. Phone camera will activate (asking permission if first time)
+4. Allow camera access when prompted
+
+### Step 9: Point Camera at QR Code
+1. On your PC, Terminal 2 displays the QR code
+2. On your phone camera, point at the QR code in terminal
+3. Keep steady for 2-3 seconds
+4. When recognized, the app will automatically start building
+5. You should see:
+   ```
+   Connected to Metro
+   Building...
+   Loading...
+   ```
+
+### Step 10: Wait for App to Load
+1. This can take 15-30 seconds on FIRST load
+2. Subsequent loads are faster (5-10 seconds)
+3. DO NOT close the app or navigate away
+4. Keep phone screen on
+5. You'll see loading indicator (spinner)
+6. ✅ When app appears, you're ready to test!
+
+---
+
+## TESTING THE APP
+
+### Step 11: Core Features to Test
+Verify these work correctly:
+
+**Dashboard:**
+- [ ] See "Dashboard" heading
+- [ ] See 4 stat tiles (Programs, Workouts, Exercises, Last 7 Days)
+- [ ] Numbers display correctly
+- [ ] "Start workout" section visible
+- [ ] Exercise progress cards show (if workouts logged)
+
+**Programs:**
+- [ ] Tap Programs stat tile
+- [ ] See list of programs
+- [ ] Can create new program
+- [ ] Can edit program name
+- [ ] Can delete program
+
+**Workouts:**
+- [ ] Click on program
+- [ ] See workouts list
+- [ ] Can add workout
+- [ ] Can edit workout
+- [ ] Can start workout
+
+**Active Workout:**
+- [ ] Start a workout from dashboard
+- [ ] See exercise name
+- [ ] See weight/reps input fields
+- [ ] See "Save" button
+- [ ] Can enter weight and reps
+- [ ] Can navigate between exercises
+- [ ] Timer shows elapsed time
+- [ ] Can finish workout
+
+**History:**
+- [ ] Tap Calendar stat tile
+- [ ] See calendar view
+- [ ] Can navigate months
+- [ ] Days with workouts show indicator dot
+- [ ] Can click date to see workouts
+- [ ] Workouts display correctly
+
+**Exercise Progress:**
+- [ ] Tap exercise card on home
+- [ ] See graph of progress
+- [ ] Can toggle between "Max Weight" and "Total Volume"
+- [ ] Historical data displays in table
+
+**Settings:**
+- [ ] Navigate to Settings
+- [ ] Dark mode toggle works
+- [ ] Unit selection works (kg/lbs)
+- [ ] Values persist on return
+
+### Step 12: Test Dark Mode
+1. In Settings page
+2. Toggle "Dark Mode" switch
+3. Verify:
+   - [ ] Background turns dark
+   - [ ] Text is readable
+   - [ ] Calendar numbers visible
+   - [ ] Buttons have good contrast
+   - [ ] All pages respond to theme
+
+### Step 13: Test Responsiveness
+1. Rotate phone between portrait and landscape
+2. Verify:
+   - [ ] Layout adapts
+   - [ ] No text overflow
+   - [ ] Buttons still clickable
+   - [ ] Forms are usable
+
+### Step 14: Test Unit Conversion
+1. Go to Settings
+2. Switch between kg and lbs
+3. Go to active workout
+4. Enter weight "100"
+5. Verify displayed as correct unit (e.g., "100 lb" or "45.4 kg")
+6. Check progress page - units convert correctly
+
+---
+
+## LIVE RELOADING (Development Feature)
+
+### Step 15: Test Hot Reload
+1. Make a small code change in your editor
+2. Save file (Ctrl+S)
+3. On phone, app should automatically refresh
+4. New change should appear
+5. ✅ You don't need to re-scan QR code
+
+### Step 16: Manual Reload if Needed
+1. In Terminal 2, press 'r'
+2. App will reload with latest code
+3. Should take 5-10 seconds
+
+---
+
+## COMMON ISSUES & SOLUTIONS
+
+### Issue 1: "QR code won't scan"
+**Symptoms:** Camera opens but QR code not recognized
+**Solutions:**
+1. Ensure phone and PC on SAME WiFi
+2. Check QR code in terminal is clear (not blurry)
+3. Try different distance/angle
+4. Increase terminal window size
+5. Restart both terminals and try again
+
+### Issue 2: "App loads but backend errors"
+**Symptoms:** White screen, "Failed to connect" errors, or blank dashboard
+**Solutions:**
+1. Verify backend running: check Terminal 1 for "🏋️ running on port 3000"
+2. Restart backend:
+   ```
+   npm run backend:dev
+   ```
+3. Check .env file has correct Supabase credentials
+4. Reload app (press 'r' in Terminal 2)
+5. Verify WiFi connection
+
+### Issue 3: "Connection refused / Cannot reach backend"
+**Symptoms:** API errors, "http://localhost:3000" errors
+**Solutions:**
+1. Backend NOT running - start it in Terminal 1
+2. Phone and PC NOT on same WiFi - reconnect to same network
+3. Firewall blocking - check Windows Firewall settings
+4. Port 3000 in use - change PORT in .env to 3001
+
+### Issue 4: "Module not found" / "Cannot find package"
+**Symptoms:** Red error screen with module errors
+**Solutions:**
+1. Recharts not installed:
+   ```
+   npm install
+   ```
+2. Restart dev server:
+   ```
+   npm run mobile:dev
+   ```
+3. Clear cache and rebuild:
+   ```
+   npm start -- --clear
+   ```
+
+### Issue 5: "App keeps crashing on startup"
+**Symptoms:** App loads then immediately closes
+**Solutions:**
+1. Check Terminal 2 for error messages
+2. Restart both servers (Terminal 1 and 2)
+3. Clear app cache: Expo Go → app → clear data
+4. Try fresh scan
+
+### Issue 6: "Expo Go says 'Connection timeout'"
+**Symptoms:** Scanning works but app never loads
+**Solutions:**
+1. Phone/PC on same WiFi? Verify
+2. Your IP address changed - restart both terminals
+3. Firewall issue - allow node.js through firewall
+4. Try alternative:
+   ```
+   expo start --tunnel
+   ```
+
+### Issue 7: "Cannot connect to 10.0.2.2:3000"
+**Symptoms:** Only on Android emulator
+**Solutions:**
+1. If using emulator (not physical phone), this is normal
+2. Your PC IP replaces localhost
+3. Check project for hardcoded "localhost:3000"
+4. Try: 10.0.2.2:3000 (works in emulator)
+
+### Issue 8: "Dark mode not working / Calendar invisible"
+**Symptoms:** Numbers disappeared, can't read text
+**Solutions:**
+1. Refresh app (press 'r' in Terminal 2)
+2. Clear Expo Go cache
+3. Close and reopen Expo Go
+4. Check latest code is deployed
+
+### Issue 9: "Calendar won't navigate"
+**Symptoms:** < > arrows don't work, locked to current month
+**Solutions:**
+1. Hard refresh app (press 'r' in Terminal 2)
+2. Close and reopen app from Expo Go
+3. Verify latest code: check Terminal 2 for "rebuilt"
+
+### Issue 10: "Changes not updating on phone"
+**Symptoms:** Code changed but app shows old version
+**Solutions:**
+1. Save file (Ctrl+S)
+2. Wait 3-5 seconds for hot reload
+3. Manual reload: press 'r' in Terminal 2
+4. Full restart both terminals
+5. Restart Expo Go on phone
+
+---
+
+## DEBUGGING
+
+### Enable Console Logs
+1. On phone in Expo Go, shake device or 3-finger tap
+2. Developer menu appears
+3. Select "Show developer logs"
+4. Logs appear at bottom of screen
+
+### Check Terminal Errors
+1. Look at Terminal 2 for error messages
+2. Red errors are problems to fix
+3. Yellow warnings usually safe to ignore
+4. Copy error and search online
+
+### Use DevTools
+1. In Terminal 2, press 'd' for developer menu
+2. Select relevant debugging option
+3. Uses JavaScript debugger in Chrome
+
+---
+
+## STOPPING & CLEANUP
+
+### Step 17: Stop Servers
+**On Phone:**
+1. Swipe up or press back button to exit app
+2. Close Expo Go
+
+**On PC - Terminal 2 (Mobile Dev):**
+1. Press 'q' to quit
+2. Terminal closes or returns to prompt
+
+**On PC - Terminal 1 (Backend):**
+1. Press Ctrl+C
+2. Confirms shutdown with "^C"
+
+### Step 18: Save Session
+1. In Terminal 2, press 's' to save app.json snapshot
+2. Useful for later reference
+
+---
+
+## BEST PRACTICES FOR TESTING
+
+✅ DO:
+- Keep backend running in separate terminal
+- Use hot reload during development
+- Test on multiple screen orientations
+- Test all navigation paths
+- Check both light and dark modes
+- Test on actual phone (not just emulator)
+- Use console logs to debug
+- Keep WiFi stable
+- Reload after making code changes
+
+❌ DON'T:
+- Close backend terminal while testing
+- Assume code changes auto-apply immediately
+- Test without backend running
+- Forget to save files before testing
+- Share QR code (unique per session)
+- Leave multiple terminals running (clean up)
+- Assume emulator = real phone experience
+
+---
+
+## QUICK START REFERENCE
+
+```
+Terminal 1 (Backend):
+cd D:\Gym-App\gym-app
+npm run backend:dev
+→ Wait for: 🏋️ Gym app backend running on port 3000
+
+Terminal 2 (Mobile):
+cd D:\Gym-App\gym-app
+npm run mobile:dev
+→ Wait for QR code
+
+Phone (Expo Go):
+Open Expo Go
+Tap "Scan QR code"
+Point at QR in Terminal 2
+Wait 15-30 seconds
+Test app!
+
+Useful commands:
+'r' in Terminal 2 = Reload app
+'q' in Terminal 2 = Quit
+Ctrl+C = Force quit any terminal
+```
+
+---
+
+## SUPPORT & RESOURCES
+
+**If stuck:**
+1. Check error messages in terminals
+2. Review "Common Issues" section above
+3. Check WiFi connection (same network?)
+4. Restart both terminals
+5. Clear Expo Go cache
+6. Scan QR code again
+
+**Official Resources:**
+- Expo docs: https://docs.expo.dev
+- React Native: https://reactnative.dev
+- Troubleshooting: https://docs.expo.dev/troubleshooting/debugging/
+
+---
+
+**Happy Testing! 🎉**

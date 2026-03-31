@@ -1,21 +1,35 @@
 {
-  "name": "gym-app",
-  "version": "0.0.1",
-  "description": "Gym workout tracker app - web, mobile, and backend",
-  "private": true,
-  "workspaces": [
-    "web",
-    "mobile",
-    "backend",
-    "shared"
-  ],
-  "scripts": {
-    "web:dev": "npm run dev -w web",
-    "web:build": "npm run build -w web",
-    "mobile:dev": "npm run dev -w mobile",
-    "mobile:start": "npm run start -w mobile",
-    "backend:dev": "npm run dev -w backend",
-    "backend:build": "npm run build -w backend",
-    "shared:build": "npm run build -w shared"
+  "expo": {
+    "name": "Gym App",
+    "slug": "gym-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourname.gymapp"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.yourname.gymapp"
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
+    }
+  },
+  "dependencies": {
+    "expo": "^55.0.9"
   }
 }
