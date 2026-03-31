@@ -68,6 +68,28 @@
   color: var(--color-text-strong);
 }
 
+sl-switch {
+  --width: 100px;
+  --height: 44px;
+}
+
+sl-switch::part(base) {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+sl-switch::part(control) {
+  background-color: var(--color-border);
+}
+
+sl-switch::part(thumb) {
+  background-color: var(--color-surface);
+}
+
+sl-switch[checked]::part(control) {
+  background-color: var(--color-accent-500);
+}
+
 .unit-option span {
   font-weight: 600;
   color: var(--color-text-strong);
@@ -76,8 +98,8 @@
 .appearance-toggle {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
-  justify-content: center;
   padding: 20px;
 }
 

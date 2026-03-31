@@ -50,12 +50,12 @@
 }
 
 .react-calendar__navigation button:hover {
-  background: #f0f0f0;
+  background: var(--color-surface-soft);
 }
 
 .react-calendar__navigation__label {
   font-weight: 600;
-  color: #333;
+  color: var(--color-text-strong);
   flex-grow: 1;
   font-size: 16px;
 }
@@ -63,7 +63,7 @@
 .react-calendar__month-view__weekdays {
   text-align: center;
   font-weight: 600;
-  color: #666;
+  color: var(--color-text-muted);
   margin-bottom: 10px;
 }
 
