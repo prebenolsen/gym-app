@@ -119,6 +119,7 @@
 .table-row {
   display: grid;
   grid-template-columns: 100px 120px 120px 80px 100px;
+  min-width: max-content;
   gap: 12px;
   align-items: center;
   padding: 12px;

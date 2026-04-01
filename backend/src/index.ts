@@ -896,7 +896,7 @@ app.get('/exercises/history', async (req, res) => {
   try {
     const { data: sets, error } = await supabase
       .from('workout_session_sets')
-      .select('exercise_id, weight')
+      .select('session_id, exercise_id, weight')
       .eq('is_deleted', false);
 
     if (error) throw error;
@@ -1011,8 +1011,8 @@ app.get('/exercises/:exerciseId/progress', async (req, res) => {
 
     const sessionMap = new Map(sessions?.map((s: any) => [s.id, s]) || []);
 
-    // Calculate stats per session
-    const sessionStats = new Map<string, { date: string; maxWeight: number; totalVolume: number; sets: number; totalReps: number }>();
+    // Calculate stats per calendar day (group by date so N sets in one workout = 1 row)
+    const dateStats = new Map<string, { date: string; maxWeight: number; totalVolume: number; sets: number; totalReps: number }>();
 
     for (const set of sets || []) {
       const session = sessionMap.get(set.session_id);
@@ -1020,8 +1020,8 @@ app.get('/exercises/:exerciseId/progress', async (req, res) => {
 
       const date = session.started_at.split('T')[0];
 
-      if (!sessionStats.has(set.session_id)) {
-        sessionStats.set(set.session_id, {
+      if (!dateStats.has(date)) {
+        dateStats.set(date, {
           date,
           maxWeight: 0,
           totalVolume: 0,
@@ -1030,18 +1030,17 @@ app.get('/exercises/:exerciseId/progress', async (req, res) => {
         });
       }
 
-      const stats = sessionStats.get(set.session_id)!;
+      const stats = dateStats.get(date)!;
       stats.maxWeight = Math.max(stats.maxWeight, set.weight);
       stats.totalVolume += set.weight * set.reps;
-      stats.sets = Math.max(stats.sets, set.set_number || 1);
+      stats.sets += 1;
       stats.totalReps += set.reps;
     }
 
     // Convert to array and sort by date
-    const history = Array.from(sessionStats.entries())
-      .map(([sessionId, stats]) => ({
+    const history = Array.from(dateStats.values())
+      .map((stats) => ({
         date: stats.date,
-        session_id: sessionId,
         max_weight: stats.maxWeight,
         total_volume: stats.totalVolume,
         sets: stats.sets,

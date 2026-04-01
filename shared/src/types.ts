@@ -151,7 +151,7 @@ export interface ExerciseHistorySummary {
 
 export interface ExerciseProgressEntry {
   date: string;
-  session_id: string;
+  session_id?: string;
   max_weight: number;
   total_volume: number;
   sets: number;
