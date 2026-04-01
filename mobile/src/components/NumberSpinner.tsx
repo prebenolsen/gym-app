@@ -17,7 +17,7 @@ const darkColors: ThemeColors = {
   surface: '#1A1A1A',
   border: '#353535',
   textStrong: '#FFFFFF',
-  textMuted: '#B1B1B1',
+  textMuted: '#FFFFFF',
   success: '#4CAF73',
   successSoft: '#18251D',
   danger: '#E45D4F',

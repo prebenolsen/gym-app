@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   exercises,
@@ -12,9 +12,48 @@ import {
   ApiClient,
 } from '@gym-app/shared';
 import './ExercisesPage.css';
+import { useTheme } from '../context/ThemeContext';
+import {
+  FrontTorso, BackTorso, ArmsView, FrontLegs, BackLegs, AbsView,
+  type MuscleGroup as MapMuscle,
+} from '../components/MuscleMap';
+
+// Maps catalog MuscleGroup → SVG component
+type MapComponent = React.ComponentType<{
+  active?: MapMuscle[];
+  size?: number;
+  mutedColor?: string;
+  highlightColor?: string;
+}>;
+
+const MUSCLE_VIEW: Record<string, MapComponent> = {
+  'Chest':               FrontTorso,
+  'Back':                BackTorso,
+  'Shoulders':           FrontTorso,
+  'Biceps':              ArmsView,
+  'Triceps':             ArmsView,
+  'Legs (Quads focus)':  FrontLegs,
+  'Hamstrings / Glutes': BackLegs,
+  'Calves':              BackLegs,
+  'Core / Abs':          AbsView,
+};
+
+const MUSCLE_ACTIVE: Record<string, MapMuscle[]> = {
+  'Chest':               ['chest'],
+  'Back':                ['lats', 'rhomboids', 'traps', 'lower_back'],
+  'Shoulders':           ['shoulders'],
+  'Biceps':              ['biceps'],
+  'Triceps':             ['triceps'],
+  'Legs (Quads focus)':  ['quads', 'hip_flexors'],
+  'Hamstrings / Glutes': ['hamstrings', 'glutes'],
+  'Calves':              ['calves'],
+  'Core / Abs':          ['upper_abs', 'lower_abs', 'obliques'],
+};
 
 const ExercisesPage = () => {
   const navigate = useNavigate();
+  const { accent } = useTheme();
+  const highlightColor = accent === 'auburn' ? '#c65a1e' : '#10b981';
   const [searchParams] = useSearchParams();
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<
     MuscleGroup | null
@@ -317,10 +356,24 @@ const ExercisesPage = () => {
                   onChange={() => toggleExerciseSelection(exercise.id)}
                   disabled={!isActiveWorkout}
                 />
-                <span className="exercise-name">{exercise.name}</span>
-                <span className="exercise-meta">
-                  {exercise.muscleGroup} • {exercise.equipment}
-                </span>
+                <div className="exercise-muscle-map">
+                  {(() => {
+                    const View = MUSCLE_VIEW[exercise.muscleGroup];
+                    return View ? (
+                      <View
+                        size={52}
+                        active={MUSCLE_ACTIVE[exercise.muscleGroup]}
+                        highlightColor={highlightColor}
+                      />
+                    ) : null;
+                  })()}
+                </div>
+                <div className="exercise-content">
+                  <span className="exercise-name">{exercise.name}</span>
+                  <span className="exercise-meta">
+                    {exercise.muscleGroup} · {exercise.equipment}
+                  </span>
+                </div>
               </label>
             ))}
           </div>

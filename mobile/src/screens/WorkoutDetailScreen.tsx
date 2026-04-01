@@ -24,7 +24,7 @@ const darkColors: ThemeColors = {
   surface: '#1A1A1A',
   border: '#353535',
   textStrong: '#FFFFFF',
-  textMuted: '#B1B1B1',
+  textMuted: '#FFFFFF',
   success: '#4CAF73',
   successSoft: '#18251D',
   danger: '#E45D4F',
@@ -328,7 +328,7 @@ const createStyles = (themeColors: ThemeColors) =>
     justifyContent: 'center',
   },
   btnText: {
-    color: themeColors.surface,
+    color: themeColors.textStrong,
     fontWeight: '600',
     fontSize: 12,
     textTransform: 'uppercase',
@@ -374,7 +374,7 @@ const createStyles = (themeColors: ThemeColors) =>
     borderRadius: radius.sm,
   },
   btnSmallText: {
-    color: themeColors.surface,
+    color: themeColors.textStrong,
     fontWeight: '600',
     fontSize: 14,
     textTransform: 'uppercase',
@@ -388,7 +388,7 @@ const createStyles = (themeColors: ThemeColors) =>
   label: {
     fontSize: 12,
     fontWeight: '600',
-    color: themeColors.textMuted,
+    color: themeColors.textStrong,
     marginBottom: 8,
     textTransform: 'uppercase',
   },
@@ -404,7 +404,7 @@ const createStyles = (themeColors: ThemeColors) =>
     alignItems: 'center',
   },
   btnReorderText: {
-    color: themeColors.textMuted,
+    color: themeColors.textStrong,
     fontWeight: '600',
     fontSize: 12,
     textTransform: 'uppercase',

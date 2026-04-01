@@ -50,7 +50,7 @@
   background: none;
   font-size: 32px;
   cursor: pointer;
-  color: var(--color-text-muted);
+  color: var(--color-text-strong);
   line-height: 1;
   transition: all 0.2s;
   padding: 8px;
@@ -108,7 +108,7 @@
 
 .btn-start-workout {
   background-color: var(--color-accent-500);
-  color: var(--color-surface);
+  color: var(--color-text-strong);
   border: none;
   border-radius: 6px;
   padding: 10px 16px;
@@ -216,6 +216,12 @@
   margin: 0;
   color: var(--color-text-strong);
   font-size: 16px;
+}
+
+[data-theme='dark'] .exercise-header h3,
+[data-theme='dark'] .exercise-card h3,
+[data-theme='dark'] .exercise-name {
+  color: #ffffff !important;
 }
 
 .btn-small {
