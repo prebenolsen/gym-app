@@ -124,27 +124,29 @@ const ProgramsPage = () => {
               {program.name}
             </h3>
             <div className="program-workouts">
-              {(workoutsByProgram[program.id] ?? []).length === 0 ? (
-                <p className="no-workouts">No workouts yet</p>
-              ) : (
-                (workoutsByProgram[program.id] ?? []).map((workout) => {
-                  const count = exerciseCountByWorkout[workout.id] ?? 0;
-                  return (
-                    <div
-                      key={workout.id}
-                      className="workout-row"
-                      onClick={() =>
-                        navigate(`/programs/${program.id}/workouts/${workout.id}`)
-                      }
-                    >
-                      <span className="workout-row-name">{workout.name}</span>
-                      <span className="workout-row-count">
-                        🏋️ {count} {count === 1 ? 'exercise' : 'exercises'}
-                      </span>
-                    </div>
-                  );
-                })
-              )}
+              {(workoutsByProgram[program.id] ?? []).map((workout) => {
+                const count = exerciseCountByWorkout[workout.id] ?? 0;
+                return (
+                  <div
+                    key={workout.id}
+                    className="workout-row"
+                    onClick={() =>
+                      navigate(`/programs/${program.id}/workouts/${workout.id}`)
+                    }
+                  >
+                    <span className="workout-row-name">{workout.name}</span>
+                    <span className="workout-row-count">
+                      🏋️ {count} {count === 1 ? 'exercise' : 'exercises'}
+                    </span>
+                  </div>
+                );
+              })}
+              <button
+                className="btn-add-workout"
+                onClick={() => navigate(`/programs/${program.id}`)}
+              >
+                + Add Workout
+              </button>
             </div>
           </div>
         ))}

@@ -95,6 +95,25 @@
   padding: 4px 0;
 }
 
+.btn-add-workout {
+  margin-top: 6px;
+  width: 100%;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-accent-500);
+  background-color: transparent;
+  border: 1px dashed var(--color-accent-500);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+  text-align: center;
+}
+
+.btn-add-workout:hover {
+  background-color: var(--color-accent-100);
+}
+
 .program-card-new {
   border: 2px dashed var(--color-accent-500);
   background-color: var(--color-accent-100);
