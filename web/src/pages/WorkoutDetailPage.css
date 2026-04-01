@@ -89,8 +89,13 @@
   cursor: pointer;
 }
 
-.btn-start-workout:hover {
+.btn-start-workout:hover:not(:disabled) {
   background-color: var(--color-accent-600);
+}
+
+.btn-start-workout:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .add-exercise {

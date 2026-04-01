@@ -216,7 +216,11 @@ const WorkoutDetailPage = () => {
       <div className="exercises-section">
         <div className="section-top-row">
           <h2>Exercises</h2>
-          <button onClick={handleStartWorkout} className="btn-start-workout">
+          <button
+            onClick={handleStartWorkout}
+            className="btn-start-workout"
+            disabled={exercises.length === 0}
+          >
             Start Workout
           </button>
         </div>

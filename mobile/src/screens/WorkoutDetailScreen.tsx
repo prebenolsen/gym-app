@@ -181,6 +181,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
           <TouchableOpacity
             onPress={handleAddExercise}
             style={styles.btnPrimary}
+            activeOpacity={0.7}
           >
             <Text style={styles.btnText}>+ Add</Text>
           </TouchableOpacity>
