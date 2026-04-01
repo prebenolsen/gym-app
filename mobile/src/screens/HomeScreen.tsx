@@ -40,8 +40,6 @@ const HomeScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Dashboard</Text>
-
       {!stats ? (
         <Text style={styles.noData}>
           No workout data yet. Create a program to get started!
@@ -76,13 +74,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     padding: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 24,
-    color: colors.textStrong,
-    textTransform: 'uppercase',
   },
   noData: {
     padding: 16,
