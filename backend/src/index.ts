@@ -151,22 +151,16 @@ app.put('/programs/:id', async (req, res) => {
 app.patch('/programs/:id/favorite', async (req, res) => {
   try {
     const { id } = req.params;
+    const { is_favorite } = req.body;
 
-    // Check current favorite status
-    const { data: current, error: fetchError } = await supabase
-      .from('programs')
-      .select('is_favorite_program')
-      .eq('id', id)
-      .eq('user_id', MOCK_USER_ID)
-      .single();
+    if (typeof is_favorite !== 'boolean') {
+      res.status(400).json({ error: 'is_favorite must be a boolean' });
+      return;
+    }
 
-    if (fetchError) throw fetchError;
-
-    // Toggle favorite status for this program only (allow multiple favorites)
-    const newStatus = !current?.is_favorite_program;
     const { data, error } = await supabase
       .from('programs')
-      .update({ is_favorite_program: newStatus })
+      .update({ is_favorite_program: is_favorite })
       .eq('id', id)
       .eq('user_id', MOCK_USER_ID)
       .select()

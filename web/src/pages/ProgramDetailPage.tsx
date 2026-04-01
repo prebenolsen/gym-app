@@ -92,8 +92,9 @@ const ProgramDetailPage = () => {
 
   const handleToggleFavorite = async () => {
     if (!program) return;
+    const newFavorite = !program.is_favorite_program;
     try {
-      const updated = await api.favoriteProgramId(program.id);
+      const updated = await api.favoriteProgramId(program.id, newFavorite);
       setProgram(updated);
     } catch (err) {
       console.error('Failed to toggle favorite:', err);

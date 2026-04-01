@@ -89,8 +89,8 @@ class ApiClient {
     return this.request('PUT', `/programs/${id}`, req);
   }
 
-  async favoriteProgramId(id: string): Promise<Program> {
-    return this.request('PATCH', `/programs/${id}/favorite`);
+  async favoriteProgramId(id: string, isFavorite: boolean): Promise<Program> {
+    return this.request('PATCH', `/programs/${id}/favorite`, { is_favorite: isFavorite });
   }
 
   async deleteProgram(id: string): Promise<void> {

@@ -284,7 +284,6 @@ const WorkoutDetailPage = () => {
                   </div>
 
                   <div className="control-group reorder-group">
-                    <label>Reorder</label>
                     <div className="reorder-buttons">
                       {index > 0 ? (
                         <button

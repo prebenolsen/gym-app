@@ -9,6 +9,8 @@
   font-weight: 600;
   text-transform: uppercase;
   color: var(--color-text-muted);
+  text-align: center;
+  width: 100%;
 }
 
 .spinner-controls {
@@ -19,6 +21,7 @@
   border-radius: var(--radius-sm);
   overflow: hidden;
   background-color: var(--color-surface);
+  width: 100%;
 }
 
 .spinner-btn {
@@ -49,6 +52,16 @@
   font-weight: 600;
   color: var(--color-text-strong);
   background-color: var(--color-surface);
+}
+
+.spinner-input::-webkit-outer-spin-button,
+.spinner-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.spinner-input[type=number] {
+  -moz-appearance: textfield;
 }
 
 .spinner-input:disabled {
