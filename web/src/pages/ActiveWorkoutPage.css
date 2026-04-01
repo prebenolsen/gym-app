@@ -36,6 +36,30 @@
   font-size: 24px;
 }
 
+.exercise-name-link {
+  margin: 10px 0 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text-strong);
+  font-size: 24px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.exercise-name-link:hover {
+  color: var(--color-accent-600);
+}
+
+.exercise-name-link:focus-visible {
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
 .rest-timer-bar {
   position: sticky;
   top: 0;

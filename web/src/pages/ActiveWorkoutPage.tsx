@@ -390,7 +390,18 @@ const ActiveWorkoutPage = () => {
         <div className="rest-timer-bar">
           {restSecondsLeft > 0 ? `Rest Timer: ${formatDuration(restSecondsLeft)}` : 'Rest Timer: Ready'}
         </div>
-        <h2>{currentExercise?.name || 'No exercise available'}</h2>
+        {currentExercise ? (
+          <button
+            type="button"
+            className="exercise-name-link"
+            onClick={() => navigate(`/exercise-progress/${currentExercise.id}`)}
+            title="View exercise statistics"
+          >
+            {currentExercise.name}
+          </button>
+        ) : (
+          <h2>No exercise available</h2>
+        )}
       </div>
 
       {currentExercise && (
