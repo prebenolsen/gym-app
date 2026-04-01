@@ -117,6 +117,14 @@ const CalendarPage = () => {
     });
   };
 
+  const formatDuration = (startIso: string, endIso: string): string => {
+    const diffMs = new Date(endIso).getTime() - new Date(startIso).getTime();
+    const totalMinutes = Math.floor(diffMs / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${hours}:${String(minutes).padStart(2, '0')}`;
+  };
+
   const formatDateDisplay = (date: Date): string => {
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -168,15 +176,16 @@ const CalendarPage = () => {
               >
                 <div className="workout-header">
                   <h3>{workout.workout_name}</h3>
-                  <span className="workout-time">
-                    {formatTime(workout.started_at)}
-                  </span>
                 </div>
-                {workout.ended_at && (
-                  <div className="workout-duration">
-                    Ended: {formatTime(workout.ended_at)}
-                  </div>
-                )}
+                <div className="workout-times">
+                  <span>Start: {formatTime(workout.started_at)}</span>
+                  {workout.ended_at && (
+                    <span>Ended: {formatTime(workout.ended_at)}</span>
+                  )}
+                  {workout.ended_at && (
+                    <span>Duration: {formatDuration(workout.started_at, workout.ended_at)}</span>
+                  )}
+                </div>
                 <div className="workout-click-hint">
                   Click to see exercises performed →
                 </div>
