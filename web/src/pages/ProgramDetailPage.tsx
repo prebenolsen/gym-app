@@ -203,9 +203,9 @@ const ProgramDetailPage = () => {
           </button>
           <button
             onClick={handleToggleFavorite}
-            className={`btn-favorite-program${program.is_favorite ? ' active' : ''}`}
+            className={`btn-favorite-program${program.is_favorite_program ? ' active' : ''}`}
           >
-            {program.is_favorite ? '★ Favorited' : '☆ Set as Favorite'}
+            {program.is_favorite_program ? '★ Favorited' : '☆ Set as Favorite'}
           </button>
         </div>
       </div>

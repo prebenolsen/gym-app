@@ -98,19 +98,7 @@ const WorkoutDetailPage = () => {
     }
   };
 
-  const handleToggleFavorite = async () => {
-    if (!workout) return;
 
-    try {
-      const updated = await api.toggleWorkoutFavorite(workout.id);
-      setWorkout({
-        ...workout,
-        is_favorite: updated.is_favorite,
-      });
-    } catch (err) {
-      console.error('Failed to toggle favorite:', err);
-    }
-  };
 
   const handleStartWorkout = async () => {
     if (!workout) return;
@@ -220,17 +208,7 @@ const WorkoutDetailPage = () => {
               />
             </div>
           ) : (
-            <div className="title-with-favorite">
-              <h1 onClick={() => setEditingName(workout.name)}>{workout.name}</h1>
-              <button
-                className="favorite-toggle-large"
-                onClick={handleToggleFavorite}
-                aria-label="Toggle favorite workout"
-                title={workout.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
-              >
-                {workout.is_favorite ? '★' : '☆'}
-              </button>
-            </div>
+            <h1 onClick={() => setEditingName(workout.name)}>{workout.name}</h1>
           )}
         </div>
       </div>

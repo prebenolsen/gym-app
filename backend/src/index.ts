@@ -113,7 +113,7 @@ app.post('/programs', async (req, res) => {
           name,
           user_id: MOCK_USER_ID,
           order: nextOrder,
-          is_favorite: isFirstProgram,
+          is_favorite_program: isFirstProgram,
         },
       ])
       .select()
@@ -155,18 +155,18 @@ app.patch('/programs/:id/favorite', async (req, res) => {
     // Check current favorite status
     const { data: current, error: fetchError } = await supabase
       .from('programs')
-      .select('is_favorite')
+      .select('is_favorite_program')
       .eq('id', id)
       .eq('user_id', MOCK_USER_ID)
       .single();
 
     if (fetchError) throw fetchError;
 
-    if (current?.is_favorite) {
+    if (current?.is_favorite_program) {
       // Already favorited — toggle off
       const { data, error } = await supabase
         .from('programs')
-        .update({ is_favorite: false })
+        .update({ is_favorite_program: false })
         .eq('id', id)
         .eq('user_id', MOCK_USER_ID)
         .select()
@@ -178,13 +178,13 @@ app.patch('/programs/:id/favorite', async (req, res) => {
     // Clear any existing favorite for this user
     await supabase
       .from('programs')
-      .update({ is_favorite: false })
+      .update({ is_favorite_program: false })
       .eq('user_id', MOCK_USER_ID);
 
     // Set this program as the favorite
     const { data, error } = await supabase
       .from('programs')
-      .update({ is_favorite: true })
+      .update({ is_favorite_program: true })
       .eq('id', id)
       .eq('user_id', MOCK_USER_ID)
       .select()
@@ -277,7 +277,6 @@ app.post('/programs/:programId/workouts', async (req, res) => {
           program_id: programId,
           name,
           user_id: MOCK_USER_ID,
-          is_favorite: false,
           order: nextOrder,
         },
       ])
@@ -300,37 +299,6 @@ app.put('/workouts/:id', async (req, res) => {
     const { data, error } = await supabase
       .from('workouts')
       .update({ name })
-      .eq('id', id)
-      .eq('user_id', MOCK_USER_ID)
-      .select()
-      .single();
-
-    if (error) throw error;
-    res.json(data);
-  } catch (err: unknown) {
-    const errorMsg = formatError(err);
-    res.status(500).json({ error: errorMsg });
-  }
-});
-
-app.patch('/workouts/:id/favorite', async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const { data: existing, error: existingError } = await supabase
-      .from('workouts')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', MOCK_USER_ID)
-      .single();
-
-    if (existingError) throw existingError;
-
-    const nextValue = !Boolean(existing.is_favorite);
-
-    const { data, error } = await supabase
-      .from('workouts')
-      .update({ is_favorite: nextValue })
       .eq('id', id)
       .eq('user_id', MOCK_USER_ID)
       .select()

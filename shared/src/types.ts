@@ -7,7 +7,7 @@ export interface Program {
   name: string;
   user_id: string;
   order: number;
-  is_favorite: boolean;
+  is_favorite_program: boolean;
   created_at: string;
 }
 
@@ -16,7 +16,6 @@ export interface Workout {
   program_id: string;
   name: string;
   user_id: string;
-  is_favorite: boolean;
   order: number;
   created_at: string;
 }

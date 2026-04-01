@@ -145,7 +145,7 @@ const HomePage = () => {
       <div className="start-workout-section">
         <h2>Start workout</h2>
         {(() => {
-          const favorite = programTree.find(({ program }) => program.is_favorite);
+          const favorite = programTree.find(({ program }) => program.is_favorite_program);
           if (!favorite) {
             return (
               <p className="no-data">

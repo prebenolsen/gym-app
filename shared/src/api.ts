@@ -117,9 +117,7 @@ class ApiClient {
     return this.request('PUT', `/workouts/${id}`, req);
   }
 
-  async toggleWorkoutFavorite(id: string): Promise<Workout> {
-    return this.request('PATCH', `/workouts/${id}/favorite`);
-  }
+
 
   async deleteWorkout(id: string): Promise<void> {
     return this.request('DELETE', `/workouts/${id}`);
