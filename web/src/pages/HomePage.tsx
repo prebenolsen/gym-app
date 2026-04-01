@@ -190,7 +190,6 @@ const HomePage = () => {
       {exercises.length > 0 && (
         <div className="exercise-progress-section">
           <h2>Your Exercise Progress</h2>
-          <p className="section-subtitle">Click an exercise to view your progress</p>
           <div className="exercises-grid">
             {exercises.map((exercise) => (
               <button
@@ -201,8 +200,12 @@ const HomePage = () => {
                 <div className="exercise-card-content">
                   <h4>{exercise.exercise_name}</h4>
                   <div className="exercise-stats">
-                    <span className="stat">Times: {exercise.times_done}</span>
-                    <span className="stat">Best: {exercise.personal_best.toFixed(1)} kg</span>
+                    <span className="exercise-times-done">
+                      Times exercised: {exercise.times_done}
+                    </span>
+                    <span className="exercise-max-weight">
+                      Max: {exercise.personal_best.toFixed(1)} kg
+                    </span>
                   </div>
                 </div>
               </button>

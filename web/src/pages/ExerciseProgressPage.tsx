@@ -85,8 +85,11 @@ const ExerciseProgressPage = () => {
     }
   });
 
-  const maxValue = Math.max(...chartData.map((d) => d.value));
   const personalBest = data.history.reduce((max, entry) => Math.max(max, entry.max_weight), 0);
+  const totalTimesExercised = data.history.length;
+  const totalRepetitions = data.history.reduce((sum, entry) => sum + entry.total_reps, 0);
+  const totalSets = data.history.reduce((sum, entry) => sum + entry.sets, 0);
+  const totalWeight = data.history.reduce((sum, entry) => sum + entry.total_volume, 0);
 
   return (
     <div className="exercise-progress-page">
@@ -115,6 +118,25 @@ const ExerciseProgressPage = () => {
         >
           Total Volume
         </button>
+      </div>
+
+      <div className="summary-metrics">
+        <div className="metric-card">
+          <span className="metric-label">Workout Days</span>
+          <strong className="metric-value">{totalTimesExercised}</strong>
+        </div>
+        <div className="metric-card">
+          <span className="metric-label">Total Repetitions</span>
+          <strong className="metric-value">{totalRepetitions}</strong>
+        </div>
+        <div className="metric-card">
+          <span className="metric-label">Total Sets</span>
+          <strong className="metric-value">{totalSets}</strong>
+        </div>
+        <div className="metric-card">
+          <span className="metric-label">Total Volume</span>
+          <strong className="metric-value">{formatWeight(totalWeight)}</strong>
+        </div>
       </div>
 
       <div className="chart-container">
@@ -161,22 +183,28 @@ const ExerciseProgressPage = () => {
       <div className="progress-details">
         <h3>Workout History</h3>
         <div className="details-table">
-          <div className="table-header">
-            <div className="col-date">Date</div>
-            <div className="col-max">Max Weight</div>
-            <div className="col-volume">Total Volume</div>
-            <div className="col-sets">Sets</div>
-            <div className="col-reps">Total Reps</div>
-          </div>
-          {data.history.map((entry, index) => (
-            <div key={index} className="table-row">
-              <div className="col-date">{entry.date}</div>
-              <div className="col-max">{formatWeight(entry.max_weight)}</div>
-              <div className="col-volume">{formatWeight(entry.total_volume)}</div>
-              <div className="col-sets">{entry.sets}</div>
-              <div className="col-reps">{entry.total_reps}</div>
-            </div>
-          ))}
+          <table className="history-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Max Weight</th>
+                <th>Total Volume</th>
+                <th>Sets</th>
+                <th>Total Reps</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.history.map((entry, index) => (
+                <tr key={index}>
+                  <td>{entry.date}</td>
+                  <td>{formatWeight(entry.max_weight)}</td>
+                  <td>{formatWeight(entry.total_volume)}</td>
+                  <td>{entry.sets}</td>
+                  <td>{entry.total_reps}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

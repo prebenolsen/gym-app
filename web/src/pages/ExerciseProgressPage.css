@@ -80,6 +80,36 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
+.summary-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.metric-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.metric-value {
+  font-size: 22px;
+  color: var(--color-text-strong);
+  line-height: 1.2;
+}
+
 .chart-container {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -115,67 +145,50 @@
   overflow-x: auto;
 }
 
-.table-header,
-.table-row {
-  display: grid;
-  grid-template-columns: 120px 140px 160px 100px 120px;
-  min-width: 720px;
-  gap: 16px;
-  align-items: center;
-  padding: 12px;
-  font-size: 14px;
+.history-table {
   width: 100%;
-  box-sizing: border-box;
+  min-width: 700px;
+  border-collapse: collapse;
 }
 
-.table-header {
-  background: var(--color-surface-soft);
+.history-table th,
+.history-table td {
+  padding: 12px;
   border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.history-table th {
+  background: var(--color-surface-soft);
+  color: var(--color-text-strong);
   font-weight: 600;
-  color: var(--color-text-strong);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  position: sticky;
-  top: 0;
+  text-align: left;
 }
 
-.table-row {
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text-strong);
-}
-
-.col-date,
-.col-max,
-.col-volume,
-.col-sets,
-.col-reps {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.table-row:last-child {
-  border-bottom: none;
-}
-
-.table-row:hover {
+.history-table tbody tr:hover {
   background: var(--color-surface-soft);
 }
 
-.col-date {
-  font-weight: 500;
+.history-table td {
+  color: var(--color-text-strong);
 }
 
-.col-max,
-.col-volume {
+.history-table td:nth-child(2),
+.history-table td:nth-child(3) {
   text-align: right;
   color: var(--color-accent-500);
   font-weight: 600;
 }
 
-.col-sets,
-.col-reps {
+.history-table td:nth-child(4),
+.history-table td:nth-child(5) {
   text-align: center;
   color: var(--color-text-muted);
+}
+
+.history-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 @media (max-width: 768px) {
@@ -198,11 +211,21 @@
     margin-bottom: 16px;
   }
 
-  .table-header,
-  .table-row {
-    grid-template-columns: 100px 120px 130px 80px 100px;
-    min-width: 530px;
-    gap: 8px;
+  .summary-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-bottom: 16px;
+  }
+
+  .metric-value {
+    font-size: 18px;
+  }
+
+  .history-table {
+    min-width: 560px;
+  }
+
+  .history-table th,
+  .history-table td {
     padding: 10px;
     font-size: 12px;
   }
