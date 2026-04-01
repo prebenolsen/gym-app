@@ -199,7 +199,7 @@ const ExercisesPage = () => {
       for (const ex of selectedExerciseList) {
         await api.createExercise(activeWorkoutId, {
           name: ex.name,
-          sets: 1,
+          sets: 4,
           rest_seconds: 120,
         });
       }

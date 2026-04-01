@@ -101,7 +101,7 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
       for (const ex of selectedExerciseList) {
         await api.createExercise(workoutId, {
           name: ex.name,
-          sets: 1,
+          sets: 4,
           rest_seconds: 120,
         });
       }

@@ -145,7 +145,7 @@ class ApiClient {
     return this.request('POST', `/workouts/${workoutId}/exercises`, {
       workout_id: workoutId,
       name: req.name,
-      sets: req.sets || 1,
+      sets: req.sets || 4,
       rest_seconds: req.rest_seconds || 120,
     });
   }

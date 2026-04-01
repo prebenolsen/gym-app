@@ -360,7 +360,7 @@ app.post('/workouts/:workoutId/exercises', async (req, res) => {
     const { workoutId } = req.params;
     const {
       name,
-      sets = 1,
+      sets = 4,
       rest_seconds = 120,
     } = req.body;
 
