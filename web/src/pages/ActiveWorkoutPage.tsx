@@ -25,6 +25,29 @@ type PreviousPerformance = {
   [exerciseId: string]: ExerciseLastPerformance[];
 };
 
+const normalizeDraftValue = (value: string): string => value.trim().replace(',', '.');
+
+const hasDraftChanged = (draft: SetDraft, baseline?: SetDraft): boolean => {
+  if (!baseline) return true;
+
+  const baselineWeight = Number(normalizeDraftValue(baseline.weight));
+  const draftWeight = Number(normalizeDraftValue(draft.weight));
+  const baselineReps = Number(normalizeDraftValue(baseline.reps));
+  const draftReps = Number(normalizeDraftValue(draft.reps));
+
+  const weightChanged =
+    Number.isNaN(baselineWeight) || Number.isNaN(draftWeight)
+      ? normalizeDraftValue(draft.weight) !== normalizeDraftValue(baseline.weight)
+      : baselineWeight !== draftWeight;
+
+  const repsChanged =
+    Number.isNaN(baselineReps) || Number.isNaN(draftReps)
+      ? normalizeDraftValue(draft.reps) !== normalizeDraftValue(baseline.reps)
+      : baselineReps !== draftReps;
+
+  return weightChanged || repsChanged;
+};
+
 const ActiveWorkoutPage = () => {
   const navigate = useNavigate();
   const api = new ApiClient('http://localhost:3000');
@@ -42,6 +65,8 @@ const ActiveWorkoutPage = () => {
   const [previousPerformance, setPreviousPerformance] = useState<PreviousPerformance>({});
   const [savedSetsForExercise, setSavedSetsForExercise] = useState<SavedSetTracking>({});
   const [lastEditedSetIndex, setLastEditedSetIndex] = useState<number | null>(null);
+  const [savedDraftBaseline, setSavedDraftBaseline] = useState<SetDraft[]>([]);
+  const [dirtySavedSets, setDirtySavedSets] = useState<SavedSetTracking>({});
 
   const currentExercise = exercises[currentIndex] || null;
 
@@ -70,6 +95,8 @@ const ActiveWorkoutPage = () => {
       };
     });
     setSetDrafts(nextDrafts);
+    setSavedDraftBaseline(nextDrafts);
+    setDirtySavedSets({});
     
     // Track which sets are saved
     const tracking: SavedSetTracking = {};
@@ -216,9 +243,24 @@ const ActiveWorkoutPage = () => {
     value: string
   ) => {
     setLastEditedSetIndex(rowIndex);
-    setSetDrafts((prev) =>
-      prev.map((row, idx) => (idx === rowIndex ? { ...row, [field]: value } : row))
-    );
+    setSetDrafts((prev) => {
+      const nextDrafts = prev.map((row, idx) =>
+        idx === rowIndex ? { ...row, [field]: value } : row
+      );
+
+      const setNumber = rowIndex + 1;
+      if (savedSetsForExercise[setNumber]) {
+        const nextRow = nextDrafts[rowIndex];
+        const baselineRow = savedDraftBaseline[rowIndex];
+        const isDirty = hasDraftChanged(nextRow, baselineRow);
+        setDirtySavedSets((prevDirty) => ({
+          ...prevDirty,
+          [setNumber]: isDirty,
+        }));
+      }
+
+      return nextDrafts;
+    });
   };
 
   const handleSaveSet = async (rowIndex: number) => {
@@ -248,6 +290,13 @@ const ActiveWorkoutPage = () => {
       setSavedSetsForExercise((prev) => ({
         ...prev,
         [setNumber]: true,
+      }));
+      setSavedDraftBaseline((prev) =>
+        prev.map((row, idx) => (idx === rowIndex ? { ...draft } : row))
+      );
+      setDirtySavedSets((prev) => ({
+        ...prev,
+        [setNumber]: false,
       }));
       setRestSecondsLeft(currentExercise.rest_seconds);
     } catch (err) {
@@ -296,6 +345,10 @@ const ActiveWorkoutPage = () => {
   const activeSaveSetNumber = activeSaveIndex !== null ? activeSaveIndex + 1 : null;
   const activeSaveIsSaved =
     activeSaveSetNumber !== null && savedSetsForExercise[activeSaveSetNumber] === true;
+  const activeSaveShouldOverwrite =
+    activeSaveSetNumber !== null &&
+    activeSaveIsSaved &&
+    dirtySavedSets[activeSaveSetNumber] === true;
 
   if (loading) {
     return <div className="active-workout-page">Loading...</div>;
@@ -390,7 +443,7 @@ const ActiveWorkoutPage = () => {
           ◀ Previous
         </button>
         <button
-          className={`btn-set-action ${activeSaveIsSaved ? 'btn-overwrite' : 'btn-primary'}`}
+          className={`btn-set-action ${activeSaveShouldOverwrite ? 'btn-overwrite' : 'btn-primary'}`}
           onClick={() => activeSaveIndex !== null && handleSaveSet(activeSaveIndex)}
           disabled={activeSaveIndex === null || savingSet === activeSaveIndex}
           title={
@@ -403,7 +456,7 @@ const ActiveWorkoutPage = () => {
             ? 'Save'
             : savingSet === activeSaveIndex
               ? `Saving Set #${activeSaveSetNumber}...`
-              : activeSaveIsSaved
+              : activeSaveShouldOverwrite
                 ? `⚠ Overwrite Set #${activeSaveSetNumber}`
                 : `Save Set #${activeSaveSetNumber}`}
         </button>

@@ -48,10 +48,15 @@
 }
 
 .exercise-nav-buttons {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1.7fr 1fr;
   gap: 10px;
   margin-top: 16px;
+}
+
+.exercise-nav-buttons > .btn-secondary,
+.exercise-nav-buttons > .btn-set-action {
+  width: 100%;
 }
 
 .btn-primary,
