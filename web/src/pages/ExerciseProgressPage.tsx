@@ -90,6 +90,10 @@ const ExerciseProgressPage = () => {
   const totalRepetitions = data.history.reduce((sum, entry) => sum + entry.total_reps, 0);
   const totalSets = data.history.reduce((sum, entry) => sum + entry.sets, 0);
   const totalWeight = data.history.reduce((sum, entry) => sum + entry.total_volume, 0);
+  const formatTotalVolume = (kgValue: number) => {
+    const converted = convertFromKg(kgValue);
+    return `${Math.round(converted)} ${unit}`;
+  };
 
   return (
     <div className="exercise-progress-page">
@@ -135,7 +139,7 @@ const ExerciseProgressPage = () => {
         </div>
         <div className="metric-card">
           <span className="metric-label">Total Volume</span>
-          <strong className="metric-value">{formatWeight(totalWeight)}</strong>
+          <strong className="metric-value">{formatTotalVolume(totalWeight)}</strong>
         </div>
       </div>
 
@@ -163,7 +167,13 @@ const ExerciseProgressPage = () => {
                 borderRadius: '4px',
               }}
               labelStyle={{ color: 'var(--color-text-strong)' }}
-              formatter={(value: any) => [`${value.toFixed(1)} ${unit}`, viewMode === 'max-weight' ? 'Max Weight' : 'Total Volume']}
+              formatter={(value: any) => {
+                const numeric = Number(value);
+                if (viewMode === 'max-weight') {
+                  return [`${numeric.toFixed(1)} ${unit}`, 'Max Weight'];
+                }
+                return [`${Math.round(numeric)} ${unit}`, 'Total Volume'];
+              }}
             />
             <Legend wrapperStyle={{ color: 'var(--color-text-strong)' }} />
             <Line
@@ -198,7 +208,7 @@ const ExerciseProgressPage = () => {
                 <tr key={index}>
                   <td>{entry.date}</td>
                   <td>{formatWeight(entry.max_weight)}</td>
-                  <td>{formatWeight(entry.total_volume)}</td>
+                  <td>{formatTotalVolume(entry.total_volume)}</td>
                   <td>{entry.sets}</td>
                   <td>{entry.total_reps}</td>
                 </tr>
