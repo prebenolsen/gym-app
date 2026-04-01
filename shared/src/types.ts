@@ -7,6 +7,7 @@ export interface Program {
   name: string;
   user_id: string;
   order: number;
+  is_favorite: boolean;
   created_at: string;
 }
 

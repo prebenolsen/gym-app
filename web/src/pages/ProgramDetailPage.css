@@ -176,7 +176,9 @@
   padding-top: 20px;
   border-top: 1px solid var(--color-border);
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 
 .btn-delete-program {
@@ -191,4 +193,28 @@
 
 .btn-delete-program:hover {
   background-color: #b91c1c;
+}
+
+.btn-favorite-program {
+  border: 2px solid var(--color-accent-500);
+  background-color: transparent;
+  color: var(--color-accent-500);
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.btn-favorite-program:hover {
+  background-color: var(--color-accent-100);
+}
+
+.btn-favorite-program.active {
+  background-color: var(--color-accent-500);
+  color: white;
+}
+
+.btn-favorite-program.active:hover {
+  background-color: var(--color-accent-600);
 }

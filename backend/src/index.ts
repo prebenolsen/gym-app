@@ -98,6 +98,14 @@ app.post('/programs', async (req, res) => {
 
     const nextOrder = ((existing && existing[0]?.order) || 0) + 1;
 
+    // Check if this is the first program
+    const { count: programCount } = await supabase
+      .from('programs')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', MOCK_USER_ID);
+
+    const isFirstProgram = (programCount || 0) === 0;
+
     const { data, error } = await supabase
       .from('programs')
       .insert([
@@ -105,6 +113,7 @@ app.post('/programs', async (req, res) => {
           name,
           user_id: MOCK_USER_ID,
           order: nextOrder,
+          is_favorite: isFirstProgram,
         },
       ])
       .select()
@@ -126,6 +135,56 @@ app.put('/programs/:id', async (req, res) => {
     const { data, error } = await supabase
       .from('programs')
       .update({ name })
+      .eq('id', id)
+      .eq('user_id', MOCK_USER_ID)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err: unknown) {
+    const errorMsg = formatError(err);
+    res.status(500).json({ error: errorMsg });
+  }
+});
+
+app.patch('/programs/:id/favorite', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check current favorite status
+    const { data: current, error: fetchError } = await supabase
+      .from('programs')
+      .select('is_favorite')
+      .eq('id', id)
+      .eq('user_id', MOCK_USER_ID)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    if (current?.is_favorite) {
+      // Already favorited — toggle off
+      const { data, error } = await supabase
+        .from('programs')
+        .update({ is_favorite: false })
+        .eq('id', id)
+        .eq('user_id', MOCK_USER_ID)
+        .select()
+        .single();
+      if (error) throw error;
+      return res.json(data);
+    }
+
+    // Clear any existing favorite for this user
+    await supabase
+      .from('programs')
+      .update({ is_favorite: false })
+      .eq('user_id', MOCK_USER_ID);
+
+    // Set this program as the favorite
+    const { data, error } = await supabase
+      .from('programs')
+      .update({ is_favorite: true })
       .eq('id', id)
       .eq('user_id', MOCK_USER_ID)
       .select()

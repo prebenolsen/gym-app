@@ -90,6 +90,16 @@ const ProgramDetailPage = () => {
     }
   };
 
+  const handleToggleFavorite = async () => {
+    if (!program) return;
+    try {
+      const updated = await api.favoriteProgramId(program.id);
+      setProgram(updated);
+    } catch (err) {
+      console.error('Failed to toggle favorite:', err);
+    }
+  };
+
   if (loading) return <div className="program-detail-page">Loading...</div>;
   if (!program)
     return (
@@ -190,6 +200,12 @@ const ProgramDetailPage = () => {
         <div className="program-danger-zone">
           <button onClick={handleDeleteProgram} className="btn-delete-program">
             Delete Program
+          </button>
+          <button
+            onClick={handleToggleFavorite}
+            className={`btn-favorite-program${program.is_favorite ? ' active' : ''}`}
+          >
+            {program.is_favorite ? '★ Favorited' : '☆ Set as Favorite'}
           </button>
         </div>
       </div>
