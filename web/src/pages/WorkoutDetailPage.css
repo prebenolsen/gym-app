@@ -27,7 +27,7 @@
 .title-section h1 {
   margin: 0;
   font-size: 28px;
-  color: #333;
+  color: var(--color-text-strong);
   cursor: pointer;
   padding: 10px;
   border-radius: 4px;
@@ -35,7 +35,7 @@
 }
 
 .title-section h1:hover {
-  background-color: #e9ecef;
+  background-color: var(--color-surface-soft);
 }
 
 .title-with-favorite {
@@ -50,7 +50,7 @@
   background: none;
   font-size: 32px;
   cursor: pointer;
-  color: #9ca3af;
+  color: var(--color-text-muted);
   line-height: 1;
   transition: all 0.2s;
   padding: 8px;
@@ -59,7 +59,7 @@
 
 .favorite-toggle-large:hover {
   color: #f59e0b;
-  background-color: #fef3c7;
+  background-color: color-mix(in srgb, #f59e0b 22%, transparent);
   transform: scale(1.1);
 }
 
@@ -79,16 +79,17 @@
 }
 
 .exercises-section {
-  background-color: white;
+  background-color: var(--color-surface);
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
 }
 
 .exercises-section h2 {
   margin: 0 0 20px 0;
   font-size: 20px;
-  color: #333;
+  color: var(--color-text-strong);
 }
 
 .section-top-row {
@@ -104,7 +105,7 @@
 
 .btn-start-workout {
   background-color: var(--color-accent-500);
-  color: white;
+  color: var(--color-surface);
   border: none;
   border-radius: 6px;
   padding: 10px 16px;
@@ -125,19 +126,19 @@
 .add-exercise input {
   flex: 1;
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 14px;
 }
 
 .btn-primary {
-  background-color: #28a745;
+  background-color: var(--color-success);
   padding: 10px 20px;
   flex-shrink: 0;
 }
 
 .btn-primary:hover {
-  background-color: #218838;
+  filter: brightness(0.92);
 }
 
 .btn-large {
@@ -158,8 +159,8 @@
 }
 
 .exercise-card {
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
+  background-color: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
   border-left: 4px solid var(--color-accent-500);
   border-radius: 4px;
   padding: 15px;
@@ -174,7 +175,7 @@
 
 .exercise-header h3 {
   margin: 0;
-  color: #333;
+  color: var(--color-text-strong);
   font-size: 16px;
 }
 
@@ -186,12 +187,12 @@
 }
 
 .btn-delete {
-  background-color: #dc3545;
-  color: white;
+  background-color: var(--color-danger);
+  color: var(--color-surface);
 }
 
 .btn-delete:hover {
-  background-color: #c82333;
+  filter: brightness(0.92);
 }
 
 .exercise-controls {
@@ -210,7 +211,7 @@
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .reorder-buttons {
@@ -220,16 +221,16 @@
 
 .btn-reorder {
   flex: 1;
-  background-color: #f0f0f0;
-  color: #666;
+  background-color: var(--color-accent-100);
+  color: var(--color-text-muted);
   padding: 8px;
   border-radius: 4px;
   font-size: 12px;
 }
 
 .btn-reorder:hover:not(:disabled) {
-  background-color: #e0e0e0;
-  color: #333;
+  background-color: var(--color-border);
+  color: var(--color-text-strong);
 }
 
 .btn-reorder:disabled {
@@ -239,10 +240,10 @@
 
 .no-data {
   padding: 15px;
-  background-color: #d1ecf1;
-  border: 1px solid #bee5eb;
+  background-color: var(--color-accent-100);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: #0c5460;
+  color: var(--color-text-strong);
   margin: 0;
 }
 

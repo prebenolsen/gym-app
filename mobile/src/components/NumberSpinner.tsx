@@ -3,7 +3,26 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
+  useColorScheme,
 } from 'react-native';
+import { colors, radius } from '../theme';
+
+type ThemeColors = typeof colors;
+
+const darkColors: ThemeColors = {
+  accent: '#C65A1E',
+  accentPressed: '#A94A16',
+  accentSoft: '#35261E',
+  background: '#0D0D0D',
+  surface: '#1A1A1A',
+  border: '#353535',
+  textStrong: '#F2F2F2',
+  textMuted: '#B1B1B1',
+  success: '#4CAF73',
+  successSoft: '#18251D',
+  danger: '#E45D4F',
+  dangerPressed: '#C84D41',
+};
 
 interface NumberSpinnerProps {
   value: number;
@@ -22,6 +41,10 @@ const NumberSpinner = ({
   step = 1,
   label,
 }: NumberSpinnerProps) => {
+  const scheme = useColorScheme();
+  const themeColors = scheme === 'dark' ? darkColors : colors;
+  const styles = createStyles(themeColors);
+
   const handleIncrease = () => {
     if (value < max) onChange(value + step);
   };
@@ -48,7 +71,8 @@ const NumberSpinner = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flexDirection: 'column',
     gap: 8,
@@ -57,25 +81,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'uppercase',
-    color: '#666',
+    color: themeColors.textMuted,
   },
   controls: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
-    backgroundColor: 'white',
+    borderColor: themeColors.border,
+    borderRadius: radius.sm,
+    backgroundColor: themeColors.surface,
     overflow: 'hidden',
   },
   btn: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: themeColors.accentSoft,
   },
   btnText: {
     fontSize: 12,
-    color: '#666',
+    color: themeColors.textMuted,
     fontWeight: '600',
   },
   value: {
@@ -83,7 +107,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: themeColors.textStrong,
   },
 });
 

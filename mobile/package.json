@@ -15,13 +15,13 @@
     "@react-navigation/bottom-tabs": "^6.5.11",
     "@react-navigation/native": "^6.1.9",
     "axios": "^1.6.2",
-    "expo": "^49.0.0",
+    "expo": "^55.0.9",
     "react": "18.2.0",
-    "react-native": "0.72.10"
+    "react-native": "^0.84.1"
   },
   "devDependencies": {
     "@types/react": "~18.2.14",
-    "expo-cli": "^6.3.12",
+    "expo-cli": "^4.0.17",
     "typescript": "~5.9.2"
   }
 }

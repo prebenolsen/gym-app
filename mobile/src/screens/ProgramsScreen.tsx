@@ -8,11 +8,13 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { ApiClient, type Program } from '@gym-app/shared';
+import { ApiClient, type Program, type Workout } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
 
 const ProgramsScreen = ({ navigation }: any) => {
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [workoutsByProgram, setWorkoutsByProgram] = useState<Record<string, Workout[]>>({});
+  const [exerciseCountByWorkout, setExerciseCountByWorkout] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   const api = new ApiClient('http://localhost:3000');
@@ -26,6 +28,17 @@ const ProgramsScreen = ({ navigation }: any) => {
     try {
       const data = await api.getPrograms();
       setPrograms(data);
+
+      const workoutsResults = await Promise.all(data.map((p) => api.getWorkouts(p.id)));
+      const wbp: Record<string, Workout[]> = {};
+      data.forEach((p, i) => { wbp[p.id] = workoutsResults[i]; });
+      setWorkoutsByProgram(wbp);
+
+      const allWorkouts = workoutsResults.flat();
+      const exercisesResults = await Promise.all(allWorkouts.map((w) => api.getExercises(w.id)));
+      const ecbw: Record<string, number> = {};
+      allWorkouts.forEach((w, i) => { ecbw[w.id] = exercisesResults[i].length; });
+      setExerciseCountByWorkout(ecbw);
     } catch (err) {
       console.error('Failed to fetch programs:', err);
     } finally {
@@ -93,27 +106,55 @@ const ProgramsScreen = ({ navigation }: any) => {
           </Text>
         ) : (
           programs.map((program) => (
-            <TouchableOpacity
-              key={program.id}
-              style={styles.programCard}
-              onPress={() =>
-                navigation.navigate('ProgramDetail', {
-                  programId: program.id,
-                  programName: program.name,
-                })
-              }
-            >
-              <View style={styles.programContent}>
-                <Text style={styles.programName}>{program.name}</Text>
+            <View key={program.id} style={styles.programCard}>
+              <View style={styles.programHeader}>
+                <TouchableOpacity
+                  style={styles.programNameArea}
+                  onPress={() =>
+                    navigation.navigate('ProgramDetail', {
+                      programId: program.id,
+                      programName: program.name,
+                    })
+                  }
+                >
+                  <Text style={styles.programName}>{program.name}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleDeleteProgram(program.id, program.name)}
+                  style={styles.btnSmall}
+                >
+                  <Text style={styles.btnSmallText}>✕</Text>
+                </TouchableOpacity>
               </View>
 
-              <TouchableOpacity
-                onPress={() => handleDeleteProgram(program.id, program.name)}
-                style={styles.btnSmall}
-              >
-                <Text style={styles.btnSmallText}>✕</Text>
-              </TouchableOpacity>
-            </TouchableOpacity>
+              <View style={styles.workoutsList}>
+                {(workoutsByProgram[program.id] ?? []).length === 0 ? (
+                  <Text style={styles.noWorkouts}>No workouts yet</Text>
+                ) : (
+                  (workoutsByProgram[program.id] ?? []).map((workout) => {
+                    const count = exerciseCountByWorkout[workout.id] ?? 0;
+                    return (
+                      <TouchableOpacity
+                        key={workout.id}
+                        style={styles.workoutRow}
+                        onPress={() =>
+                          navigation.navigate('WorkoutDetail', {
+                            programId: program.id,
+                            workoutId: workout.id,
+                            workoutName: workout.name,
+                          })
+                        }
+                      >
+                        <Text style={styles.workoutRowName}>{workout.name}</Text>
+                        <Text style={styles.workoutRowCount}>
+                          🏋️ {count} {count === 1 ? 'exercise' : 'exercises'}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })
+                )}
+              </View>
+            </View>
           ))
         )}
       </ScrollView>
@@ -165,9 +206,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   programCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: radius.md,
     padding: 16,
@@ -178,13 +216,50 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     ...shadow.card,
   },
-  programContent: {
+  programHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  programNameArea: {
     flex: 1,
   },
   programName: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.textStrong,
+  },
+  workoutsList: {
+    marginTop: 4,
+  },
+  workoutRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginTop: 6,
+    backgroundColor: colors.background,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  workoutRowName: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.textStrong,
+  },
+  workoutRowCount: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  noWorkouts: {
+    fontSize: 13,
+    color: colors.textMuted,
+    fontStyle: 'italic',
+    paddingVertical: 4,
+    paddingHorizontal: 12,
   },
   btnSmall: {
     backgroundColor: colors.danger,

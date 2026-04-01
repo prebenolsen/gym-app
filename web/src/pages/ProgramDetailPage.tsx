@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ApiClient, type Program, type Workout } from '@gym-app/shared';
+import { ApiClient, type Program, type Workout, type Exercise } from '@gym-app/shared';
 import './ProgramDetailPage.css';
 
 const ProgramDetailPage = () => {
@@ -12,6 +12,7 @@ const ProgramDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [showNewWorkout, setShowNewWorkout] = useState(false);
   const [newWorkoutName, setNewWorkoutName] = useState('');
+  const [exercisesByWorkout, setExercisesByWorkout] = useState<Record<string, Exercise[]>>({});
 
   const api = new ApiClient('http://localhost:3000');
 
@@ -30,6 +31,11 @@ const ProgramDetailPage = () => {
       if (prog) {
         const wks = await api.getWorkouts(prog.id);
         setWorkouts(wks);
+
+        const exercisesResults = await Promise.all(wks.map((w) => api.getExercises(w.id)));
+        const ebw: Record<string, Exercise[]> = {};
+        wks.forEach((w, i) => { ebw[w.id] = exercisesResults[i]; });
+        setExercisesByWorkout(ebw);
       }
     } catch (err) {
       console.error('Failed to fetch data:', err);
@@ -70,17 +76,6 @@ const ProgramDetailPage = () => {
   const cancelNewWorkout = () => {
     setShowNewWorkout(false);
     setNewWorkoutName('');
-  };
-
-  const handleDeleteWorkout = async (id: string) => {
-    if (!window.confirm('Delete this workout and all its exercises?')) return;
-
-    try {
-      await api.deleteWorkout(id);
-      setWorkouts(workouts.filter((w) => w.id !== id));
-    } catch (err) {
-      console.error('Failed to delete workout:', err);
-    }
   };
 
   const handleDeleteProgram = async () => {
@@ -147,28 +142,21 @@ const ProgramDetailPage = () => {
         {(workouts.length > 0 || showNewWorkout) && (
           <div className="workouts-list">
             {workouts.map((workout) => (
-              <div key={workout.id} className="workout-item">
-                <div className="workout-info">
-                  <h3>{workout.name}</h3>
-                </div>
-                <div className="workout-actions">
-                  <button
-                    onClick={() =>
-                      navigate(
-                        `/programs/${programId}/workouts/${workout.id}`
-                      )
-                    }
-                    className="btn-view"
-                  >
-                    Manage
-                  </button>
-                  <button
-                    onClick={() => handleDeleteWorkout(workout.id)}
-                    className="btn-delete"
-                  >
-                    Delete
-                  </button>
-                </div>
+              <div
+                key={workout.id}
+                className="workout-item"
+                onClick={() => navigate(`/programs/${programId}/workouts/${workout.id}`)}
+              >
+                <h3>{workout.name}</h3>
+                <ul className="workout-exercises-list">
+                  {(exercisesByWorkout[workout.id] ?? []).length === 0 ? (
+                    <li className="workout-exercise-item workout-exercise-empty">No exercises yet</li>
+                  ) : (
+                    (exercisesByWorkout[workout.id] ?? []).map((ex) => (
+                      <li key={ex.id} className="workout-exercise-item">{ex.name}</li>
+                    ))
+                  )}
+                </ul>
               </div>
             ))}
 

@@ -8,11 +8,33 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
+  useColorScheme,
 } from 'react-native';
 import { ApiClient, type Exercise } from '@gym-app/shared';
 import NumberSpinner from '../components/NumberSpinner';
+import { colors, radius, shadow } from '../theme';
+
+type ThemeColors = typeof colors;
+
+const darkColors: ThemeColors = {
+  accent: '#C65A1E',
+  accentPressed: '#A94A16',
+  accentSoft: '#35261E',
+  background: '#0D0D0D',
+  surface: '#1A1A1A',
+  border: '#353535',
+  textStrong: '#F2F2F2',
+  textMuted: '#B1B1B1',
+  success: '#4CAF73',
+  successSoft: '#18251D',
+  danger: '#E45D4F',
+  dangerPressed: '#C84D41',
+};
 
 const WorkoutDetailScreen = ({ route, navigation }: any) => {
+  const scheme = useColorScheme();
+  const themeColors = scheme === 'dark' ? darkColors : colors;
+  const styles = createStyles(themeColors);
   const { programId, workoutId, workoutName } = route.params;
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,7 +144,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007bff" />
+        <ActivityIndicator size="large" color={themeColors.accent} />
       </View>
     );
   }
@@ -152,6 +174,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
           <TextInput
             style={styles.input}
             placeholder="Add a custom exercise"
+            placeholderTextColor={themeColors.textMuted}
             value={newExerciseName}
             onChangeText={setNewExerciseName}
           />
@@ -245,28 +268,29 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: themeColors.background,
   },
   header: {
-    backgroundColor: 'white',
+    backgroundColor: themeColors.surface,
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: themeColors.border,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: themeColors.textStrong,
   },
   titleInput: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: themeColors.textStrong,
     borderBottomWidth: 2,
-    borderBottomColor: '#007bff',
+    borderBottomColor: themeColors.accent,
     paddingBottom: 8,
   },
   section: {
@@ -276,7 +300,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: themeColors.textStrong,
     marginBottom: 16,
   },
   addExercise: {
@@ -288,18 +312,20 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
+    borderColor: themeColors.border,
+    borderRadius: radius.sm,
+    color: themeColors.textStrong,
+    backgroundColor: themeColors.surface,
   },
   btnPrimary: {
-    backgroundColor: '#28a745',
+    backgroundColor: themeColors.success,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 4,
+    borderRadius: radius.sm,
     justifyContent: 'center',
   },
   btnText: {
-    color: 'white',
+    color: themeColors.surface,
     fontWeight: '600',
     fontSize: 12,
   },
@@ -308,23 +334,21 @@ const styles = StyleSheet.create({
   },
   noData: {
     padding: 16,
-    backgroundColor: '#d1ecf1',
-    borderRadius: 4,
-    color: '#0c5460',
+    backgroundColor: themeColors.accentSoft,
+    borderRadius: radius.sm,
+    color: themeColors.textStrong,
     textAlign: 'center',
   },
   exerciseCard: {
-    backgroundColor: 'white',
-    borderRadius: 8,
+    backgroundColor: themeColors.surface,
+    borderRadius: radius.md,
     borderLeftWidth: 4,
-    borderLeftColor: '#007bff',
+    borderLeftColor: themeColors.accent,
+    borderWidth: 1,
+    borderColor: themeColors.border,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...shadow.card,
   },
   exerciseHeader: {
     flexDirection: 'row',
@@ -335,17 +359,17 @@ const styles = StyleSheet.create({
   exerciseName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: themeColors.textStrong,
     flex: 1,
   },
   btnSmallDelete: {
-    backgroundColor: '#dc3545',
+    backgroundColor: themeColors.danger,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 4,
+    borderRadius: radius.sm,
   },
   btnSmallText: {
-    color: 'white',
+    color: themeColors.surface,
     fontWeight: '600',
     fontSize: 14,
   },
@@ -358,7 +382,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#666',
+    color: themeColors.textMuted,
     marginBottom: 8,
     textTransform: 'uppercase',
   },
@@ -368,13 +392,13 @@ const styles = StyleSheet.create({
   },
   btnReorder: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: themeColors.accentSoft,
     padding: 8,
-    borderRadius: 4,
+    borderRadius: radius.sm,
     alignItems: 'center',
   },
   btnReorderText: {
-    color: '#666',
+    color: themeColors.textMuted,
     fontWeight: '600',
     fontSize: 12,
   },

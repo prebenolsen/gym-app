@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ApiClient, type Program } from '@gym-app/shared';
+import { ApiClient, type Program, type Workout } from '@gym-app/shared';
 import './ProgramsPage.css';
 
 const ProgramsPage = () => {
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [workoutsByProgram, setWorkoutsByProgram] = useState<Record<string, Workout[]>>({});
+  const [exerciseCountByWorkout, setExerciseCountByWorkout] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [firstProgramName, setFirstProgramName] = useState('Program 01');
   const [showNewProgram, setShowNewProgram] = useState(false);
@@ -22,6 +24,17 @@ const ProgramsPage = () => {
     try {
       const data = await api.getPrograms();
       setPrograms(data);
+
+      const workoutsResults = await Promise.all(data.map((p) => api.getWorkouts(p.id)));
+      const wbp: Record<string, Workout[]> = {};
+      data.forEach((p, i) => { wbp[p.id] = workoutsResults[i]; });
+      setWorkoutsByProgram(wbp);
+
+      const allWorkouts = workoutsResults.flat();
+      const exercisesResults = await Promise.all(allWorkouts.map((w) => api.getExercises(w.id)));
+      const ecbw: Record<string, number> = {};
+      allWorkouts.forEach((w, i) => { ecbw[w.id] = exercisesResults[i].length; });
+      setExerciseCountByWorkout(ecbw);
     } catch (err) {
       console.error('Failed to fetch programs:', err);
     } finally {
@@ -101,17 +114,37 @@ const ProgramsPage = () => {
         )}
       </div>
 
-      <div className="programs-grid">
+      <div className="programs-list">
         {programs.map((program) => (
           <div key={program.id} className="program-card">
-            <h3>{program.name}</h3>
-            <div className="program-actions">
-              <button
-                onClick={() => navigate(`/programs/${program.id}`)}
-                className="btn-view"
-              >
-                View
-              </button>
+            <h3
+              className="program-name"
+              onClick={() => navigate(`/programs/${program.id}`)}
+            >
+              {program.name}
+            </h3>
+            <div className="program-workouts">
+              {(workoutsByProgram[program.id] ?? []).length === 0 ? (
+                <p className="no-workouts">No workouts yet</p>
+              ) : (
+                (workoutsByProgram[program.id] ?? []).map((workout) => {
+                  const count = exerciseCountByWorkout[workout.id] ?? 0;
+                  return (
+                    <div
+                      key={workout.id}
+                      className="workout-row"
+                      onClick={() =>
+                        navigate(`/programs/${program.id}/workouts/${workout.id}`)
+                      }
+                    >
+                      <span className="workout-row-name">{workout.name}</span>
+                      <span className="workout-row-count">
+                        🏋️ {count} {count === 1 ? 'exercise' : 'exercises'}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         ))}

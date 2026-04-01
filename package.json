@@ -1,35 +1,26 @@
 {
-  "expo": {
-    "name": "Gym App",
-    "slug": "gym-app",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.yourname.gymapp"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "package": "com.yourname.gymapp"
-    },
-    "web": {
-      "favicon": "./assets/icon.png"
-    }
+  "name": "gym-app",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "web",
+    "mobile",
+    "shared",
+    "backend"
+  ],
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web:mobile": "expo start --web",
+    "web:dev": "npm run dev --workspace=web",
+    "backend:dev": "npm run dev --workspace=backend"
   },
   "dependencies": {
-    "expo": "^55.0.9"
+    "@types/react": "~19.2.10",
+    "expo": "^55.0.9",
+    "react-dom": "19.2.0",
+    "react-native-web": "^0.21.0",
+    "typescript": "~5.9.2"
   }
 }

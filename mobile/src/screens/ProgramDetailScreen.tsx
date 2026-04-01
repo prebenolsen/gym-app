@@ -9,11 +9,13 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
-import { ApiClient, type Workout } from '@gym-app/shared';
+import { ApiClient, type Workout, type Exercise } from '@gym-app/shared';
+import { colors, radius, shadow } from '../theme';
 
 const ProgramDetailScreen = ({ route, navigation }: any) => {
   const { programId, programName } = route.params;
   const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [exercisesByWorkout, setExercisesByWorkout] = useState<Record<string, Exercise[]>>({});
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(programName);
@@ -29,6 +31,11 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
     try {
       const data = await api.getWorkouts(programId);
       setWorkouts(data);
+
+      const exercisesResults = await Promise.all(data.map((w) => api.getExercises(w.id)));
+      const ebw: Record<string, Exercise[]> = {};
+      data.forEach((w, i) => { ebw[w.id] = exercisesResults[i]; });
+      setExercisesByWorkout(ebw);
     } catch (err) {
       console.error('Failed to fetch workouts:', err);
     } finally {
@@ -46,33 +53,10 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
     }
   };
 
-  const handleDeleteWorkout = async (id: string, name: string) => {
-    Alert.alert(
-      'Delete Workout',
-      `Delete "${name}" and all its exercises?`,
-      [
-        { text: 'Cancel' },
-        {
-          text: 'Delete',
-          onPress: async () => {
-            try {
-              await api.deleteWorkout(id);
-              setWorkouts(workouts.filter((w) => w.id !== id));
-            } catch (err) {
-              console.error('Failed to delete workout:', err);
-              Alert.alert('Error', 'Failed to delete workout');
-            }
-          },
-          style: 'destructive',
-        },
-      ]
-    );
-  };
-
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007bff" />
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
@@ -124,16 +108,14 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
                   })
                 }
               >
-                <View style={styles.workoutContent}>
-                  <Text style={styles.workoutName}>{workout.name}</Text>
-                </View>
-
-                <TouchableOpacity
-                  onPress={() => handleDeleteWorkout(workout.id, workout.name)}
-                  style={styles.btnSmallDelete}
-                >
-                  <Text style={styles.btnSmallText}>✕</Text>
-                </TouchableOpacity>
+                <Text style={styles.workoutName}>{workout.name}</Text>
+                {(exercisesByWorkout[workout.id] ?? []).length === 0 ? (
+                  <Text style={styles.exerciseEmpty}>No exercises yet</Text>
+                ) : (
+                  (exercisesByWorkout[workout.id] ?? []).map((ex) => (
+                    <Text key={ex.id} style={styles.exerciseItem}>• {ex.name}</Text>
+                  ))
+                )}
               </TouchableOpacity>
             ))
           )}
@@ -146,25 +128,25 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: colors.border,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.textStrong,
   },
   titleInput: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.textStrong,
     borderBottomWidth: 2,
-    borderBottomColor: '#007bff',
+    borderBottomColor: colors.accent,
     paddingBottom: 8,
   },
   section: {
@@ -180,16 +162,16 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.textStrong,
   },
   btnPrimary: {
-    backgroundColor: '#28a745',
+    backgroundColor: colors.accent,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 4,
+    borderRadius: radius.sm,
   },
   btnText: {
-    color: 'white',
+    color: colors.surface,
     fontWeight: '600',
     fontSize: 12,
   },
@@ -198,45 +180,39 @@ const styles = StyleSheet.create({
   },
   noData: {
     padding: 16,
-    backgroundColor: '#d1ecf1',
-    borderRadius: 4,
-    color: '#0c5460',
+    backgroundColor: colors.accentSoft,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    color: colors.textStrong,
     textAlign: 'center',
   },
   workoutCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
     padding: 16,
     marginBottom: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#007bff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  workoutContent: {
-    flex: 1,
+    borderLeftColor: colors.accent,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadow.card,
   },
   workoutName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.textStrong,
+    marginBottom: 6,
   },
-  btnSmallDelete: {
-    backgroundColor: '#dc3545',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 4,
+  exerciseItem: {
+    fontSize: 13,
+    color: colors.textMuted,
+    lineHeight: 20,
   },
-  btnSmallText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 14,
+  exerciseEmpty: {
+    fontSize: 13,
+    color: colors.textMuted,
+    fontStyle: 'italic',
   },
 });
 
