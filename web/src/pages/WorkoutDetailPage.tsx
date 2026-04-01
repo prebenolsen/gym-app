@@ -258,14 +258,7 @@ const WorkoutDetailPage = () => {
           </button>
         </div>
 
-        {exercises.length === 0 ? (
-          <button
-            onClick={() => navigate(`/exercises?programId=${programId}&workoutId=${workoutId}&workoutName=${encodeURIComponent(workout?.name || '')}`)}
-            className="btn-large btn-primary"
-          >
-            Add exercises from the catalog
-          </button>
-        ) : (
+        {exercises.length > 0 && (
           <div className="exercises-list">
             {exercises.map((exercise, index) => (
               <div key={exercise.id} className="exercise-card">
@@ -311,20 +304,26 @@ const WorkoutDetailPage = () => {
                   <div className="control-group reorder-group">
                     <label>Reorder</label>
                     <div className="reorder-buttons">
-                      <button
-                        onClick={() => handleMoveExercise(index, 'up')}
-                        disabled={index === 0}
-                        className="btn-reorder"
-                      >
-                        ▲
-                      </button>
-                      <button
-                        onClick={() => handleMoveExercise(index, 'down')}
-                        disabled={index === exercises.length - 1}
-                        className="btn-reorder"
-                      >
-                        ▼
-                      </button>
+                      {index > 0 ? (
+                        <button
+                          onClick={() => handleMoveExercise(index, 'up')}
+                          className="btn-reorder"
+                        >
+                          ▲
+                        </button>
+                      ) : (
+                        <div className="btn-reorder-slot" aria-hidden="true" />
+                      )}
+                      {index < exercises.length - 1 ? (
+                        <button
+                          onClick={() => handleMoveExercise(index, 'down')}
+                          className="btn-reorder"
+                        >
+                          ▼
+                        </button>
+                      ) : (
+                        <div className="btn-reorder-slot" aria-hidden="true" />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -332,6 +331,13 @@ const WorkoutDetailPage = () => {
             ))}
           </div>
         )}
+
+        <button
+          onClick={() => navigate(`/exercises?programId=${programId}&workoutId=${workoutId}&workoutName=${encodeURIComponent(workout?.name || '')}`)}
+          className="btn-large btn-primary btn-catalog"
+        >
+          Add exercises from the catalog
+        </button>
       </div>
     </div>
   );

@@ -161,6 +161,10 @@
   transition: background-color 0.2s;
 }
 
+.btn-catalog {
+  margin-top: 20px;
+}
+
 .exercises-list {
   display: flex;
   flex-direction: column;
@@ -260,17 +264,21 @@
 }
 
 .reorder-buttons {
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  min-height: 44px;
 }
 
 .btn-reorder {
-  flex: 1;
+  width: 100%;
   background-color: var(--color-accent-100);
-  color: var(--color-text-muted);
-  padding: 8px;
-  border-radius: 4px;
-  font-size: 12px;
+  color: var(--color-text-strong);
+  padding: 12px 10px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  min-height: 44px;
 }
 
 .btn-reorder:hover:not(:disabled) {
@@ -278,9 +286,10 @@
   color: var(--color-text-strong);
 }
 
-.btn-reorder:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.btn-reorder-slot {
+  width: 100%;
+  min-height: 44px;
+  visibility: hidden;
 }
 
 .no-data {

@@ -187,14 +187,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
         </View>
 
         <ScrollView style={styles.list}>
-          {exercises.length === 0 ? (
-            <TouchableOpacity
-              onPress={() => navigation.navigate('ExercisesCatalog', { programId, workoutId, workoutName })}
-              style={styles.btnPrimary}
-            >
-              <Text style={styles.btnText}>Add exercises from the catalog</Text>
-            </TouchableOpacity>
-          ) : (
+          {exercises.length > 0 && (
             exercises.map((exercise, index) => (
               <View key={exercise.id} style={styles.exerciseCard}>
                 <View style={styles.exerciseHeader}>
@@ -262,6 +255,13 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
               </View>
             ))
           )}
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ExercisesCatalog', { programId, workoutId, workoutName })}
+            style={[styles.btnPrimary, styles.catalogButton]}
+          >
+            <Text style={styles.btnText}>Add exercises from the catalog</Text>
+          </TouchableOpacity>
         </ScrollView>
       </View>
     </View>
@@ -326,6 +326,10 @@ const createStyles = (themeColors: ThemeColors) =>
     paddingVertical: 8,
     borderRadius: radius.sm,
     justifyContent: 'center',
+  },
+  catalogButton: {
+    marginTop: 8,
+    marginBottom: 16,
   },
   btnText: {
     color: themeColors.textStrong,
