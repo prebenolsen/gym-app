@@ -96,8 +96,6 @@ const HomePage = () => {
 
   return (
     <div className="home-page">
-      <h1>Dashboard</h1>
-
       {activeSession && (
         <div className="active-session-card">
           <p>You have an active workout session.</p>
