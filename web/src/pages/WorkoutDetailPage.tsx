@@ -64,7 +64,7 @@ const WorkoutDetailPage = () => {
     try {
       const newExercise = await api.createExercise(workout.id, {
         name: newExerciseName,
-        sets: 1,
+        sets: 4,
         rest_seconds: 120,
       });
 

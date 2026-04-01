@@ -66,7 +66,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
     try {
       const newExercise = await api.createExercise(workoutId, {
         name: newExerciseName,
-        sets: 1,
+        sets: 4,
         rest_seconds: 120,
       });
 
