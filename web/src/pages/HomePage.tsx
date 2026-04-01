@@ -143,41 +143,45 @@ const HomePage = () => {
       </div>
 
       <div className="start-workout-section">
-        <h2>Start workout</h2>
+        <h2>Favorite workouts</h2>
         {(() => {
-          const favorite = programTree.find(({ program }) => program.is_favorite_program);
-          if (!favorite) {
+          const favorites = programTree.filter(({ program }) => program.is_favorite_program);
+          if (favorites.length === 0) {
             return (
               <p className="no-data">
-                No favorite program selected. Open a program and click "Set as Favorite" to display it here.
+                No favorites yet. Open a program and click the star icon to add it to your favorites.
               </p>
             );
           }
           return (
-            <div className="favorite-program-tile">
-              <div className="favorite-program-header">
-                <span className="favorite-star">★</span>
-                <h3>{favorite.program.name}</h3>
-              </div>
-              <div className="favorite-workouts-list">
-                {favorite.workouts.length === 0 ? (
-                  <p className="no-data">No workouts in this program yet.</p>
-                ) : (
-                  favorite.workouts.map((workout) => (
-                    <button
-                      key={workout.id}
-                      className="workout-row-tile"
-                      onClick={() => handleStartWorkout(favorite.program.id, workout.id)}
-                    >
-                      <span className="workout-row-tile-name">{workout.name}</span>
-                      <span className="workout-row-tile-count">
-                        🏋️ {favorite.exerciseCounts[workout.id] ?? 0}{' '}
-                        {(favorite.exerciseCounts[workout.id] ?? 0) === 1 ? 'exercise' : 'exercises'}
-                      </span>
-                    </button>
-                  ))
-                )}
-              </div>
+            <div className="favorite-programs-list">
+              {favorites.map(({ program, workouts, exerciseCounts }) => (
+                <div key={program.id} className="favorite-program-tile">
+                  <div className="favorite-program-header">
+                    <span className="favorite-star">★</span>
+                    <h3>{program.name}</h3>
+                  </div>
+                  <div className="favorite-workouts-list">
+                    {workouts.length === 0 ? (
+                      <p className="no-data">No workouts in this program yet.</p>
+                    ) : (
+                      workouts.map((workout) => (
+                        <button
+                          key={workout.id}
+                          className="workout-row-tile"
+                          onClick={() => handleStartWorkout(program.id, workout.id)}
+                        >
+                          <span className="workout-row-tile-name">{workout.name}</span>
+                          <span className="workout-row-tile-count">
+                            🏋️ {exerciseCounts[workout.id] ?? 0}{' '}
+                            {(exerciseCounts[workout.id] ?? 0) === 1 ? 'exercise' : 'exercises'}
+                          </span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           );
         })()}

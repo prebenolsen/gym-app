@@ -162,29 +162,11 @@ app.patch('/programs/:id/favorite', async (req, res) => {
 
     if (fetchError) throw fetchError;
 
-    if (current?.is_favorite_program) {
-      // Already favorited — toggle off
-      const { data, error } = await supabase
-        .from('programs')
-        .update({ is_favorite_program: false })
-        .eq('id', id)
-        .eq('user_id', MOCK_USER_ID)
-        .select()
-        .single();
-      if (error) throw error;
-      return res.json(data);
-    }
-
-    // Clear any existing favorite for this user
-    await supabase
-      .from('programs')
-      .update({ is_favorite_program: false })
-      .eq('user_id', MOCK_USER_ID);
-
-    // Set this program as the favorite
+    // Toggle favorite status for this program only (allow multiple favorites)
+    const newStatus = !current?.is_favorite_program;
     const { data, error } = await supabase
       .from('programs')
-      .update({ is_favorite_program: true })
+      .update({ is_favorite_program: newStatus })
       .eq('id', id)
       .eq('user_id', MOCK_USER_ID)
       .select()
