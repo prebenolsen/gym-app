@@ -140,6 +140,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: colors.textStrong,
+    textTransform: 'uppercase',
   },
   titleInput: {
     fontSize: 24,
@@ -148,6 +149,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: colors.accent,
     paddingBottom: 8,
+    textTransform: 'uppercase',
   },
   section: {
     flex: 1,
@@ -163,6 +165,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: colors.textStrong,
+    textTransform: 'uppercase',
   },
   btnPrimary: {
     backgroundColor: colors.accent,
@@ -174,6 +177,7 @@ const styles = StyleSheet.create({
     color: colors.surface,
     fontWeight: '600',
     fontSize: 12,
+    textTransform: 'uppercase',
   },
   list: {
     flex: 1,
@@ -186,6 +190,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     color: colors.textStrong,
     textAlign: 'center',
+    textTransform: 'uppercase',
   },
   workoutCard: {
     backgroundColor: colors.surface,
@@ -203,16 +208,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.textStrong,
     marginBottom: 6,
+    textTransform: 'uppercase',
   },
   exerciseItem: {
     fontSize: 13,
     color: colors.textMuted,
     lineHeight: 20,
+    textTransform: 'uppercase',
   },
   exerciseEmpty: {
     fontSize: 13,
     color: colors.textMuted,
     fontStyle: 'italic',
+    textTransform: 'uppercase',
   },
 });
 

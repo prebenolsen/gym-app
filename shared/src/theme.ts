@@ -5,7 +5,7 @@ export const themeTokens = {
     surfaceSoft: '#27272a',
     accent: '#10b981',
     accentPressed: '#059669',
-    textStrong: '#fafafa',
+    textStrong: '#ffffff',
     textMuted: '#a1a1aa',
     border: '#3f3f46',
     success: '#22c55e',

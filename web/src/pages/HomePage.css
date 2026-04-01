@@ -42,7 +42,8 @@
 
 .stat-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 26px rgba(31, 26, 23, 0.14);
+  border-color: var(--color-accent-500);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.45);
 }
 
 .stat-icon {
@@ -67,7 +68,7 @@
   align-items: center;
   justify-content: center;
   min-height: 400px;
-  background: linear-gradient(135deg, #d87a45 0%, #a94a16 100%);
+  background: linear-gradient(135deg, var(--color-accent-500) 0%, var(--color-accent-600) 100%);
   border-radius: var(--radius-md);
   padding: 40px 20px;
   box-shadow: var(--shadow-card);
@@ -108,7 +109,7 @@
   align-items: center;
   gap: 12px;
   background: var(--color-success-soft);
-  border: 1px solid #cde9d9;
+  border: 1px solid var(--color-success);
   border-radius: var(--radius-sm);
   padding: 14px 16px;
   margin-bottom: 20px;
@@ -169,8 +170,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(140deg, #fff8f3 0%, #fbe7da 100%);
-  border: 2px solid #efd2c0;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 20px;
   aspect-ratio: 1;
@@ -179,9 +180,9 @@
 }
 
 .program-group li:hover {
-  background: linear-gradient(140deg, #fbe7da 0%, #f4d3bf 100%);
-  border-color: #d87a45;
-  box-shadow: 0 10px 20px rgba(169, 74, 22, 0.16);
+  background: var(--color-accent-100);
+  border-color: var(--color-accent-500);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
   transform: translateY(-2px);
 }
 
@@ -196,8 +197,8 @@
 }
 
 .workout-card {
-  background: linear-gradient(140deg, #fff8f3 0%, #fbe7da 100%);
-  border: 2px solid #efd2c0;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 20px;
   cursor: pointer;
@@ -212,9 +213,9 @@
 }
 
 .workout-card:hover {
-  background: linear-gradient(140deg, #fbe7da 0%, #f4d3bf 100%);
-  border-color: #d87a45;
-  box-shadow: 0 10px 20px rgba(169, 74, 22, 0.16);
+  background: var(--color-accent-100);
+  border-color: var(--color-accent-500);
+  box-shadow: var(--shadow-card);
   transform: translateY(-2px);
 }
 
@@ -300,9 +301,9 @@
 }
 
 .exercise-card:hover {
-  background: var(--color-surface);
+  background: var(--color-accent-100);
   border-color: var(--color-accent-500);
-  box-shadow: 0 4px 12px rgba(198, 90, 30, 0.12);
+  box-shadow: var(--shadow-card);
   transform: translateY(-2px);
 }
 

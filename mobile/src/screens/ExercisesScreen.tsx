@@ -274,9 +274,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     color: '#666',
+    textTransform: 'uppercase',
   },
   chipTextActive: {
     color: 'white',
+    textTransform: 'uppercase',
   },
   exercisesSection: {
     backgroundColor: 'white',
@@ -294,14 +296,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 16,
+    textTransform: 'uppercase',
   },
   noData: {
     padding: 16,
     backgroundColor: '#f8f9fa',
     borderRadius: 6,
-    color: #666',
+    color: '#666',
     textAlign: 'center',
     fontStyle: 'italic',
+    textTransform: 'uppercase',
   },
   exerciseItem: {
     paddingVertical: 12,
@@ -314,10 +318,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#333',
     marginBottom: 4,
+    textTransform: 'uppercase',
   },
   exerciseMeta: {
     fontSize: 12,
     color: '#999',
+    textTransform: 'uppercase',
   },
 });
 

@@ -23,7 +23,7 @@ const darkColors: ThemeColors = {
   background: '#0D0D0D',
   surface: '#1A1A1A',
   border: '#353535',
-  textStrong: '#F2F2F2',
+  textStrong: '#FFFFFF',
   textMuted: '#B1B1B1',
   success: '#4CAF73',
   successSoft: '#18251D',
@@ -284,6 +284,7 @@ const createStyles = (themeColors: ThemeColors) =>
     fontSize: 24,
     fontWeight: 'bold',
     color: themeColors.textStrong,
+    textTransform: 'uppercase',
   },
   titleInput: {
     fontSize: 24,
@@ -292,6 +293,7 @@ const createStyles = (themeColors: ThemeColors) =>
     borderBottomWidth: 2,
     borderBottomColor: themeColors.accent,
     paddingBottom: 8,
+    textTransform: 'uppercase',
   },
   section: {
     flex: 1,
@@ -302,6 +304,7 @@ const createStyles = (themeColors: ThemeColors) =>
     fontWeight: 'bold',
     color: themeColors.textStrong,
     marginBottom: 16,
+    textTransform: 'uppercase',
   },
   addExercise: {
     flexDirection: 'row',
@@ -328,6 +331,7 @@ const createStyles = (themeColors: ThemeColors) =>
     color: themeColors.surface,
     fontWeight: '600',
     fontSize: 12,
+    textTransform: 'uppercase',
   },
   list: {
     flex: 1,
@@ -361,6 +365,7 @@ const createStyles = (themeColors: ThemeColors) =>
     fontWeight: '600',
     color: themeColors.textStrong,
     flex: 1,
+    textTransform: 'uppercase',
   },
   btnSmallDelete: {
     backgroundColor: themeColors.danger,
@@ -372,6 +377,7 @@ const createStyles = (themeColors: ThemeColors) =>
     color: themeColors.surface,
     fontWeight: '600',
     fontSize: 14,
+    textTransform: 'uppercase',
   },
   exerciseControls: {
     gap: 12,
@@ -401,6 +407,7 @@ const createStyles = (themeColors: ThemeColors) =>
     color: themeColors.textMuted,
     fontWeight: '600',
     fontSize: 12,
+    textTransform: 'uppercase',
   },
   btnDisabled: {
     opacity: 0.5,

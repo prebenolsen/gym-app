@@ -82,6 +82,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 24,
     color: colors.textStrong,
+    textTransform: 'uppercase',
   },
   noData: {
     padding: 16,
@@ -91,6 +92,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     color: colors.textStrong,
     textAlign: 'center',
+    textTransform: 'uppercase',
   },
   statsGrid: {
     flexDirection: 'row',
@@ -117,11 +119,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: colors.accent,
+    textTransform: 'uppercase',
   },
   statLabel: {
     fontSize: 12,
     color: colors.textMuted,
     marginTop: 8,
+    textTransform: 'uppercase',
   },
 });
 

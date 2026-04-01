@@ -180,6 +180,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: colors.textStrong,
+    textTransform: 'uppercase',
   },
   btnPrimary: {
     backgroundColor: colors.accent,
@@ -191,6 +192,7 @@ const styles = StyleSheet.create({
     color: colors.surface,
     fontWeight: '600',
     fontSize: 12,
+    textTransform: 'uppercase',
   },
   list: {
     flex: 1,
@@ -204,6 +206,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     color: colors.textStrong,
     textAlign: 'center',
+    textTransform: 'uppercase',
   },
   programCard: {
     backgroundColor: colors.surface,
@@ -229,6 +232,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.textStrong,
+    textTransform: 'uppercase',
   },
   workoutsList: {
     marginTop: 4,
@@ -249,10 +253,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: colors.textStrong,
+    textTransform: 'uppercase',
   },
   workoutRowCount: {
     fontSize: 12,
     color: colors.textMuted,
+    textTransform: 'uppercase',
   },
   noWorkouts: {
     fontSize: 13,
@@ -260,6 +266,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     paddingVertical: 4,
     paddingHorizontal: 12,
+    textTransform: 'uppercase',
   },
   btnSmall: {
     backgroundColor: colors.danger,
@@ -271,6 +278,7 @@ const styles = StyleSheet.create({
     color: colors.surface,
     fontWeight: '600',
     fontSize: 14,
+    textTransform: 'uppercase',
   },
 });
 

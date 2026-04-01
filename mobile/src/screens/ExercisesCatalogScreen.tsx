@@ -341,6 +341,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: '500',
+    textTransform: 'uppercase',
   },
   bannerWorkout: {
     fontWeight: '700',
@@ -381,9 +382,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     color: '#666',
+    textTransform: 'uppercase',
   },
   chipTextActive: {
     color: 'white',
+    textTransform: 'uppercase',
   },
   exercisesSection: {
     backgroundColor: 'white',
@@ -403,6 +406,7 @@ const styles = StyleSheet.create({
     color: '#333',
     paddingVertical: 16,
     paddingHorizontal: 16,
+    textTransform: 'uppercase',
   },
   noData: {
     padding: 16,
@@ -411,6 +415,7 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     fontStyle: 'italic',
+    textTransform: 'uppercase',
   },
   exerciseItem: {
     flexDirection: 'row',
@@ -438,6 +443,7 @@ const styles = StyleSheet.create({
     color: '#007bff',
     fontSize: 14,
     fontWeight: '600',
+    textTransform: 'uppercase',
   },
   exerciseInfo: {
     flex: 1,
@@ -447,10 +453,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#333',
     marginBottom: 4,
+    textTransform: 'uppercase',
   },
   exerciseMeta: {
     fontSize: 12,
     color: '#999',
+    textTransform: 'uppercase',
   },
   spacer: {
     height: 20,
@@ -478,6 +486,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
     fontSize: 14,
+    textTransform: 'uppercase',
   },
 });
 

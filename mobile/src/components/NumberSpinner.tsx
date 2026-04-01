@@ -16,7 +16,7 @@ const darkColors: ThemeColors = {
   background: '#0D0D0D',
   surface: '#1A1A1A',
   border: '#353535',
-  textStrong: '#F2F2F2',
+  textStrong: '#FFFFFF',
   textMuted: '#B1B1B1',
   success: '#4CAF73',
   successSoft: '#18251D',
@@ -101,6 +101,7 @@ const createStyles = (themeColors: ThemeColors) =>
     fontSize: 12,
     color: themeColors.textMuted,
     fontWeight: '600',
+    textTransform: 'uppercase',
   },
   value: {
     flex: 1,
@@ -108,6 +109,7 @@ const createStyles = (themeColors: ThemeColors) =>
     fontSize: 16,
     fontWeight: '600',
     color: themeColors.textStrong,
+    textTransform: 'uppercase',
   },
 });
 
