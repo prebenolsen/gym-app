@@ -331,7 +331,7 @@ const ActiveWorkoutPage = () => {
             <span>Set #</span>
             <span>Weight ({unit}) (prev)</span>
             <span>Reps (prev)</span>
-            <span>Action</span>
+            <span aria-hidden="true"></span>
           </div>
           {setDrafts.map((draft, index) => {
             const prevPerf = previousPerformance[currentExercise.id];
