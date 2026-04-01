@@ -1,6 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { setBasePath } from '@shoelace-style/shoelace/dist/utilities/base-path.js';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Navigation from './components/Navigation';
 import HomePage from './pages/HomePage';
 import ProgramsPage from './pages/ProgramsPage';
@@ -13,22 +12,11 @@ import WorkoutHistoryDetail from './pages/WorkoutHistoryDetail';
 import ExerciseProgressPage from './pages/ExerciseProgressPage';
 import SettingsPage from './pages/SettingsPage';
 import { UnitProvider } from './context/UnitContext';
-import { ThemeProvider, useTheme } from './context/ThemeContext';
-import '@shoelace-style/shoelace/dist/themes/light.css';
-import '@shoelace-style/shoelace/dist/themes/dark.css';
+import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
-setBasePath('https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@3.x/cdn/');
-
 function AppContent() {
-  const { theme } = useTheme();
-  
-  React.useEffect(() => {
-    document.documentElement.classList.toggle('sl-theme-dark', theme === 'dark');
-  }, [theme]);
-
   return (
-
     <div className="app">
       <div className="app-shell">
         <Navigation />

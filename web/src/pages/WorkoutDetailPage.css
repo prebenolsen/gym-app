@@ -76,6 +76,9 @@
   font-size: 28px;
   padding: 10px;
   border: 2px solid var(--color-accent-500);
+  background-color: var(--color-surface);
+  color: var(--color-text-strong);
+  border-radius: 4px;
 }
 
 .exercises-section {
@@ -129,6 +132,12 @@
   border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 14px;
+  background-color: var(--color-surface);
+  color: var(--color-text-strong);
+}
+
+.add-exercise input::placeholder {
+  color: var(--color-text-muted);
 }
 
 .btn-primary {
