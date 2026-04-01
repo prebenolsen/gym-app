@@ -41,6 +41,7 @@ const ActiveWorkoutPage = () => {
   const [savingSet, setSavingSet] = useState<number | null>(null);
   const [previousPerformance, setPreviousPerformance] = useState<PreviousPerformance>({});
   const [savedSetsForExercise, setSavedSetsForExercise] = useState<SavedSetTracking>({});
+  const [lastEditedSetIndex, setLastEditedSetIndex] = useState<number | null>(null);
 
   const currentExercise = exercises[currentIndex] || null;
 
@@ -76,6 +77,13 @@ const ActiveWorkoutPage = () => {
       tracking[set.set_number] = true;
     });
     setSavedSetsForExercise(tracking);
+
+    const firstUnsavedIndex = nextDrafts.findIndex((_, idx) => !tracking[idx + 1]);
+    if (firstUnsavedIndex >= 0) {
+      setLastEditedSetIndex(firstUnsavedIndex);
+    } else {
+      setLastEditedSetIndex(nextDrafts.length > 0 ? nextDrafts.length - 1 : null);
+    }
   };
 
   const loadWorkoutById = async (workoutId: string): Promise<Workout | null> => {
@@ -207,6 +215,7 @@ const ActiveWorkoutPage = () => {
     field: keyof SetDraft,
     value: string
   ) => {
+    setLastEditedSetIndex(rowIndex);
     setSetDrafts((prev) =>
       prev.map((row, idx) => (idx === rowIndex ? { ...row, [field]: value } : row))
     );
@@ -282,6 +291,12 @@ const ActiveWorkoutPage = () => {
     return `${workout.name} (${formatDuration(elapsedSeconds)})`;
   }, [workout?.name, elapsedSeconds]);
 
+  const firstUnsavedSetIndex = setDrafts.findIndex((_, idx) => !savedSetsForExercise[idx + 1]);
+  const activeSaveIndex = lastEditedSetIndex;
+  const activeSaveSetNumber = activeSaveIndex !== null ? activeSaveIndex + 1 : null;
+  const activeSaveIsSaved =
+    activeSaveSetNumber !== null && savedSetsForExercise[activeSaveSetNumber] === true;
+
   if (loading) {
     return <div className="active-workout-page">Loading...</div>;
   }
@@ -331,25 +346,13 @@ const ActiveWorkoutPage = () => {
             <span>Set #</span>
             <span>Weight ({unit}) (prev)</span>
             <span>Reps (prev)</span>
-            <span aria-hidden="true"></span>
           </div>
           {setDrafts.map((draft, index) => {
             const prevPerf = previousPerformance[currentExercise.id];
             const prevForThisSet = prevPerf?.find((p) => p.set_number === index + 1);
             const setNumber = index + 1;
             const isSaved = savedSetsForExercise[setNumber] === true;
-            
-            // Find first unsaved set
-            let firstUnsavedIndex = -1;
-            for (let i = 0; i < setDrafts.length; i++) {
-              if (!savedSetsForExercise[i + 1]) {
-                firstUnsavedIndex = i;
-                break;
-              }
-            }
-            
-            // Show button if: next unsaved set OR already saved
-            const showButton = firstUnsavedIndex === index || isSaved;
+            const canEdit = firstUnsavedSetIndex === index || isSaved;
 
             return (
               <div key={index} className="set-row">
@@ -357,29 +360,21 @@ const ActiveWorkoutPage = () => {
                 <div className="input-with-previous">
                   <input
                     value={draft.weight}
+                    onFocus={() => setLastEditedSetIndex(index)}
                     onChange={(e) => handleSetFieldChange(index, 'weight', e.target.value)}
                     placeholder={prevForThisSet ? `(${formatWeight(prevForThisSet.weight)})` : "e.g. 10,5"}
-                    disabled={!showButton}
+                    disabled={!canEdit}
                   />
                 </div>
                 <div className="input-with-previous">
                   <input
                     value={draft.reps}
+                    onFocus={() => setLastEditedSetIndex(index)}
                     onChange={(e) => handleSetFieldChange(index, 'reps', e.target.value)}
                     placeholder={prevForThisSet ? `(${prevForThisSet.reps})` : "e.g. 8"}
-                    disabled={!showButton}
+                    disabled={!canEdit}
                   />
                 </div>
-                {showButton && (
-                  <button
-                    className={`btn-set-action ${isSaved ? 'btn-saved' : 'btn-primary'}`}
-                    onClick={() => handleSaveSet(index)}
-                    disabled={savingSet === index}
-                    title={isSaved ? 'Click to overwrite' : 'Save this set'}
-                  >
-                    {savingSet === index ? 'Saving...' : isSaved ? 'Saved ✓' : 'Save'}
-                  </button>
-                )}
               </div>
             );
           })}
@@ -393,6 +388,24 @@ const ActiveWorkoutPage = () => {
           disabled={currentIndex === 0}
         >
           ◀ Previous
+        </button>
+        <button
+          className={`btn-set-action ${activeSaveIsSaved ? 'btn-overwrite' : 'btn-primary'}`}
+          onClick={() => activeSaveIndex !== null && handleSaveSet(activeSaveIndex)}
+          disabled={activeSaveIndex === null || savingSet === activeSaveIndex}
+          title={
+            activeSaveSetNumber !== null
+              ? `Save set #${activeSaveSetNumber}`
+              : 'Select a set first'
+          }
+        >
+          {activeSaveSetNumber === null
+            ? 'Save'
+            : savingSet === activeSaveIndex
+              ? `Saving Set #${activeSaveSetNumber}...`
+              : activeSaveIsSaved
+                ? `⚠ Overwrite Set #${activeSaveSetNumber}`
+                : `Save Set #${activeSaveSetNumber}`}
         </button>
         <button
           className="btn-secondary"
