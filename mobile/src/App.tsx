@@ -1,6 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Text } from 'react-native';
 
 import HomeScreen from './screens/HomeScreen';
 import ProgramsScreen from './screens/ProgramsScreen';
@@ -95,7 +96,9 @@ const AppRoutes = () => {
           component={HomeScreen}
           options={{
             tabBarLabel: 'Home',
-            tabBarIcon: ({ color }) => <>{color === colors.accent ? '??' : '?'}</>,
+            tabBarIcon: ({ color }) => (
+              <Text style={{ color, fontSize: 16, fontWeight: '700' }}>H</Text>
+            ),
           }}
         />
         <Tab.Screen
@@ -103,7 +106,9 @@ const AppRoutes = () => {
           component={ProgramsStackNavigator}
           options={{
             tabBarLabel: 'Programs',
-            tabBarIcon: ({ color }) => <>{color === colors.accent ? '??' : '?'}</>,
+            tabBarIcon: ({ color }) => (
+              <Text style={{ color, fontSize: 16, fontWeight: '700' }}>P</Text>
+            ),
           }}
         />
         <Tab.Screen
@@ -111,7 +116,9 @@ const AppRoutes = () => {
           component={ExercisesStackNavigator}
           options={{
             tabBarLabel: 'Exercises',
-            tabBarIcon: ({ color }) => <>{color === colors.accent ? '??' : '?'}</>,
+            tabBarIcon: ({ color }) => (
+              <Text style={{ color, fontSize: 16, fontWeight: '700' }}>E</Text>
+            ),
           }}
         />
         <Tab.Screen
@@ -119,7 +126,9 @@ const AppRoutes = () => {
           component={SettingsScreen}
           options={{
             tabBarLabel: 'Settings',
-            tabBarIcon: ({ color }) => <>{color === colors.accent ? '??' : '?'}</>,
+            tabBarIcon: ({ color }) => (
+              <Text style={{ color, fontSize: 16, fontWeight: '700' }}>S</Text>
+            ),
           }}
         />
       </Tab.Navigator>

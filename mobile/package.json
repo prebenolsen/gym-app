@@ -2,15 +2,6 @@
   "name": "@gym-app/mobile",
   "version": "0.0.1",
   "description": "Gym app mobile frontend - React Native",
-  "expo": {
-    "install": {
-      "exclude": [
-        "react",
-        "react-dom",
-        "react-native"
-      ]
-    }
-  },
   "type": "module",
   "scripts": {
     "dev": "expo start",
