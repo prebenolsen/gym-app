@@ -10,6 +10,7 @@ import {
 import { type WorkoutHistoryByDate } from '@gym-app/shared';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
+import { usePreferences } from '../context/PreferencesContext';
 
 const toMonthKey = (date: Date): string => {
   const year = date.getFullYear();
@@ -40,6 +41,8 @@ const formatDuration = (startIso: string, endIso: string | null): string => {
 
 const CalendarScreen = ({ navigation }: any) => {
   const api = useApi();
+  const { colors: themeColors } = usePreferences();
+  const styles = createStyles(themeColors);
   const [monthDate, setMonthDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [workouts, setWorkouts] = useState<WorkoutHistoryByDate[]>([]);
@@ -85,7 +88,7 @@ const CalendarScreen = ({ navigation }: any) => {
 
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.accent} />
+          <ActivityIndicator size="large" color={themeColors.accent} />
         </View>
       ) : workouts.length === 0 ? (
         <View style={styles.centered}>
@@ -113,19 +116,19 @@ const CalendarScreen = ({ navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: themeColors.background,
   },
   header: {
-    backgroundColor: colors.surface,
-    borderBottomColor: colors.border,
+    backgroundColor: themeColors.surface,
+    borderBottomColor: themeColors.border,
     borderBottomWidth: 1,
     padding: 16,
   },
   title: {
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     fontSize: 22,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -137,20 +140,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   monthLabel: {
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   monthButton: {
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     borderWidth: 1,
     borderRadius: radius.sm,
-    backgroundColor: colors.background,
+    backgroundColor: themeColors.background,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   monthButtonText: {
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     fontWeight: '700',
   },
   list: {
@@ -158,8 +161,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   historyItem: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
+    backgroundColor: themeColors.surface,
+    borderColor: themeColors.border,
     borderWidth: 1,
     borderRadius: radius.md,
     padding: 14,
@@ -167,13 +170,13 @@ const styles = StyleSheet.create({
     ...shadow.card,
   },
   workoutName: {
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     fontWeight: '700',
     marginBottom: 6,
     textTransform: 'uppercase',
   },
   metaText: {
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     textTransform: 'uppercase',
     fontSize: 12,
   },
@@ -184,7 +187,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   emptyText: {
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     textTransform: 'uppercase',
   },
 });

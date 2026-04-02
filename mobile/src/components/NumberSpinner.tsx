@@ -3,26 +3,9 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  useColorScheme,
 } from 'react-native';
 import { colors, radius } from '../theme';
-
-type ThemeColors = typeof colors;
-
-const darkColors: ThemeColors = {
-  accent: '#C65A1E',
-  accentPressed: '#A94A16',
-  accentSoft: '#35261E',
-  background: '#0D0D0D',
-  surface: '#1A1A1A',
-  border: '#353535',
-  textStrong: '#FFFFFF',
-  textMuted: '#FFFFFF',
-  success: '#4CAF73',
-  successSoft: '#18251D',
-  danger: '#E45D4F',
-  dangerPressed: '#C84D41',
-};
+import { usePreferences } from '../context/PreferencesContext';
 
 interface NumberSpinnerProps {
   value: number;
@@ -41,8 +24,7 @@ const NumberSpinner = ({
   step = 1,
   label,
 }: NumberSpinnerProps) => {
-  const scheme = useColorScheme();
-  const themeColors = scheme === 'dark' ? darkColors : colors;
+  const { colors: themeColors } = usePreferences();
   const styles = createStyles(themeColors);
 
   const handleIncrease = () => {
@@ -71,7 +53,7 @@ const NumberSpinner = ({
   );
 };
 
-const createStyles = (themeColors: ThemeColors) =>
+const createStyles = (themeColors: typeof colors) =>
   StyleSheet.create({
   container: {
     flexDirection: 'column',

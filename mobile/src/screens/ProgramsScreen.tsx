@@ -11,8 +11,11 @@ import {
 import { type Program, type Workout } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
 import { useApi } from '../hooks/useApi';
+import { usePreferences } from '../context/PreferencesContext';
 
 const ProgramsScreen = ({ navigation }: any) => {
+  const { colors: themeColors } = usePreferences();
+  const styles = createStyles(themeColors);
   const [programs, setPrograms] = useState<Program[]>([]);
   const [workoutsByProgram, setWorkoutsByProgram] = useState<Record<string, Workout[]>>({});
   const [exerciseCountByWorkout, setExerciseCountByWorkout] = useState<Record<string, number>>({});
@@ -83,7 +86,7 @@ const ProgramsScreen = ({ navigation }: any) => {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <ActivityIndicator size="large" color={themeColors.accent} />
       </View>
     );
   }
@@ -171,19 +174,19 @@ const ProgramsScreen = ({ navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: themeColors.background,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: themeColors.border,
   },
   headerActions: {
     flexDirection: 'row',
@@ -192,31 +195,31 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     textTransform: 'uppercase',
   },
   btnPrimary: {
-    backgroundColor: colors.accent,
+    backgroundColor: themeColors.accent,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: radius.sm,
   },
   btnText: {
-    color: colors.surface,
+    color: '#fff',
     fontWeight: '600',
     fontSize: 12,
     textTransform: 'uppercase',
   },
   btnSecondary: {
-    backgroundColor: colors.accentSoft,
+    backgroundColor: themeColors.accentSoft,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: themeColors.accent,
   },
   btnSecondaryText: {
-    color: colors.accent,
+    color: themeColors.accent,
     fontWeight: '600',
     fontSize: 11,
     textTransform: 'uppercase',
@@ -227,23 +230,23 @@ const styles = StyleSheet.create({
   },
   noData: {
     padding: 16,
-    backgroundColor: colors.accentSoft,
+    backgroundColor: themeColors.accentSoft,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
-    color: colors.textStrong,
+    borderColor: themeColors.border,
+    color: themeColors.textStrong,
     textAlign: 'center',
     textTransform: 'uppercase',
   },
   programCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     borderRadius: radius.md,
     padding: 16,
     marginBottom: 12,
     borderLeftWidth: 4,
-    borderLeftColor: colors.accent,
+    borderLeftColor: themeColors.accent,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     ...shadow.card,
   },
   programHeader: {
@@ -258,7 +261,7 @@ const styles = StyleSheet.create({
   programName: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     textTransform: 'uppercase',
   },
   workoutsList: {
@@ -271,38 +274,38 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     marginTop: 6,
-    backgroundColor: colors.background,
+    backgroundColor: themeColors.background,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
   },
   workoutRowName: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     textTransform: 'uppercase',
   },
   workoutRowCount: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     textTransform: 'uppercase',
   },
   noWorkouts: {
     fontSize: 13,
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     fontStyle: 'italic',
     paddingVertical: 4,
     paddingHorizontal: 12,
     textTransform: 'uppercase',
   },
   btnSmall: {
-    backgroundColor: colors.danger,
+    backgroundColor: themeColors.danger,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: radius.sm,
   },
   btnSmallText: {
-    color: colors.surface,
+    color: '#fff',
     fontWeight: '600',
     fontSize: 14,
     textTransform: 'uppercase',

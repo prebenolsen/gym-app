@@ -8,33 +8,15 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
-  useColorScheme,
 } from 'react-native';
 import { type Exercise } from '@gym-app/shared';
 import NumberSpinner from '../components/NumberSpinner';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
-
-type ThemeColors = typeof colors;
-
-const darkColors: ThemeColors = {
-  accent: '#C65A1E',
-  accentPressed: '#A94A16',
-  accentSoft: '#35261E',
-  background: '#0D0D0D',
-  surface: '#1A1A1A',
-  border: '#353535',
-  textStrong: '#FFFFFF',
-  textMuted: '#FFFFFF',
-  success: '#4CAF73',
-  successSoft: '#18251D',
-  danger: '#E45D4F',
-  dangerPressed: '#C84D41',
-};
+import { usePreferences } from '../context/PreferencesContext';
 
 const WorkoutDetailScreen = ({ route, navigation }: any) => {
-  const scheme = useColorScheme();
-  const themeColors = scheme === 'dark' ? darkColors : colors;
+  const { colors: themeColors } = usePreferences();
   const styles = createStyles(themeColors);
   const { programId, workoutId, workoutName } = route.params;
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -150,6 +132,47 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
         parentNav.navigate('ActiveWorkoutStack', { screen: 'ActiveWorkout' });
       }
     } catch (err) {
+      const apiErr = err as Error & { status?: number };
+      if (apiErr.status === 409) {
+        Alert.alert(
+          'Active Workout Exists',
+          'You already have an active workout session. Resume it or replace it with this workout?',
+          [
+            {
+              text: 'Resume',
+              onPress: () => {
+                const parentNav = navigation.getParent?.();
+                if (parentNav?.navigate) {
+                  parentNav.navigate('ActiveWorkoutStack', { screen: 'ActiveWorkout' });
+                }
+              },
+            },
+            {
+              text: 'Replace',
+              style: 'destructive',
+              onPress: async () => {
+                try {
+                  const activeSession = await api.getActiveSession();
+                  if (activeSession) {
+                    await api.cancelWorkoutSession(activeSession.id);
+                  }
+                  await api.startWorkoutSession(workoutId);
+                  const parentNav = navigation.getParent?.();
+                  if (parentNav?.navigate) {
+                    parentNav.navigate('ActiveWorkoutStack', { screen: 'ActiveWorkout' });
+                  }
+                } catch (replaceErr) {
+                  console.error('Failed to replace active workout session:', replaceErr);
+                  Alert.alert('Error', 'Failed to replace active workout session');
+                }
+              },
+            },
+            { text: 'Cancel', style: 'cancel' },
+          ]
+        );
+        return;
+      }
+
       console.error('Failed to start workout session:', err);
       Alert.alert('Error', 'Failed to start workout session');
     }

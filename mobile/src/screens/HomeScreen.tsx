@@ -25,7 +25,8 @@ type ProgramWithWorkouts = {
 };
 
 const HomeScreen = ({ navigation }: any) => {
-  const { formatWeight } = usePreferences();
+  const { formatWeight, colors: themeColors } = usePreferences();
+  const styles = createStyles(themeColors);
   const [stats, setStats] = useState<WorkoutStats | null>(null);
   const [programTree, setProgramTree] = useState<ProgramWithWorkouts[]>([]);
   const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null);
@@ -86,7 +87,7 @@ const HomeScreen = ({ navigation }: any) => {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <ActivityIndicator size="large" color={themeColors.accent} />
       </View>
     );
   }
@@ -241,177 +242,178 @@ const HomeScreen = ({ navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: 16,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.background,
-  },
-  onboarding: {
-    paddingTop: 32,
-    alignItems: 'center',
-    gap: 16,
-  },
-  onboardingHelper: {
-    fontSize: 15,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  btnGetStarted: {
-    backgroundColor: colors.accent,
-    borderRadius: radius.sm,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-  },
-  btnGetStartedText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  activeSessionCard: {
-    backgroundColor: colors.accentSoft,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.accent,
-    padding: 14,
-    marginBottom: 16,
-    gap: 6,
-  },
-  activeSessionText: {
-    fontSize: 14,
-    color: colors.textStrong,
-  },
-  activeSessionBtn: {
-    fontSize: 14,
-    color: colors.accent,
-    fontWeight: '700',
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 12,
-    marginBottom: 24,
-  },
-  statCard: {
-    width: '47%',
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadow.card,
-  },
-  statIcon: {
-    fontSize: 28,
-    marginBottom: 6,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.accent,
-    textTransform: 'uppercase',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 6,
-    textTransform: 'uppercase',
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: colors.textStrong,
-    textTransform: 'uppercase',
-    marginBottom: 12,
-  },
-  noData: {
-    fontSize: 13,
-    color: colors.textMuted,
-    fontStyle: 'italic',
-    paddingVertical: 8,
-  },
-  favoriteProgramTile: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 14,
-    marginBottom: 10,
-    ...shadow.card,
-  },
-  favoriteProgramHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 10,
-  },
-  favoriteStar: {
-    fontSize: 18,
-    color: colors.accent,
-  },
-  favoriteProgramName: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: colors.textStrong,
-    textTransform: 'uppercase',
-    flex: 1,
-  },
-  workoutRowTile: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: colors.accentSoft,
-    borderRadius: radius.sm,
-    marginBottom: 6,
-  },
-  workoutRowTileName: {
-    fontSize: 14,
-    color: colors.textStrong,
-    fontWeight: '600',
-    flex: 1,
-  },
-  workoutRowTileCount: {
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  exerciseCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 12,
-    marginBottom: 8,
-    ...shadow.card,
-  },
-  exerciseCardName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textStrong,
-    marginBottom: 4,
-  },
-  exerciseCardStats: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  exerciseStatText: {
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-});
+const createStyles = (themeColors: typeof colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+      padding: 16,
+    },
+    centered: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: themeColors.background,
+    },
+    onboarding: {
+      paddingTop: 32,
+      alignItems: 'center',
+      gap: 16,
+    },
+    onboardingHelper: {
+      fontSize: 15,
+      color: themeColors.textMuted,
+      textAlign: 'center',
+      lineHeight: 22,
+    },
+    btnGetStarted: {
+      backgroundColor: themeColors.accent,
+      borderRadius: radius.sm,
+      paddingHorizontal: 24,
+      paddingVertical: 14,
+    },
+    btnGetStartedText: {
+      color: '#fff',
+      fontWeight: '700',
+      fontSize: 16,
+    },
+    activeSessionCard: {
+      backgroundColor: themeColors.accentSoft,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: themeColors.accent,
+      padding: 14,
+      marginBottom: 16,
+      gap: 6,
+    },
+    activeSessionText: {
+      fontSize: 14,
+      color: themeColors.textStrong,
+    },
+    activeSessionBtn: {
+      fontSize: 14,
+      color: themeColors.accent,
+      fontWeight: '700',
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      gap: 12,
+      marginBottom: 24,
+    },
+    statCard: {
+      width: '47%',
+      backgroundColor: themeColors.surface,
+      borderRadius: radius.md,
+      padding: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      ...shadow.card,
+    },
+    statIcon: {
+      fontSize: 28,
+      marginBottom: 6,
+    },
+    statValue: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: themeColors.accent,
+      textTransform: 'uppercase',
+    },
+    statLabel: {
+      fontSize: 12,
+      color: themeColors.textMuted,
+      marginTop: 6,
+      textTransform: 'uppercase',
+    },
+    section: {
+      marginBottom: 24,
+    },
+    sectionTitle: {
+      fontSize: 15,
+      fontWeight: 'bold',
+      color: themeColors.textStrong,
+      textTransform: 'uppercase',
+      marginBottom: 12,
+    },
+    noData: {
+      fontSize: 13,
+      color: themeColors.textMuted,
+      fontStyle: 'italic',
+      paddingVertical: 8,
+    },
+    favoriteProgramTile: {
+      backgroundColor: themeColors.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      padding: 14,
+      marginBottom: 10,
+      ...shadow.card,
+    },
+    favoriteProgramHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 10,
+    },
+    favoriteStar: {
+      fontSize: 18,
+      color: themeColors.accent,
+    },
+    favoriteProgramName: {
+      fontSize: 15,
+      fontWeight: 'bold',
+      color: themeColors.textStrong,
+      textTransform: 'uppercase',
+      flex: 1,
+    },
+    workoutRowTile: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      backgroundColor: themeColors.accentSoft,
+      borderRadius: radius.sm,
+      marginBottom: 6,
+    },
+    workoutRowTileName: {
+      fontSize: 14,
+      color: themeColors.textStrong,
+      fontWeight: '600',
+      flex: 1,
+    },
+    workoutRowTileCount: {
+      fontSize: 12,
+      color: themeColors.textMuted,
+    },
+    exerciseCard: {
+      backgroundColor: themeColors.surface,
+      borderRadius: radius.sm,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      padding: 12,
+      marginBottom: 8,
+      ...shadow.card,
+    },
+    exerciseCardName: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: themeColors.textStrong,
+      marginBottom: 4,
+    },
+    exerciseCardStats: {
+      flexDirection: 'row',
+      gap: 16,
+    },
+    exerciseStatText: {
+      fontSize: 12,
+      color: themeColors.textMuted,
+    },
+  });
 
 export default HomeScreen;

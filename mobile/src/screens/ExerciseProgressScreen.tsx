@@ -16,7 +16,8 @@ type ViewMode = 'max-weight' | 'total-volume';
 
 const ExerciseProgressScreen = ({ route, navigation }: any) => {
   const { exerciseId } = route.params;
-  const { unit, convertFromKg, formatWeight } = usePreferences();
+  const { unit, convertFromKg, formatWeight, colors: themeColors } = usePreferences();
+  const styles = createStyles(themeColors);
   const api = useApi();
   const [data, setData] = useState<ExerciseProgressHistory | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('max-weight');
@@ -41,7 +42,7 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <ActivityIndicator size="large" color={themeColors.accent} />
       </View>
     );
   }
@@ -180,45 +181,45 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: themeColors.background,
   },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: themeColors.background,
   },
   header: {
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: themeColors.border,
     gap: 4,
   },
   backBtn: {
     marginBottom: 4,
   },
   backBtnText: {
-    color: colors.accent,
+    color: themeColors.accent,
     fontSize: 14,
     fontWeight: '600',
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     textTransform: 'uppercase',
   },
   personalBest: {
     fontSize: 13,
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     marginTop: 2,
   },
   personalBestValue: {
-    color: colors.accent,
+    color: themeColors.accent,
     fontWeight: 'bold',
   },
   content: {
@@ -233,13 +234,13 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 15,
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     textAlign: 'center',
   },
   toggle: {
     flexDirection: 'row',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     borderRadius: radius.sm,
     overflow: 'hidden',
     marginBottom: 16,
@@ -248,15 +249,15 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
   },
   toggleBtnActive: {
-    backgroundColor: colors.accent,
+    backgroundColor: themeColors.accent,
   },
   toggleBtnText: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.textMuted,
+    color: themeColors.textMuted,
   },
   toggleBtnTextActive: {
     color: '#fff',
@@ -269,30 +270,30 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     width: '47%',
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     padding: 12,
     alignItems: 'center',
     ...shadow.card,
   },
   metricLabel: {
     fontSize: 11,
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     textTransform: 'uppercase',
     marginBottom: 4,
   },
   metricValue: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: colors.accent,
+    color: themeColors.accent,
   },
   chartSection: {
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     padding: 16,
     marginBottom: 20,
     ...shadow.card,
@@ -300,7 +301,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     textTransform: 'uppercase',
     marginBottom: 12,
   },
@@ -312,32 +313,32 @@ const styles = StyleSheet.create({
   },
   barDate: {
     fontSize: 11,
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     width: 36,
   },
   barTrack: {
     flex: 1,
     height: 10,
-    backgroundColor: colors.border,
+    backgroundColor: themeColors.border,
     borderRadius: 5,
     overflow: 'hidden',
   },
   barFill: {
     height: '100%',
-    backgroundColor: colors.accent,
+    backgroundColor: themeColors.accent,
     borderRadius: 5,
   },
   barValue: {
     fontSize: 11,
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     width: 40,
     textAlign: 'right',
   },
   historySection: {
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     padding: 16,
     marginBottom: 32,
     ...shadow.card,
@@ -345,25 +346,25 @@ const styles = StyleSheet.create({
   tableHeader: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: themeColors.border,
     paddingBottom: 8,
     marginBottom: 4,
   },
   tableHeaderText: {
     fontWeight: '700',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
   },
   tableRow: {
     flexDirection: 'row',
     paddingVertical: 6,
   },
   tableRowEven: {
-    backgroundColor: colors.accentSoft,
+    backgroundColor: themeColors.accentSoft,
   },
   tableCell: {
     flex: 1,
     fontSize: 12,
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     textAlign: 'center',
   },
 });

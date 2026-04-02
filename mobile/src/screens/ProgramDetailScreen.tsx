@@ -9,12 +9,16 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
-import { type Workout, type Exercise } from '@gym-app/shared';
+import { type Workout, type Exercise, type Program } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
 import { useApi } from '../hooks/useApi';
+import { usePreferences } from '../context/PreferencesContext';
 
 const ProgramDetailScreen = ({ route, navigation }: any) => {
   const { programId, programName } = route.params;
+  const { colors: themeColors } = usePreferences();
+  const styles = createStyles(themeColors);
+  const [program, setProgram] = useState<Program | null>(null);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [exercisesByWorkout, setExercisesByWorkout] = useState<Record<string, Exercise[]>>({});
   const [loading, setLoading] = useState(true);
@@ -30,6 +34,13 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
   const fetchWorkouts = async () => {
     setLoading(true);
     try {
+      const programs = await api.getPrograms();
+      const currentProgram = programs.find((p) => p.id === programId) ?? null;
+      setProgram(currentProgram);
+      if (currentProgram) {
+        setEditName(currentProgram.name);
+      }
+
       const data = await api.getWorkouts(programId);
       setWorkouts(data);
 
@@ -54,10 +65,64 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
     }
   };
 
+  const handleRenameProgram = async () => {
+    const newName = editName.trim();
+    setEditing(false);
+    if (!program || !newName) {
+      setEditName(program?.name ?? programName);
+      return;
+    }
+
+    if (newName === program.name) return;
+
+    try {
+      const updated = await api.updateProgram(program.id, { name: newName });
+      setProgram(updated);
+      setEditName(updated.name);
+    } catch (err) {
+      console.error('Failed to rename program:', err);
+      Alert.alert('Error', 'Failed to rename program');
+      setEditName(program.name);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!program) return;
+
+    try {
+      const updated = await api.favoriteProgramId(program.id, !program.is_favorite_program);
+      setProgram(updated);
+    } catch (err) {
+      console.error('Failed to toggle favorite program:', err);
+      Alert.alert('Error', 'Failed to update favorite');
+    }
+  };
+
+  const handleDeleteProgram = () => {
+    if (!program) return;
+
+    Alert.alert('Delete Program', `Delete "${program.name}" and all its workouts?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await api.deleteProgram(program.id);
+            navigation.goBack();
+          } catch (err) {
+            console.error('Failed to delete program:', err);
+            Alert.alert('Error', 'Failed to delete program');
+          }
+        },
+      },
+    ]);
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <ActivityIndicator size="large" color={themeColors.accent} />
       </View>
     );
   }
@@ -70,14 +135,25 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
             style={styles.titleInput}
             value={editName}
             onChangeText={setEditName}
-            onBlur={() => setEditing(false)}
+            onBlur={handleRenameProgram}
             autoFocus
+            onSubmitEditing={handleRenameProgram}
           />
         ) : (
           <Text style={styles.title} onPress={() => setEditing(true)}>
             {editName}
           </Text>
         )}
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.favoriteButton} onPress={handleToggleFavorite}>
+            <Text style={styles.favoriteButtonText}>
+              {program?.is_favorite_program ? '★ Favorited' : '☆ Add Favorite'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteProgram}>
+            <Text style={styles.deleteButtonText}>Delete Program</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.section}>
@@ -134,30 +210,61 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: themeColors.background,
   },
   header: {
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: themeColors.border,
+    gap: 8,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     textTransform: 'uppercase',
   },
   titleInput: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     borderBottomWidth: 2,
-    borderBottomColor: colors.accent,
+    borderBottomColor: themeColors.accent,
     paddingBottom: 8,
+    textTransform: 'uppercase',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  favoriteButton: {
+    backgroundColor: themeColors.accentSoft,
+    borderWidth: 1,
+    borderColor: themeColors.accent,
+    borderRadius: radius.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  favoriteButtonText: {
+    color: themeColors.accent,
+    fontWeight: '700',
+    fontSize: 11,
+    textTransform: 'uppercase',
+  },
+  deleteButton: {
+    backgroundColor: themeColors.danger,
+    borderRadius: radius.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 11,
     textTransform: 'uppercase',
   },
   section: {
@@ -177,15 +284,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   btnSecondary: {
-    backgroundColor: colors.accentSoft,
+    backgroundColor: themeColors.accentSoft,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: themeColors.accent,
   },
   btnSecondaryText: {
-    color: colors.accent,
+    color: themeColors.accent,
     fontWeight: '600',
     fontSize: 11,
     textTransform: 'uppercase',
@@ -193,17 +300,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     textTransform: 'uppercase',
   },
   btnPrimary: {
-    backgroundColor: colors.accent,
+    backgroundColor: themeColors.accent,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: radius.sm,
   },
   btnText: {
-    color: colors.surface,
+    color: '#fff',
     fontWeight: '600',
     fontSize: 12,
     textTransform: 'uppercase',
@@ -213,41 +320,41 @@ const styles = StyleSheet.create({
   },
   noData: {
     padding: 16,
-    backgroundColor: colors.accentSoft,
+    backgroundColor: themeColors.accentSoft,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
-    color: colors.textStrong,
+    borderColor: themeColors.border,
+    color: themeColors.textStrong,
     textAlign: 'center',
     textTransform: 'uppercase',
   },
   workoutCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     borderRadius: radius.md,
     padding: 16,
     marginBottom: 12,
     borderLeftWidth: 4,
-    borderLeftColor: colors.accent,
+    borderLeftColor: themeColors.accent,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     ...shadow.card,
   },
   workoutName: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     marginBottom: 6,
     textTransform: 'uppercase',
   },
   exerciseItem: {
     fontSize: 13,
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     lineHeight: 20,
     textTransform: 'uppercase',
   },
   exerciseEmpty: {
     fontSize: 13,
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     fontStyle: 'italic',
     textTransform: 'uppercase',
   },

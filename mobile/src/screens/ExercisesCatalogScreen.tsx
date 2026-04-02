@@ -16,9 +16,13 @@ import {
   type Equipment,
 } from '@gym-app/shared';
 import { useApi } from '../hooks/useApi';
+import { colors, radius, shadow } from '../theme';
+import { usePreferences } from '../context/PreferencesContext';
 
 const ExercisesCatalogScreen = ({ route, navigation }: any) => {
   const { programId, workoutId, workoutName } = route.params;
+  const { colors: themeColors } = usePreferences();
+  const styles = createStyles(themeColors);
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<
     MuscleGroup | null
   >(null);
@@ -326,18 +330,18 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: themeColors.background,
   },
   banner: {
-    backgroundColor: '#007bff',
+    backgroundColor: themeColors.accent,
     paddingVertical: 12,
     paddingHorizontal: 16,
   },
   bannerText: {
-    color: 'white',
+    color: '#fff',
     fontSize: 14,
     fontWeight: '500',
     textTransform: 'uppercase',
@@ -355,7 +359,7 @@ const styles = StyleSheet.create({
   filterTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: themeColors.textStrong,
     marginBottom: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
@@ -369,49 +373,47 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginRight: 8,
     borderWidth: 1.5,
-    borderColor: '#ddd',
-    backgroundColor: 'white',
+    borderColor: themeColors.border,
+    backgroundColor: themeColors.surface,
     borderRadius: 16,
   },
   chipActive: {
-    backgroundColor: '#007bff',
-    borderColor: '#007bff',
+    backgroundColor: themeColors.accentSoft,
+    borderColor: themeColors.accent,
   },
   chipText: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#666',
+    color: themeColors.textMuted,
     textTransform: 'uppercase',
   },
   chipTextActive: {
-    color: 'white',
+    color: themeColors.accent,
     textTransform: 'uppercase',
   },
   exercisesSection: {
-    backgroundColor: 'white',
-    borderRadius: 8,
+    backgroundColor: themeColors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: themeColors.border,
     padding: 0,
     overflow: 'hidden',
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    ...shadow.card,
   },
   resultsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: themeColors.textStrong,
     paddingVertical: 16,
     paddingHorizontal: 16,
     textTransform: 'uppercase',
   },
   noData: {
     padding: 16,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: themeColors.accentSoft,
     borderRadius: 6,
-    color: '#666',
+    color: themeColors.textMuted,
     textAlign: 'center',
     fontStyle: 'italic',
     textTransform: 'uppercase',
@@ -422,16 +424,16 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: themeColors.border,
   },
   exerciseItemSelected: {
-    backgroundColor: '#f0f7ff',
+    backgroundColor: themeColors.accentSoft,
   },
   checkbox: {
     width: 20,
     height: 20,
     borderWidth: 1.5,
-    borderColor: '#ddd',
+    borderColor: themeColors.border,
     borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
@@ -439,7 +441,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   checkmark: {
-    color: '#007bff',
+    color: themeColors.accent,
     fontSize: 14,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -450,13 +452,13 @@ const styles = StyleSheet.create({
   exerciseName: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333',
+    color: themeColors.textStrong,
     marginBottom: 4,
     textTransform: 'uppercase',
   },
   exerciseMeta: {
     fontSize: 12,
-    color: '#999',
+    color: themeColors.textMuted,
     textTransform: 'uppercase',
   },
   spacer: {
@@ -467,11 +469,11 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    backgroundColor: 'white',
+    borderTopColor: themeColors.border,
+    backgroundColor: themeColors.surface,
   },
   btnAddSelected: {
-    backgroundColor: '#28a745',
+    backgroundColor: themeColors.accent,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 6,
@@ -482,7 +484,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   btnText: {
-    color: 'white',
+    color: '#fff',
     fontWeight: '600',
     fontSize: 14,
     textTransform: 'uppercase',

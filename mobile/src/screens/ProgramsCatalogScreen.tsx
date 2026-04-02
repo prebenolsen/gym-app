@@ -10,6 +10,7 @@ import {
   type ProgramTemplate,
 } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
+import { usePreferences } from '../context/PreferencesContext';
 
 const TIME_PER_SET_SECONDS = { low: 30, high: 45 };
 
@@ -49,6 +50,9 @@ const getProgramAverageWorkoutEstimateMinutes = (template: ProgramTemplate) => {
 };
 
 const ProgramsCatalogScreen = ({ navigation }: any) => {
+  const { colors: themeColors } = usePreferences();
+  const styles = createStyles(themeColors);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -82,7 +86,7 @@ const ProgramsCatalogScreen = ({ navigation }: any) => {
                 <View style={styles.statItem}>
                   <Text style={styles.statLabel}>Est. Time</Text>
                   <Text style={styles.statValue}>
-                    {estimatedTime.low}–{estimatedTime.high} min
+                    {estimatedTime.low}-{estimatedTime.high} min
                   </Text>
                 </View>
                 <View style={styles.statItem}>
@@ -119,123 +123,124 @@ const ProgramsCatalogScreen = ({ navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    gap: 4,
-  },
-  backBtn: {
-    marginBottom: 8,
-  },
-  backBtnText: {
-    color: colors.accent,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: colors.textStrong,
-    textTransform: 'uppercase',
-  },
-  subtitle: {
-    fontSize: 13,
-    color: colors.textMuted,
-  },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 16,
-    marginBottom: 16,
-    ...shadow.card,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.textStrong,
-    textTransform: 'uppercase',
-    marginBottom: 6,
-  },
-  cardDescription: {
-    fontSize: 13,
-    color: colors.textMuted,
-    marginBottom: 12,
-    lineHeight: 18,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  statItem: {
-    flex: 1,
-    backgroundColor: colors.accentSoft,
-    borderRadius: radius.sm,
-    padding: 10,
-    alignItems: 'center',
-  },
-  statLabel: {
-    fontSize: 11,
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: colors.textStrong,
-  },
-  workoutsList: {
-    marginBottom: 16,
-  },
-  workoutsTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textStrong,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-  },
-  workoutRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  workoutName: {
-    fontSize: 14,
-    color: colors.textStrong,
-    flex: 1,
-  },
-  workoutCount: {
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  btnImport: {
-    backgroundColor: colors.accent,
-    borderRadius: radius.sm,
-    padding: 12,
-    alignItems: 'center',
-  },
-  btnImportText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 14,
-    textTransform: 'uppercase',
-  },
-});
+const createStyles = (themeColors: typeof colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+    },
+    header: {
+      backgroundColor: themeColors.surface,
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+      gap: 4,
+    },
+    backBtn: {
+      marginBottom: 8,
+    },
+    backBtnText: {
+      color: themeColors.accent,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    title: {
+      fontSize: 22,
+      fontWeight: 'bold',
+      color: themeColors.textStrong,
+      textTransform: 'uppercase',
+    },
+    subtitle: {
+      fontSize: 13,
+      color: themeColors.textMuted,
+    },
+    content: {
+      flex: 1,
+      padding: 16,
+    },
+    card: {
+      backgroundColor: themeColors.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      padding: 16,
+      marginBottom: 16,
+      ...shadow.card,
+    },
+    cardTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: themeColors.textStrong,
+      textTransform: 'uppercase',
+      marginBottom: 6,
+    },
+    cardDescription: {
+      fontSize: 13,
+      color: themeColors.textMuted,
+      marginBottom: 12,
+      lineHeight: 18,
+    },
+    statsRow: {
+      flexDirection: 'row',
+      gap: 12,
+      marginBottom: 16,
+    },
+    statItem: {
+      flex: 1,
+      backgroundColor: themeColors.accentSoft,
+      borderRadius: radius.sm,
+      padding: 10,
+      alignItems: 'center',
+    },
+    statLabel: {
+      fontSize: 11,
+      color: themeColors.textMuted,
+      textTransform: 'uppercase',
+      marginBottom: 4,
+    },
+    statValue: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      color: themeColors.textStrong,
+    },
+    workoutsList: {
+      marginBottom: 16,
+    },
+    workoutsTitle: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: themeColors.textStrong,
+      textTransform: 'uppercase',
+      marginBottom: 8,
+    },
+    workoutRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingVertical: 6,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+    },
+    workoutName: {
+      fontSize: 14,
+      color: themeColors.textStrong,
+      flex: 1,
+    },
+    workoutCount: {
+      fontSize: 12,
+      color: themeColors.textMuted,
+    },
+    btnImport: {
+      backgroundColor: themeColors.accent,
+      borderRadius: radius.sm,
+      padding: 12,
+      alignItems: 'center',
+    },
+    btnImportText: {
+      color: '#fff',
+      fontWeight: '700',
+      fontSize: 14,
+      textTransform: 'uppercase',
+    },
+  });
 
 export default ProgramsCatalogScreen;

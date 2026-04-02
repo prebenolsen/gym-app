@@ -10,6 +10,7 @@ import {
 import { type WorkoutSessionDetail, type WorkoutSessionSet } from '@gym-app/shared';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
+import { usePreferences } from '../context/PreferencesContext';
 
 const formatDate = (isoString: string): string => {
   const date = new Date(isoString);
@@ -44,6 +45,8 @@ const formatDuration = (startIso: string, endIso: string | null): string => {
 
 const WorkoutHistoryDetailScreen = ({ route, navigation }: any) => {
   const api = useApi();
+  const { colors: themeColors, unit, convertFromKg } = usePreferences();
+  const styles = createStyles(themeColors);
   const { sessionId } = route.params;
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<WorkoutSessionDetail | null>(null);
@@ -79,7 +82,7 @@ const WorkoutHistoryDetailScreen = ({ route, navigation }: any) => {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <ActivityIndicator size="large" color={themeColors.accent} />
       </View>
     );
   }
@@ -114,7 +117,7 @@ const WorkoutHistoryDetailScreen = ({ route, navigation }: any) => {
             {sets.map((set) => (
               <View key={set.id} style={styles.setRow}>
                 <Text style={styles.setCell}>Set #{set.set_number}</Text>
-                <Text style={styles.setCell}>{set.weight} kg</Text>
+                <Text style={styles.setCell}>{convertFromKg(set.weight).toFixed(1)} {unit}</Text>
                 <Text style={styles.setCell}>{set.reps} reps</Text>
               </View>
             ))}
@@ -129,38 +132,38 @@ const WorkoutHistoryDetailScreen = ({ route, navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: themeColors.background,
   },
   centered: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: themeColors.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   header: {
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: themeColors.border,
     padding: 16,
     gap: 6,
   },
   backText: {
-    color: colors.accent,
+    color: themeColors.accent,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   title: {
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     fontSize: 22,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   metaText: {
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     textTransform: 'uppercase',
     fontSize: 12,
   },
@@ -169,8 +172,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   exerciseCard: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
+    backgroundColor: themeColors.surface,
+    borderColor: themeColors.border,
     borderWidth: 1,
     borderRadius: radius.md,
     padding: 14,
@@ -178,7 +181,7 @@ const styles = StyleSheet.create({
     ...shadow.card,
   },
   exerciseName: {
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     fontWeight: '700',
     marginBottom: 8,
     textTransform: 'uppercase',
@@ -187,16 +190,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 6,
-    borderTopColor: colors.border,
+    borderTopColor: themeColors.border,
     borderTopWidth: 1,
   },
   setCell: {
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     textTransform: 'uppercase',
     fontSize: 12,
   },
   emptyText: {
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     textTransform: 'uppercase',
     textAlign: 'center',
     marginTop: 16,

@@ -5,18 +5,20 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Switch,
 } from 'react-native';
 import {
   exercises,
   getMuscleGroups,
   getEquipment,
-  filterExercises,
   type MuscleGroup,
   type Equipment,
 } from '@gym-app/shared';
+import { colors, radius, shadow } from '../theme';
+import { usePreferences } from '../context/PreferencesContext';
 
-const ExercisesScreen = () => {
+const ExercisesScreen = ({ navigation }: any) => {
+  const { colors: themeColors } = usePreferences();
+  const styles = createStyles(themeColors);
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<
     MuscleGroup | null
   >(null);
@@ -218,11 +220,19 @@ const ExercisesScreen = () => {
           ) : (
             filteredExercises.map((exercise) => (
               <View key={exercise.id} style={styles.exerciseItem}>
-                <View>
-                  <Text style={styles.exerciseName}>{exercise.name}</Text>
-                  <Text style={styles.exerciseMeta}>
-                    {exercise.muscleGroup} • {exercise.equipment}
-                  </Text>
+                <View style={styles.exerciseTopRow}>
+                  <View style={styles.exerciseMainInfo}>
+                    <Text style={styles.exerciseName}>{exercise.name}</Text>
+                    <Text style={styles.exerciseMeta}>
+                      {exercise.muscleGroup} • {exercise.equipment}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.progressButton}
+                    onPress={() => navigation.navigate('ExerciseProgress', { exerciseId: exercise.id })}
+                  >
+                    <Text style={styles.progressButtonText}>Progress</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             ))
@@ -233,10 +243,10 @@ const ExercisesScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: themeColors.background,
   },
   content: {
     flex: 1,
@@ -248,7 +258,7 @@ const styles = StyleSheet.create({
   filterTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: themeColors.textStrong,
     marginBottom: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
@@ -262,47 +272,45 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginRight: 8,
     borderWidth: 1.5,
-    borderColor: '#ddd',
-    backgroundColor: 'white',
+    borderColor: themeColors.border,
+    backgroundColor: themeColors.surface,
     borderRadius: 16,
   },
   chipActive: {
-    backgroundColor: '#007bff',
-    borderColor: '#007bff',
+    backgroundColor: themeColors.accentSoft,
+    borderColor: themeColors.accent,
   },
   chipText: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#666',
+    color: themeColors.textMuted,
     textTransform: 'uppercase',
   },
   chipTextActive: {
-    color: 'white',
+    color: themeColors.accent,
     textTransform: 'uppercase',
   },
   exercisesSection: {
-    backgroundColor: 'white',
-    borderRadius: 8,
+    backgroundColor: themeColors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: themeColors.border,
     padding: 16,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    ...shadow.card,
   },
   resultsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: themeColors.textStrong,
     marginBottom: 16,
     textTransform: 'uppercase',
   },
   noData: {
     padding: 16,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: themeColors.accentSoft,
     borderRadius: 6,
-    color: '#666',
+    color: themeColors.textMuted,
     textAlign: 'center',
     fontStyle: 'italic',
     textTransform: 'uppercase',
@@ -311,18 +319,40 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 0,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: themeColors.border,
+  },
+  exerciseTopRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  exerciseMainInfo: {
+    flex: 1,
   },
   exerciseName: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333',
+    color: themeColors.textStrong,
     marginBottom: 4,
     textTransform: 'uppercase',
   },
   exerciseMeta: {
     fontSize: 12,
-    color: '#999',
+    color: themeColors.textMuted,
+    textTransform: 'uppercase',
+  },
+  progressButton: {
+    backgroundColor: themeColors.accentSoft,
+    borderWidth: 1,
+    borderColor: themeColors.accent,
+    borderRadius: radius.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  progressButtonText: {
+    color: themeColors.accent,
+    fontWeight: '700',
+    fontSize: 11,
     textTransform: 'uppercase',
   },
 });

@@ -17,6 +17,7 @@ import {
 import NumberSpinner from '../components/NumberSpinner';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
+import { usePreferences } from '../context/PreferencesContext';
 
 interface EditableExercise {
   name: string;
@@ -41,6 +42,8 @@ const deepCopyWorkouts = (workouts: ProgramTemplateWorkout[]): EditableWorkout[]
 
 const ProgramTemplateScreen = ({ route, navigation }: any) => {
   const { templateId } = route.params;
+  const { colors: themeColors } = usePreferences();
+  const styles = createStyles(themeColors);
   const api = useApi();
 
   const template = PROGRAM_TEMPLATES.find((t) => t.id === templateId);
@@ -204,7 +207,7 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
               <TextInput
                 style={styles.addExerciseInput}
                 placeholder="Add exercise..."
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={themeColors.textMuted}
                 value={newExerciseNames[wi] ?? ''}
                 onChangeText={(text) =>
                   setNewExerciseNames((prev) => ({ ...prev, [wi]: text }))
@@ -237,21 +240,21 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: themeColors.background,
   },
   header: {
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: themeColors.border,
     gap: 6,
   },
   backBtn: {},
   backBtnText: {
-    color: colors.accent,
+    color: themeColors.accent,
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 4,
@@ -259,23 +262,23 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     textTransform: 'uppercase',
   },
   subtitle: {
     fontSize: 13,
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     lineHeight: 18,
     marginBottom: 8,
   },
   btnImport: {
-    backgroundColor: colors.accent,
+    backgroundColor: themeColors.accent,
     borderRadius: radius.sm,
     padding: 12,
     alignItems: 'center',
   },
   btnImportBottom: {
-    backgroundColor: colors.accent,
+    backgroundColor: themeColors.accent,
     borderRadius: radius.sm,
     padding: 14,
     alignItems: 'center',
@@ -296,10 +299,10 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   workoutCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     padding: 16,
     marginBottom: 16,
     ...shadow.card,
@@ -307,25 +310,25 @@ const styles = StyleSheet.create({
   workoutName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     textTransform: 'uppercase',
     marginBottom: 12,
   },
   noExercises: {
     fontSize: 13,
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     fontStyle: 'italic',
     marginBottom: 8,
   },
   exerciseRow: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: themeColors.border,
     paddingVertical: 10,
     gap: 8,
   },
   exerciseName: {
     fontSize: 14,
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     fontWeight: '600',
     flex: 1,
   },
@@ -336,7 +339,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   btnRemove: {
-    backgroundColor: colors.danger,
+    backgroundColor: themeColors.danger,
     borderRadius: radius.sm,
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -354,28 +357,28 @@ const styles = StyleSheet.create({
   addExerciseInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     borderRadius: radius.sm,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    color: colors.textStrong,
-    backgroundColor: colors.background,
+    color: themeColors.textStrong,
+    backgroundColor: themeColors.background,
     fontSize: 14,
   },
   btnAdd: {
-    backgroundColor: colors.accentSoft,
+    backgroundColor: themeColors.accentSoft,
     borderRadius: radius.sm,
     paddingHorizontal: 12,
     paddingVertical: 8,
     justifyContent: 'center',
   },
   btnAddText: {
-    color: colors.accent,
+    color: themeColors.accent,
     fontWeight: '700',
     fontSize: 13,
   },
   errorText: {
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     fontSize: 16,
     padding: 16,
   },

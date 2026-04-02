@@ -14,10 +14,13 @@ import {
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { colors, radius, shadow } from '../theme';
+import { usePreferences } from '../context/PreferencesContext';
 
 type Mode = 'login' | 'signup' | 'forgot';
 
 const AuthScreen = () => {
+  const { colors: themeColors } = usePreferences();
+  const styles = createStyles(themeColors);
   const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
@@ -110,7 +113,7 @@ const AuthScreen = () => {
             keyboardType="email-address"
             value={email}
             onChangeText={setEmail}
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={themeColors.textMuted}
           />
 
           {mode !== 'forgot' && (
@@ -122,7 +125,7 @@ const AuthScreen = () => {
               secureTextEntry
               value={password}
               onChangeText={setPassword}
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={themeColors.textMuted}
             />
           )}
 
@@ -135,7 +138,7 @@ const AuthScreen = () => {
               secureTextEntry
               value={confirmPassword}
               onChangeText={setConfirmPassword}
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={themeColors.textMuted}
             />
           )}
 
@@ -145,7 +148,7 @@ const AuthScreen = () => {
             onPress={handleSubmit}
           >
             {loading ? (
-              <ActivityIndicator color={colors.surface} />
+              <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.primaryButtonText}>
                 {mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Email'}
@@ -176,7 +179,7 @@ const AuthScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -190,8 +193,8 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 420,
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
+    backgroundColor: themeColors.surface,
+    borderColor: themeColors.border,
     borderWidth: 1,
     borderRadius: radius.md,
     padding: 20,
@@ -210,27 +213,27 @@ const styles = StyleSheet.create({
   authHeaderText: {
     fontSize: 28,
     fontWeight: '700',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     marginBottom: 14,
     textTransform: 'uppercase',
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     borderRadius: radius.sm,
-    backgroundColor: colors.background,
-    color: colors.textStrong,
+    backgroundColor: themeColors.background,
+    color: themeColors.textStrong,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 10,
   },
   primaryButton: {
-    backgroundColor: colors.accent,
+    backgroundColor: themeColors.accent,
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -241,7 +244,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   primaryButtonText: {
-    color: colors.surface,
+    color: '#fff',
     fontWeight: '700',
     textTransform: 'uppercase',
   },
@@ -250,7 +253,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   link: {
-    color: colors.accent,
+    color: themeColors.accent,
     fontWeight: '600',
     textTransform: 'uppercase',
   },

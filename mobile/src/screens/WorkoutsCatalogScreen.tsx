@@ -11,9 +11,12 @@ import {
 import { WORKOUT_TEMPLATES, type WorkoutTemplate } from '@gym-app/shared';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
+import { usePreferences } from '../context/PreferencesContext';
 
 const WorkoutsCatalogScreen = ({ route, navigation }: any) => {
   const { programId } = route.params;
+  const { colors: themeColors } = usePreferences();
+  const styles = createStyles(themeColors);
   const api = useApi();
 
   const [importing, setImporting] = useState<string | null>(null);
@@ -103,45 +106,45 @@ const WorkoutsCatalogScreen = ({ route, navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: themeColors.background,
   },
   header: {
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: themeColors.border,
     gap: 4,
   },
   backBtn: {
     marginBottom: 8,
   },
   backBtnText: {
-    color: colors.accent,
+    color: themeColors.accent,
     fontSize: 14,
     fontWeight: '600',
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     textTransform: 'uppercase',
   },
   subtitle: {
     fontSize: 13,
-    color: colors.textMuted,
+    color: themeColors.textMuted,
   },
   content: {
     flex: 1,
     padding: 16,
   },
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     padding: 16,
     marginBottom: 16,
     ...shadow.card,
@@ -156,31 +159,31 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     textTransform: 'uppercase',
     flex: 1,
   },
   categoryBadge: {
     fontSize: 11,
-    color: colors.accent,
+    color: themeColors.accent,
     fontWeight: '600',
     textTransform: 'uppercase',
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: themeColors.accent,
     borderRadius: radius.sm,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
   cardDescription: {
     fontSize: 13,
-    color: colors.textMuted,
+    color: themeColors.textMuted,
     marginBottom: 12,
     lineHeight: 18,
   },
   exercisesTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     textTransform: 'uppercase',
     marginBottom: 8,
   },
@@ -190,31 +193,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: themeColors.border,
     gap: 8,
   },
   exerciseName: {
     flex: 1,
     fontSize: 13,
-    color: colors.textStrong,
+    color: themeColors.textStrong,
   },
   exerciseMeta: {
     flexDirection: 'row',
     gap: 6,
   },
   badge: {
-    backgroundColor: colors.accentSoft,
+    backgroundColor: themeColors.accentSoft,
     borderRadius: radius.sm,
     paddingHorizontal: 6,
     paddingVertical: 3,
   },
   badgeText: {
     fontSize: 11,
-    color: colors.accent,
+    color: themeColors.accent,
     fontWeight: '600',
   },
   btnImport: {
-    backgroundColor: colors.accent,
+    backgroundColor: themeColors.accent,
     borderRadius: radius.sm,
     padding: 12,
     alignItems: 'center',
@@ -230,7 +233,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   errorText: {
-    color: colors.textStrong,
+    color: themeColors.textStrong,
     fontSize: 16,
     padding: 16,
   },
