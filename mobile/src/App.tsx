@@ -8,6 +8,9 @@ import ProgramDetailScreen from './screens/ProgramDetailScreen';
 import WorkoutDetailScreen from './screens/WorkoutDetailScreen';
 import ExercisesScreen from './screens/ExercisesScreen';
 import ExercisesCatalogScreen from './screens/ExercisesCatalogScreen';
+import AuthScreen from './screens/AuthScreen';
+import SettingsScreen from './screens/SettingsScreen';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { colors } from './theme';
 
 const Tab = createBottomTabNavigator();
@@ -48,6 +51,24 @@ const ExercisesStackNavigator = () => {
 };
 
 export default function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  );
+}
+
+const AppRoutes = () => {
+  const { session, loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
+
+  if (!session) {
+    return <AuthScreen />;
+  }
+
   return (
     <NavigationContainer>
       <Tab.Navigator
@@ -93,7 +114,15 @@ export default function App() {
             tabBarIcon: ({ color }) => <>{color === colors.accent ? '??' : '?'}</>,
           }}
         />
+        <Tab.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{
+            tabBarLabel: 'Settings',
+            tabBarIcon: ({ color }) => <>{color === colors.accent ? '??' : '?'}</>,
+          }}
+        />
       </Tab.Navigator>
     </NavigationContainer>
   );
-}
+};

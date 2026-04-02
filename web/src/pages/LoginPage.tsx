@@ -5,23 +5,44 @@ import './LoginPage.css';
 
 const LoginPage = () => {
   const { signIn } = useAuth();
-  const [mode, setMode] = useState<'login' | 'forgot'>('login');
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const handleLogin = async (e: FormEvent) => {
+  const handleAuth = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setMessage(null);
     setLoading(true);
 
     try {
-      await signIn(email.trim(), password);
+      if (mode === 'signup') {
+        if (password.length < 8) {
+          throw new Error('Password must be at least 8 characters.');
+        }
+        if (password !== confirmPassword) {
+          throw new Error('Passwords do not match.');
+        }
+
+        const { error: signupError } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+        });
+        if (signupError) {
+          throw signupError;
+        }
+
+        setMessage('Account created. If email confirmation is required, check your inbox.');
+        setMode('login');
+      } else {
+        await signIn(email.trim(), password);
+      }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to sign in';
+      const msg = err instanceof Error ? err.message : 'Authentication failed';
       setError(msg);
     } finally {
       setLoading(false);
@@ -55,14 +76,18 @@ const LoginPage = () => {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h1>{mode === 'login' ? 'Sign In' : 'Forgot Password'}</h1>
+        <h1>
+          {mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Forgot Password'}
+        </h1>
         <p className="auth-subtitle">
           {mode === 'login'
             ? 'Sign in with your email and password.'
+            : mode === 'signup'
+            ? 'Register with your email and password.'
             : 'Enter your email and we will send a reset link.'}
         </p>
 
-        <form onSubmit={mode === 'login' ? handleLogin : handleForgotPassword} className="auth-form">
+        <form onSubmit={mode === 'forgot' ? handleForgotPassword : handleAuth} className="auth-form">
           <label>
             Email
             <input
@@ -74,7 +99,7 @@ const LoginPage = () => {
             />
           </label>
 
-          {mode === 'login' && (
+          {(mode === 'login' || mode === 'signup') && (
             <label>
               Password
               <input
@@ -87,21 +112,46 @@ const LoginPage = () => {
             </label>
           )}
 
+          {mode === 'signup' && (
+            <label>
+              Confirm password
+              <input
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </label>
+          )}
+
           {error && <p className="auth-error">{error}</p>}
           {message && <p className="auth-message">{message}</p>}
 
           <button type="submit" disabled={loading}>
-            {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Send Reset Email'}
+            {loading
+              ? 'Please wait...'
+              : mode === 'login'
+              ? 'Sign In'
+              : mode === 'signup'
+              ? 'Create Account'
+              : 'Send Reset Email'}
           </button>
         </form>
 
-        {mode === 'login' ? (
-          <button className="auth-link" onClick={() => setMode('forgot')}>
-            Forgot password?
-          </button>
-        ) : (
+        {mode !== 'login' && (
           <button className="auth-link" onClick={() => setMode('login')}>
             Back to login
+          </button>
+        )}
+        {mode !== 'signup' && (
+          <button className="auth-link" onClick={() => setMode('signup')}>
+            Create account
+          </button>
+        )}
+        {mode !== 'forgot' && (
+          <button className="auth-link" onClick={() => setMode('forgot')}>
+            Forgot password?
           </button>
         )}
       </div>

@@ -5,18 +5,17 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  AlertIOS,
-  loadingIndicator,
+  Alert,
 } from 'react-native';
-import { ActivityIndicator, Alert } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 import {
   exercises,
   getMuscleGroups,
   getEquipment,
-  ApiClient,
   type MuscleGroup,
   type Equipment,
 } from '@gym-app/shared';
+import { useApi } from '../hooks/useApi';
 
 const ExercisesCatalogScreen = ({ route, navigation }: any) => {
   const { programId, workoutId, workoutName } = route.params;
@@ -34,7 +33,7 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
   );
   const [isAdding, setIsAdding] = useState(false);
 
-  const api = new ApiClient('http://localhost:3000');
+  const api = useApi();
 
   // Filter exercises
   let filteredExercises = exercises;

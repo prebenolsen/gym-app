@@ -6,14 +6,15 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { ApiClient, type WorkoutStats } from '@gym-app/shared';
+import { type WorkoutStats } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
+import { useApi } from '../hooks/useApi';
 
 const HomeScreen = () => {
   const [stats, setStats] = useState<WorkoutStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const api = new ApiClient('http://localhost:3000');
+  const api = useApi();
 
   useEffect(() => {
     fetchStats();

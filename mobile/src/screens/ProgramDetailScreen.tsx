@@ -9,8 +9,9 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
-import { ApiClient, type Workout, type Exercise } from '@gym-app/shared';
+import { type Workout, type Exercise } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
+import { useApi } from '../hooks/useApi';
 
 const ProgramDetailScreen = ({ route, navigation }: any) => {
   const { programId, programName } = route.params;
@@ -20,7 +21,7 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(programName);
 
-  const api = new ApiClient('http://localhost:3000');
+  const api = useApi();
 
   useEffect(() => {
     fetchWorkouts();

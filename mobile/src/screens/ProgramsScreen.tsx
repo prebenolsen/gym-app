@@ -8,8 +8,9 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { ApiClient, type Program, type Workout } from '@gym-app/shared';
+import { type Program, type Workout } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
+import { useApi } from '../hooks/useApi';
 
 const ProgramsScreen = ({ navigation }: any) => {
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -17,7 +18,7 @@ const ProgramsScreen = ({ navigation }: any) => {
   const [exerciseCountByWorkout, setExerciseCountByWorkout] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
-  const api = new ApiClient('http://localhost:3000');
+  const api = useApi();
 
   useEffect(() => {
     fetchPrograms();

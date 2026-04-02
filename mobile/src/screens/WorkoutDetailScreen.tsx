@@ -10,8 +10,9 @@ import {
   TextInput,
   useColorScheme,
 } from 'react-native';
-import { ApiClient, type Exercise } from '@gym-app/shared';
+import { type Exercise } from '@gym-app/shared';
 import NumberSpinner from '../components/NumberSpinner';
+import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
 
 type ThemeColors = typeof colors;
@@ -42,7 +43,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(workoutName);
 
-  const api = new ApiClient('http://localhost:3000');
+  const api = useApi();
 
   useEffect(() => {
     fetchExercises();
