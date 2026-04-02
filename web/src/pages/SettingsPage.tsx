@@ -1,8 +1,12 @@
+import { useState, type FormEvent } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { useUnit, type WeightUnit } from '../context/UnitContext';
 import { useTheme, type AccentColor } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
+import { useApi } from '../hooks/useApi';
 
 const ACCENT_OPTIONS: { value: AccentColor; label: string; swatch: string; ring: string }[] = [
   { value: 'emerald', label: 'Emerald', swatch: '#10b981', ring: 'ring-emerald-500' },
@@ -12,6 +16,60 @@ const ACCENT_OPTIONS: { value: AccentColor; label: string; swatch: string; ring:
 const SettingsPage = () => {
   const { unit, setUnit } = useUnit();
   const { theme, setTheme, accent, setAccent } = useTheme();
+  const { signOut } = useAuth();
+  const api = useApi();
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [accountError, setAccountError] = useState<string | null>(null);
+  const [accountMessage, setAccountMessage] = useState<string | null>(null);
+
+  const handleChangePassword = async (e: FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+    setPasswordMessage(null);
+
+    if (newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Passwords do not match.');
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      setPasswordError(error.message);
+      return;
+    }
+
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordMessage('Password updated successfully.');
+  };
+
+  const handleDeleteAccount = async () => {
+    setAccountError(null);
+    setAccountMessage(null);
+    const confirmed = window.confirm(
+      'Delete your account and all data permanently? This cannot be undone.'
+    );
+    if (!confirmed) return;
+
+    try {
+      await api.deleteAccount();
+      await signOut();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete account';
+      setAccountError(msg);
+      return;
+    }
+
+    setAccountMessage('Account deleted.');
+  };
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
@@ -93,6 +151,77 @@ const SettingsPage = () => {
                 </label>
               );
             })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Account</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
+            <span className="font-medium text-foreground">Log Out</span>
+            <button
+              onClick={() => signOut()}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              Log Out
+            </button>
+          </div>
+
+          <form
+            onSubmit={handleChangePassword}
+            className="rounded-lg border border-border bg-muted/30 p-4"
+          >
+            <p className="mb-3 font-medium text-foreground">Change Password</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <input
+                type="password"
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="New password"
+                className="rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                required
+              />
+              <input
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm password"
+                className="rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                required
+              />
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <button
+                type="submit"
+                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+              >
+                Update Password
+              </button>
+              {passwordError && <span className="text-sm text-destructive">{passwordError}</span>}
+              {passwordMessage && <span className="text-sm text-primary">{passwordMessage}</span>}
+            </div>
+          </form>
+
+          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4">
+            <p className="mb-2 font-medium text-foreground">Delete Account</p>
+            <p className="mb-3 text-sm text-muted-foreground">
+              This permanently deletes your account and all gym data.
+            </p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleDeleteAccount}
+                className="rounded-md bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground"
+              >
+                Delete Account
+              </button>
+              {accountError && <span className="text-sm text-destructive">{accountError}</span>}
+              {accountMessage && <span className="text-sm text-primary">{accountMessage}</span>}
+            </div>
           </div>
         </CardContent>
       </Card>

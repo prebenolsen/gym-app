@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ApiClient,
   type Program,
   type Workout,
   type WorkoutSession,
   type WorkoutStats,
   type ExerciseHistorySummary,
 } from '@gym-app/shared';
+import { useApi } from '../hooks/useApi';
 import './HomePage.css';
 
 type ProgramWithWorkouts = {
@@ -25,7 +25,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const api = new ApiClient('http://localhost:3000');
+  const api = useApi();
 
   useEffect(() => {
     const fetchDashboardData = async () => {

@@ -9,10 +9,10 @@ import {
   type Equipment,
   type Program,
   type Workout,
-  ApiClient,
 } from '@gym-app/shared';
 import './ExercisesPage.css';
 import { useTheme } from '../context/ThemeContext';
+import { useApi } from '../hooks/useApi';
 import {
   FrontTorso, BackTorso, ArmsView, FrontLegs, BackLegs, AbsView,
   type MuscleGroup as MapMuscle,
@@ -86,7 +86,7 @@ const ExercisesPage = () => {
   const activeProgramId = selectedProgram || paramProgramId;
   const isActiveWorkout = !!activeWorkoutId;
 
-  const api = new ApiClient('http://localhost:3000');
+  const api = useApi();
 
   // Fetch programs on mount
   useEffect(() => {

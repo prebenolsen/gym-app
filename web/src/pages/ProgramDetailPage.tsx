@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ApiClient, type Program, type Workout, type Exercise } from '@gym-app/shared';
+import { type Program, type Workout, type Exercise } from '@gym-app/shared';
+import { useApi } from '../hooks/useApi';
 import './ProgramDetailPage.css';
 
 const ProgramDetailPage = () => {
@@ -14,7 +15,7 @@ const ProgramDetailPage = () => {
   const [newWorkoutName, setNewWorkoutName] = useState('');
   const [exercisesByWorkout, setExercisesByWorkout] = useState<Record<string, Exercise[]>>({});
 
-  const api = new ApiClient('http://localhost:3000');
+  const api = useApi();
 
   useEffect(() => {
     if (!programId) return;

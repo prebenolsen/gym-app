@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ApiClient, type Workout, type Exercise } from '@gym-app/shared';
+import { type Workout, type Exercise } from '@gym-app/shared';
 import NumberSpinner from '../components/NumberSpinner';
+import { useApi } from '../hooks/useApi';
 import './WorkoutDetailPage.css';
 
 const WorkoutDetailPage = () => {
@@ -16,7 +17,7 @@ const WorkoutDetailPage = () => {
   const [newExerciseName, setNewExerciseName] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const api = new ApiClient('http://localhost:3000');
+  const api = useApi();
 
   useEffect(() => {
     if (!workoutId) return;

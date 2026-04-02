@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ApiClient, type Program, type Workout } from '@gym-app/shared';
+import { type Program, type Workout } from '@gym-app/shared';
+import { useApi } from '../hooks/useApi';
 import './ProgramsPage.css';
 
 const ProgramsPage = () => {
@@ -13,7 +14,7 @@ const ProgramsPage = () => {
   const [newProgramName, setNewProgramName] = useState('');
   const navigate = useNavigate();
 
-  const api = new ApiClient('http://localhost:3000');
+  const api = useApi();
 
   useEffect(() => {
     fetchPrograms();

@@ -15,8 +15,9 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { ApiClient, type ExerciseProgressHistory } from '@gym-app/shared';
+import { type ExerciseProgressHistory } from '@gym-app/shared';
 import { useUnit } from '../context/UnitContext';
+import { useApi } from '../hooks/useApi';
 import './ExerciseProgressPage.css';
 
 type ViewMode = 'max-weight' | 'total-volume';
@@ -29,7 +30,7 @@ const ExerciseProgressPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('max-weight');
   const [loading, setLoading] = useState(true);
 
-  const api = new ApiClient('http://localhost:3000');
+  const api = useApi();
 
   useEffect(() => {
     const fetchExerciseProgress = async () => {

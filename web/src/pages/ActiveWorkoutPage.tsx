@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ApiClient,
   type Exercise,
   type Program,
   type Workout,
@@ -10,6 +9,7 @@ import {
   type ExerciseLastPerformance,
 } from '@gym-app/shared';
 import { useUnit } from '../context/UnitContext';
+import { useApi } from '../hooks/useApi';
 import './ActiveWorkoutPage.css';
 
 type SetDraft = {
@@ -50,7 +50,7 @@ const hasDraftChanged = (draft: SetDraft, baseline?: SetDraft): boolean => {
 
 const ActiveWorkoutPage = () => {
   const navigate = useNavigate();
-  const api = new ApiClient('http://localhost:3000');
+  const api = useApi();
   const { unit, convertFromKg, convertToKg, formatWeight } = useUnit();
 
   const [loading, setLoading] = useState(true);

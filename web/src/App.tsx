@@ -1,6 +1,8 @@
 import React from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
 import Navigation from './components/Navigation';
+import LoginPage from './pages/LoginPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import HomePage from './pages/HomePage';
 import ProgramsPage from './pages/ProgramsPage';
 import ProgramDetailPage from './pages/ProgramDetailPage';
@@ -13,9 +15,25 @@ import ExerciseProgressPage from './pages/ExerciseProgressPage';
 import SettingsPage from './pages/SettingsPage';
 import { UnitProvider } from './context/UnitContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import './App.css';
 
 function AppContent() {
+  const { loading, session, isPasswordRecovery } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return <div className="app" />;
+  }
+
+  if (isPasswordRecovery || location.pathname === '/reset-password') {
+    return <ResetPasswordPage />;
+  }
+
+  if (!session) {
+    return <LoginPage />;
+  }
+
   return (
     <div className="app">
       <div className="app-shell">
@@ -35,6 +53,7 @@ function AppContent() {
             <Route path="/workout-history/:sessionId" element={<WorkoutHistoryDetail />} />
             <Route path="/exercise-progress/:exerciseId" element={<ExerciseProgressPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
           </Routes>
         </div>
       </div>
@@ -45,11 +64,13 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider>
-        <UnitProvider>
-          <AppContent />
-        </UnitProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <UnitProvider>
+            <AppContent />
+          </UnitProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

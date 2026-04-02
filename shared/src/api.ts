@@ -25,10 +25,11 @@ import type {
 
 class ApiClient {
   baseURL: string;
-  userId: string = 'user_mock_mvp'; // Mock user for MVP
+  private getToken?: () => string | null;
 
-  constructor(baseURL: string) {
+  constructor(baseURL: string, getToken?: () => string | null) {
     this.baseURL = baseURL;
+    this.getToken = getToken;
   }
 
   private async request<T>(
@@ -43,6 +44,11 @@ class ApiClient {
         'Content-Type': 'application/json',
       },
     };
+
+    const token = this.getToken?.();
+    if (token) {
+      (options.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+    }
 
     if (data) {
       options.body = JSON.stringify(data);
@@ -95,6 +101,10 @@ class ApiClient {
 
   async deleteProgram(id: string): Promise<void> {
     return this.request('DELETE', `/programs/${id}`);
+  }
+
+  async deleteAccount(): Promise<void> {
+    return this.request('DELETE', '/account');
   }
 
   /* === WORKOUTS === */

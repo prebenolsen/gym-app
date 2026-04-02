@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { ApiClient, type WorkoutHistoryByDate } from '@gym-app/shared';
+import { type WorkoutHistoryByDate } from '@gym-app/shared';
+import { useApi } from '../hooks/useApi';
 import './CalendarPage.css';
 
 const CalendarPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const api = new ApiClient('http://localhost:3000');
+  const api = useApi();
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());

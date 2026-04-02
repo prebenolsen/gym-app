@@ -17,8 +17,13 @@ const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Mock user for MVP
-const MOCK_USER_ID = 'user_mock_mvp';
+declare global {
+  namespace Express {
+    interface Request {
+      userId: string;
+    }
+  }
+}
 
 const normalizeWeightToDotDecimal = (input: string | number): number => {
   if (typeof input === 'number') {
@@ -66,6 +71,37 @@ const formatError = (err: unknown): string => {
   return String(err);
 };
 
+const extractBearerToken = (authHeader?: string): string | null => {
+  if (!authHeader) return null;
+  const [scheme, token] = authHeader.split(' ');
+  if (scheme !== 'Bearer' || !token) return null;
+  return token;
+};
+
+const authenticateUser: express.RequestHandler = async (req, res, next) => {
+  if (req.path === '/health') {
+    next();
+    return;
+  }
+
+  const token = extractBearerToken(req.header('authorization'));
+  if (!token) {
+    res.status(401).json({ error: 'Missing or invalid authorization token' });
+    return;
+  }
+
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data.user) {
+    res.status(401).json({ error: 'Invalid or expired authorization token' });
+    return;
+  }
+
+  req.userId = data.user.id;
+  next();
+};
+
+app.use(authenticateUser);
+
 // === PROGRAMS ===
 
 app.get('/programs', async (req, res) => {
@@ -73,7 +109,7 @@ app.get('/programs', async (req, res) => {
     const { data, error } = await supabase
       .from('programs')
       .select('*')
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .order('order', { ascending: true });
 
     if (error) throw error;
@@ -92,7 +128,7 @@ app.post('/programs', async (req, res) => {
     const { data: existing } = await supabase
       .from('programs')
       .select('order')
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .order('order', { ascending: false })
       .limit(1);
 
@@ -102,7 +138,7 @@ app.post('/programs', async (req, res) => {
     const { count: programCount } = await supabase
       .from('programs')
       .select('id', { count: 'exact', head: true })
-      .eq('user_id', MOCK_USER_ID);
+      .eq('user_id', req.userId);
 
     const isFirstProgram = (programCount || 0) === 0;
 
@@ -111,7 +147,7 @@ app.post('/programs', async (req, res) => {
       .insert([
         {
           name,
-          user_id: MOCK_USER_ID,
+          user_id: req.userId,
           order: nextOrder,
           is_favorite_program: isFirstProgram,
         },
@@ -136,7 +172,7 @@ app.put('/programs/:id', async (req, res) => {
       .from('programs')
       .update({ name })
       .eq('id', id)
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .select()
       .single();
 
@@ -162,7 +198,7 @@ app.patch('/programs/:id/favorite', async (req, res) => {
       .from('programs')
       .update({ is_favorite_program: is_favorite })
       .eq('id', id)
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .select()
       .single();
 
@@ -200,7 +236,7 @@ app.delete('/programs/:id', async (req, res) => {
       .from('programs')
       .delete()
       .eq('id', id)
-      .eq('user_id', MOCK_USER_ID);
+      .eq('user_id', req.userId);
 
     if (error) throw error;
     res.status(204).send();
@@ -220,7 +256,7 @@ app.get('/programs/:programId/workouts', async (req, res) => {
       .from('workouts')
       .select('*')
       .eq('program_id', programId)
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .order('order', { ascending: true });
 
     if (error) throw error;
@@ -252,7 +288,7 @@ app.post('/programs/:programId/workouts', async (req, res) => {
         {
           program_id: programId,
           name,
-          user_id: MOCK_USER_ID,
+          user_id: req.userId,
           order: nextOrder,
         },
       ])
@@ -276,7 +312,7 @@ app.put('/workouts/:id', async (req, res) => {
       .from('workouts')
       .update({ name })
       .eq('id', id)
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .select()
       .single();
 
@@ -300,7 +336,7 @@ app.delete('/workouts/:id', async (req, res) => {
       .from('workouts')
       .delete()
       .eq('id', id)
-      .eq('user_id', MOCK_USER_ID);
+      .eq('user_id', req.userId);
 
     if (error) throw error;
     res.status(204).send();
@@ -338,7 +374,7 @@ app.get('/workouts/:workoutId/exercises', async (req, res) => {
       .from('exercises')
       .select('*')
       .eq('workout_id', workoutId)
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .order('order', { ascending: true });
 
     if (error) throw error;
@@ -376,7 +412,7 @@ app.post('/workouts/:workoutId/exercises', async (req, res) => {
           name,
           sets,
           rest_seconds,
-          user_id: MOCK_USER_ID,
+          user_id: req.userId,
           order: nextOrder,
         },
       ])
@@ -405,7 +441,7 @@ app.put('/exercises/:id', async (req, res) => {
       .from('exercises')
       .update(updates)
       .eq('id', id)
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .select()
       .single();
 
@@ -425,7 +461,7 @@ app.delete('/exercises/:id', async (req, res) => {
       .from('exercises')
       .delete()
       .eq('id', id)
-      .eq('user_id', MOCK_USER_ID);
+      .eq('user_id', req.userId);
 
     if (error) throw error;
     res.status(204).send();
@@ -460,7 +496,7 @@ app.get('/workout-sessions/active', async (req, res) => {
     const { data, error } = await supabase
       .from('workout_sessions')
       .select('*')
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(1)
@@ -485,7 +521,7 @@ app.post('/workout-sessions/start', async (req, res) => {
     const { data: activeSession, error: activeError } = await supabase
       .from('workout_sessions')
       .select('*')
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(1)
@@ -506,7 +542,7 @@ app.post('/workout-sessions/start', async (req, res) => {
       .insert([
         {
           workout_id,
-          user_id: MOCK_USER_ID,
+          user_id: req.userId,
           status: 'active',
           current_exercise_index: 0,
           started_at: new Date().toISOString(),
@@ -532,7 +568,7 @@ app.patch('/workout-sessions/:id/current-exercise', async (req, res) => {
       .from('workout_sessions')
       .update({ current_exercise_index })
       .eq('id', id)
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .eq('status', 'active')
       .select()
       .single();
@@ -553,7 +589,7 @@ app.post('/workout-sessions/:id/cancel', async (req, res) => {
       .from('workout_sessions')
       .update({ status: 'cancelled', ended_at: new Date().toISOString() })
       .eq('id', id)
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .eq('status', 'active')
       .select()
       .single();
@@ -564,7 +600,7 @@ app.post('/workout-sessions/:id/cancel', async (req, res) => {
       .from('workout_session_sets')
       .update({ is_deleted: true })
       .eq('session_id', id)
-      .eq('user_id', MOCK_USER_ID);
+      .eq('user_id', req.userId);
 
     res.json(data);
   } catch (err: unknown) {
@@ -581,7 +617,7 @@ app.post('/workout-sessions/:id/finish', async (req, res) => {
       .from('workout_sessions')
       .update({ status: 'finished', ended_at: new Date().toISOString() })
       .eq('id', id)
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .eq('status', 'active')
       .select()
       .single();
@@ -609,7 +645,7 @@ app.get('/workout-sessions/:id/sets', async (req, res) => {
       .select('*')
       .eq('session_id', id)
       .eq('exercise_id', exerciseId)
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .eq('is_deleted', false)
       .order('set_number', { ascending: true });
 
@@ -644,7 +680,7 @@ app.post('/workout-sessions/:id/sets', async (req, res) => {
             weight: normalizedWeight,
             reps,
             is_deleted: false,
-            user_id: MOCK_USER_ID,
+            user_id: req.userId,
             saved_at: new Date().toISOString(),
           },
         ],
@@ -673,7 +709,7 @@ app.get('/workouts/history/dates-with-workouts', async (req, res) => {
     let query = supabase
       .from('workout_sessions')
       .select('started_at, ended_at')
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .eq('status', 'finished');
 
     if (startDate) {
@@ -714,7 +750,7 @@ app.get('/workouts/history/by-date', async (req, res) => {
     const { data: sessions, error } = await supabase
       .from('workout_sessions')
       .select('id, workout_id, started_at, ended_at, status')
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .eq('status', 'finished')
       .gte('started_at', `${date}T00:00:00`)
       .lte('started_at', `${date}T23:59:59`)
@@ -754,7 +790,7 @@ app.get('/workout-sessions/:sessionId/details', async (req, res) => {
       .from('workout_sessions')
       .select('*')
       .eq('id', sessionId)
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .single();
 
     if (sessionError) throw sessionError;
@@ -808,7 +844,7 @@ app.get('/workouts/:workoutId/last-performance', async (req, res) => {
       .from('workout_sessions')
       .select('id')
       .eq('workout_id', workoutId)
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .eq('status', 'finished')
       .order('ended_at', { ascending: false })
       .limit(1)
@@ -848,17 +884,17 @@ app.get('/stats', async (req, res) => {
     const { count: programCount } = await supabase
       .from('programs')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', MOCK_USER_ID);
+      .eq('user_id', req.userId);
 
     const { count: workoutCount } = await supabase
       .from('workouts')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', MOCK_USER_ID);
+      .eq('user_id', req.userId);
 
     const { count: exerciseCount } = await supabase
       .from('exercises')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', MOCK_USER_ID);
+      .eq('user_id', req.userId);
 
     res.json({
       total_programs: programCount || 0,
@@ -881,7 +917,7 @@ app.get('/stats/workouts-7-days', async (req, res) => {
     const { count, error } = await supabase
       .from('workout_sessions')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .eq('status', 'finished')
       .gte('started_at', sevenDaysAgoISO);
 
@@ -907,7 +943,7 @@ app.get('/exercises/history', async (req, res) => {
     const { data: sessions, error: sessionsError } = await supabase
       .from('workout_sessions')
       .select('id, started_at')
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .eq('status', 'finished');
 
     if (sessionsError) throw sessionsError;
@@ -1005,7 +1041,7 @@ app.get('/exercises/:exerciseId/progress', async (req, res) => {
     const { data: sessions, error: sessionsError } = await supabase
       .from('workout_sessions')
       .select('id, started_at')
-      .eq('user_id', MOCK_USER_ID)
+      .eq('user_id', req.userId)
       .eq('status', 'finished')
       .in('id', sessionIds)
       .gte('started_at', lookbackISO);
@@ -1069,6 +1105,58 @@ app.get('/exercises/:exerciseId/progress', async (req, res) => {
   }
 });
 
+app.delete('/account', async (req, res) => {
+  try {
+    // Delete child records first, then parent records.
+    const { data: sessions, error: sessionsError } = await supabase
+      .from('workout_sessions')
+      .select('id')
+      .eq('user_id', req.userId);
+
+    if (sessionsError) {
+      throw sessionsError;
+    }
+
+    const sessionIds = (sessions ?? []).map((session) => session.id);
+    if (sessionIds.length > 0) {
+      await supabase
+        .from('workout_session_sets')
+        .delete()
+        .in('session_id', sessionIds);
+    }
+
+    await supabase
+      .from('workout_sessions')
+      .delete()
+      .eq('user_id', req.userId);
+
+    await supabase
+      .from('exercises')
+      .delete()
+      .eq('user_id', req.userId);
+
+    await supabase
+      .from('workouts')
+      .delete()
+      .eq('user_id', req.userId);
+
+    await supabase
+      .from('programs')
+      .delete()
+      .eq('user_id', req.userId);
+
+    const { error: authDeleteError } = await supabase.auth.admin.deleteUser(req.userId);
+    if (authDeleteError) {
+      throw authDeleteError;
+    }
+
+    res.status(204).send();
+  } catch (err: unknown) {
+    const errorMsg = formatError(err);
+    res.status(500).json({ error: errorMsg });
+  }
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
@@ -1076,5 +1164,5 @@ app.get('/health', (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🏋️ Gym app backend running on port ${PORT}`);
+  console.log(`Gym app backend running on port ${PORT}`);
 });

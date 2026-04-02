@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ApiClient, type WorkoutSessionDetail } from '@gym-app/shared';
+import { type WorkoutSessionDetail } from '@gym-app/shared';
 import { useUnit } from '../context/UnitContext';
+import { useApi } from '../hooks/useApi';
 import './WorkoutHistoryDetail.css';
 
 const WorkoutHistoryDetail = () => {
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string }>();
-  const api = new ApiClient('http://localhost:3000');
+  const api = useApi();
   const { formatWeight } = useUnit();
 
   const [sessionDetail, setSessionDetail] = useState<WorkoutSessionDetail | null>(
