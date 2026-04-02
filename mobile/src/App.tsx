@@ -22,6 +22,7 @@ import SettingsScreen from './screens/SettingsScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { PreferencesProvider, usePreferences } from './context/PreferencesContext';
 import { useApi } from './hooks/useApi';
+import { Ionicons } from '@expo/vector-icons';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -207,10 +208,10 @@ const AppRoutes = () => {
             component={HomeScreen}
             options={{
               tabBarIcon: ({ color, focused }) => (
-                <View style={createTabIconWrapperStyle(focused, colors.accent)}>
-                  <Text style={tabIconStyle({ color })}>⚡</Text>
-                </View>
-              ),
+            <View style={createTabIconWrapperStyle(focused, colors.accent)}>
+              <Ionicons name="flash" size={24} color={color} />
+            </View>
+          ),
             }}
           />
           <Tab.Screen
@@ -219,7 +220,7 @@ const AppRoutes = () => {
             options={{
               tabBarIcon: ({ color, focused }) => (
                 <View style={createTabIconWrapperStyle(focused, colors.accent)}>
-                  <Text style={tabIconStyle({ color })}>📋</Text>
+                  <Ionicons name="clipboard-outline" size={24} color={color} />
                 </View>
               ),
             }}
@@ -230,21 +231,18 @@ const AppRoutes = () => {
             options={{
               tabBarIcon: ({ color, focused }) => (
                 <View style={createTabIconWrapperStyle(focused, colors.accent)}>
-                  <Text
-                    style={tabIconStyle({
-                      color: isActiveWorkoutEnabled ? color : colors.textMuted,
-                      opacity: isActiveWorkoutEnabled ? 1 : 0.45,
-                    })}
-                  >
-                    🏋️
-                  </Text>
+                  <Ionicons
+                    name="barbell-outline"
+                    size={24}
+                    color={isActiveWorkoutEnabled ? color : colors.textMuted}
+                    style={{ opacity: isActiveWorkoutEnabled ? 1 : 0.45 }}
+                  />
                 </View>
               ),
               tabBarButton: (props) => {
                 if (isActiveWorkoutEnabled) {
                   return <TouchableOpacity {...props} />;
                 }
-
                 return (
                   <TouchableOpacity
                     {...props}
@@ -262,7 +260,7 @@ const AppRoutes = () => {
             options={{
               tabBarIcon: ({ color, focused }) => (
                 <View style={createTabIconWrapperStyle(focused, colors.accent)}>
-                  <Text style={tabIconStyle({ color })}>📅</Text>
+                  <Ionicons name="calendar-outline" size={24} color={color} />
                 </View>
               ),
             }}
@@ -273,16 +271,16 @@ const AppRoutes = () => {
             options={{
               tabBarIcon: ({ color, focused }) => (
                 <View style={createTabIconWrapperStyle(focused, colors.accent)}>
-                  <Text style={tabIconStyle({ color })}>⚙️</Text>
+                  <Ionicons name="settings-outline" size={24} color={color} />
                 </View>
               ),
             }}
           />
-        </Tab.Navigator>
-      </NavigationContainer>
-    </SafeAreaView>
-  );
-};
+                  </Tab.Navigator>
+                </NavigationContainer>
+              </SafeAreaView>
+            );
+          };
 
 const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors']) =>
   StyleSheet.create({
@@ -292,6 +290,7 @@ const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors']) 
     },
     tabBarWrapper: {
       backgroundColor: themeColors.surface,
+      marginBottom: 12
     },
     tabBarFooter: {
       width: '100%',
