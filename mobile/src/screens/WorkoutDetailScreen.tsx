@@ -142,6 +142,19 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
     }
   };
 
+  const handleStartWorkout = async () => {
+    try {
+      await api.startWorkoutSession(workoutId);
+      const parentNav = navigation.getParent?.();
+      if (parentNav?.navigate) {
+        parentNav.navigate('ActiveWorkoutStack', { screen: 'ActiveWorkout' });
+      }
+    } catch (err) {
+      console.error('Failed to start workout session:', err);
+      Alert.alert('Error', 'Failed to start workout session');
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -166,6 +179,13 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
             {editName}
           </Text>
         )}
+        <TouchableOpacity
+          onPress={handleStartWorkout}
+          style={styles.startWorkoutButton}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.startWorkoutButtonText}>Start Workout</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
@@ -295,6 +315,20 @@ const createStyles = (themeColors: ThemeColors) =>
     borderBottomWidth: 2,
     borderBottomColor: themeColors.accent,
     paddingBottom: 8,
+    textTransform: 'uppercase',
+  },
+  startWorkoutButton: {
+    marginTop: 10,
+    backgroundColor: themeColors.accent,
+    borderRadius: radius.sm,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  startWorkoutButtonText: {
+    color: themeColors.surface,
+    fontWeight: '700',
+    fontSize: 12,
     textTransform: 'uppercase',
   },
   section: {

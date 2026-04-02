@@ -1,7 +1,8 @@
+import { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { BottomTabBar, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import HomeScreen from './screens/HomeScreen';
@@ -10,13 +11,26 @@ import ProgramDetailScreen from './screens/ProgramDetailScreen';
 import WorkoutDetailScreen from './screens/WorkoutDetailScreen';
 import ExercisesScreen from './screens/ExercisesScreen';
 import ExercisesCatalogScreen from './screens/ExercisesCatalogScreen';
+import ExerciseProgressScreen from './screens/ExerciseProgressScreen';
+import ProgramsCatalogScreen from './screens/ProgramsCatalogScreen';
+import ProgramTemplateScreen from './screens/ProgramTemplateScreen';
+import WorkoutsCatalogScreen from './screens/WorkoutsCatalogScreen';
+import ActiveWorkoutScreen from './screens/ActiveWorkoutScreen';
+import CalendarScreen from './screens/CalendarScreen';
+import WorkoutHistoryDetailScreen from './screens/WorkoutHistoryDetailScreen';
 import AuthScreen from './screens/AuthScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { useApi } from './hooks/useApi';
 import { colors } from './theme';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+const tabIconStyle = ({ color, opacity = 1 }: { color: string; opacity?: number }) => ({
+  color,
+  fontSize: 19,
+  opacity,
+});
 
 const ProgramsStackNavigator = () => {
   return (
@@ -37,6 +51,18 @@ const ProgramsStackNavigator = () => {
         name="ExercisesCatalog"
         component={ExercisesCatalogScreen}
       />
+      <Stack.Screen
+        name="ProgramsCatalog"
+        component={ProgramsCatalogScreen}
+      />
+      <Stack.Screen
+        name="ProgramTemplate"
+        component={ProgramTemplateScreen}
+      />
+      <Stack.Screen
+        name="WorkoutsCatalog"
+        component={WorkoutsCatalogScreen}
+      />
     </Stack.Navigator>
   );
 };
@@ -47,6 +73,36 @@ const ExercisesStackNavigator = () => {
       <Stack.Screen
         name="ExercisesList"
         component={ExercisesScreen}
+      />
+      <Stack.Screen
+        name="ExerciseProgress"
+        component={ExerciseProgressScreen}
+      />
+    </Stack.Navigator>
+  );
+};
+
+const ActiveWorkoutStackNavigator = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen
+        name="ActiveWorkout"
+        component={ActiveWorkoutScreen}
+      />
+    </Stack.Navigator>
+  );
+};
+
+const CalendarStackNavigator = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen
+        name="Calendar"
+        component={CalendarScreen}
+      />
+      <Stack.Screen
+        name="WorkoutHistoryDetail"
+        component={WorkoutHistoryDetailScreen}
       />
     </Stack.Navigator>
   );
@@ -62,6 +118,49 @@ export default function App() {
 
 const AppRoutes = () => {
   const { session, loading } = useAuth();
+  const api = useApi();
+  const [hasActiveSession, setHasActiveSession] = useState(false);
+  const [loadingActiveSession, setLoadingActiveSession] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchActiveSession = async () => {
+      if (!session) {
+        if (isMounted) {
+          setHasActiveSession(false);
+          setLoadingActiveSession(false);
+        }
+        return;
+      }
+
+      try {
+        const activeSession = await api.getActiveSession();
+        if (isMounted) {
+          setHasActiveSession(!!activeSession);
+        }
+      } catch (err) {
+        console.error('Failed to fetch active workout session:', err);
+        if (isMounted) {
+          setHasActiveSession(false);
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingActiveSession(false);
+        }
+      }
+    };
+
+    fetchActiveSession();
+    const interval = setInterval(fetchActiveSession, 10000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [api, session]);
+
+  const isActiveWorkoutEnabled = hasActiveSession && !loadingActiveSession;
 
   if (loading) {
     return null;
@@ -78,13 +177,16 @@ const AppRoutes = () => {
           tabBar={(props) => (
             <View style={styles.tabBarWrapper}>
               <BottomTabBar {...props} />
-              <Text style={styles.versionText}>GymApp - version 0.1</Text>
+              <View style={styles.tabBarFooter}>
+                <Text style={styles.versionText}>GymApp - version 0.1</Text>
+              </View>
             </View>
           )}
           screenOptions={{
             headerShown: false,
             tabBarActiveTintColor: colors.accent,
             tabBarInactiveTintColor: colors.textMuted,
+            tabBarShowLabel: false,
             tabBarStyle: {
               backgroundColor: colors.surface,
               borderTopColor: colors.border,
@@ -92,19 +194,14 @@ const AppRoutes = () => {
               height: 64,
               paddingTop: 6,
             },
-            tabBarLabelStyle: {
-              fontSize: 12,
-              fontWeight: '600',
-            },
           }}
         >
           <Tab.Screen
             name="Home"
             component={HomeScreen}
             options={{
-              tabBarLabel: 'Home',
               tabBarIcon: ({ color }) => (
-                <Text style={{ color, fontSize: 16, fontWeight: '700' }}>H</Text>
+                <Text style={tabIconStyle({ color })}>⚡</Text>
               ),
             }}
           />
@@ -112,9 +209,47 @@ const AppRoutes = () => {
             name="ProgramsStack"
             component={ProgramsStackNavigator}
             options={{
-              tabBarLabel: 'Programs',
               tabBarIcon: ({ color }) => (
-                <Text style={{ color, fontSize: 16, fontWeight: '700' }}>P</Text>
+                <Text style={tabIconStyle({ color })}>📋</Text>
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="ActiveWorkoutStack"
+            component={ActiveWorkoutStackNavigator}
+            options={{
+              tabBarIcon: ({ color }) => (
+                <Text
+                  style={tabIconStyle({
+                    color: isActiveWorkoutEnabled ? color : colors.textMuted,
+                    opacity: isActiveWorkoutEnabled ? 1 : 0.45,
+                  })}
+                >
+                  🏋️
+                </Text>
+              ),
+              tabBarButton: (props) => {
+                if (isActiveWorkoutEnabled) {
+                  return <TouchableOpacity {...props} />;
+                }
+
+                return (
+                  <TouchableOpacity
+                    {...props}
+                    disabled
+                    activeOpacity={1}
+                    style={[props.style, styles.disabledTabButton]}
+                  />
+                );
+              },
+            }}
+          />
+          <Tab.Screen
+            name="CalendarStack"
+            component={CalendarStackNavigator}
+            options={{
+              tabBarIcon: ({ color }) => (
+                <Text style={tabIconStyle({ color })}>📅</Text>
               ),
             }}
           />
@@ -122,9 +257,8 @@ const AppRoutes = () => {
             name="ExercisesStack"
             component={ExercisesStackNavigator}
             options={{
-              tabBarLabel: 'Exercises',
               tabBarIcon: ({ color }) => (
-                <Text style={{ color, fontSize: 16, fontWeight: '700' }}>E</Text>
+                <Text style={tabIconStyle({ color })}>💪</Text>
               ),
             }}
           />
@@ -132,9 +266,8 @@ const AppRoutes = () => {
             name="Settings"
             component={SettingsScreen}
             options={{
-              tabBarLabel: 'Settings',
               tabBarIcon: ({ color }) => (
-                <Text style={{ color, fontSize: 16, fontWeight: '700' }}>S</Text>
+                <Text style={tabIconStyle({ color })}>⚙️</Text>
               ),
             }}
           />
@@ -151,8 +284,12 @@ const styles = StyleSheet.create({
   },
   tabBarWrapper: {
     backgroundColor: colors.surface,
+  },
+  tabBarFooter: {
+    width: '100%',
     borderTopWidth: 1,
     borderTopColor: colors.border,
+    paddingTop: 6,
     paddingBottom: 10,
     alignItems: 'center',
   },
@@ -160,5 +297,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
     paddingTop: 2,
+  },
+  disabledTabButton: {
+    opacity: 0.85,
   },
 });

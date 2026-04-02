@@ -92,12 +92,20 @@ const ProgramsScreen = ({ navigation }: any) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Programs</Text>
-        <TouchableOpacity
-          onPress={handleCreateProgram}
-          style={styles.btnPrimary}
-        >
-          <Text style={styles.btnText}>+ Create</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ProgramsCatalog')}
+            style={styles.btnSecondary}
+          >
+            <Text style={styles.btnSecondaryText}>Templates</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleCreateProgram}
+            style={styles.btnPrimary}
+          >
+            <Text style={styles.btnText}>+ Create</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView style={styles.list}>
@@ -177,6 +185,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -193,6 +205,20 @@ const styles = StyleSheet.create({
     color: colors.surface,
     fontWeight: '600',
     fontSize: 12,
+    textTransform: 'uppercase',
+  },
+  btnSecondary: {
+    backgroundColor: colors.accentSoft,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.accent,
+  },
+  btnSecondaryText: {
+    color: colors.accent,
+    fontWeight: '600',
+    fontSize: 11,
     textTransform: 'uppercase',
   },
   list: {

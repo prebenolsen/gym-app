@@ -83,12 +83,20 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Workouts</Text>
-          <TouchableOpacity
-            onPress={handleCreateWorkout}
-            style={styles.btnPrimary}
-          >
-            <Text style={styles.btnText}>+ Add</Text>
-          </TouchableOpacity>
+          <View style={styles.sectionActions}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('WorkoutsCatalog', { programId })}
+              style={styles.btnSecondary}
+            >
+              <Text style={styles.btnSecondaryText}>Browse Templates</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleCreateWorkout}
+              style={styles.btnPrimary}
+            >
+              <Text style={styles.btnText}>+ Add</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <ScrollView style={styles.list}>
@@ -161,6 +169,26 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  sectionActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  btnSecondary: {
+    backgroundColor: colors.accentSoft,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.accent,
+  },
+  btnSecondaryText: {
+    color: colors.accent,
+    fontWeight: '600',
+    fontSize: 11,
+    textTransform: 'uppercase',
   },
   sectionTitle: {
     fontSize: 18,
