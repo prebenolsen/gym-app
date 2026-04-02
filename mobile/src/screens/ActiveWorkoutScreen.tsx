@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { type Exercise, type Workout, type WorkoutSession, type WorkoutSessionSet } from '@gym-app/shared';
+import { useFocusEffect } from '@react-navigation/native';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
@@ -190,9 +191,11 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     }
   };
 
-  useEffect(() => {
-    loadContext();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadContext();
+    }, []),
+  );
 
   useEffect(() => {
     if (!session) return;

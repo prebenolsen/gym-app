@@ -17,6 +17,7 @@ import {
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
 import { useApi } from '../hooks/useApi';
+import { Ionicons } from '@expo/vector-icons';
 
 type ProgramWithWorkouts = {
   program: Program;
@@ -128,7 +129,7 @@ const HomeScreen = ({ navigation }: any) => {
           style={styles.statCard}
           onPress={() => navigation.navigate('ProgramsStack')}
         >
-          <Text style={styles.statIcon}>📋</Text>
+          <Ionicons name="clipboard-outline" size={28} color={themeColors.accent} style={{ marginBottom: 6 }} />
           <Text style={styles.statValue}>{stats.total_programs}</Text>
           <Text style={styles.statLabel}>Programs</Text>
         </TouchableOpacity>
@@ -137,7 +138,7 @@ const HomeScreen = ({ navigation }: any) => {
           style={styles.statCard}
           onPress={() => navigation.navigate('ActiveWorkoutStack')}
         >
-          <Text style={styles.statIcon}>🏋️</Text>
+          <Ionicons name="body-outline" size={28} color={themeColors.accent} style={{ marginBottom: 6 }} />
           <Text style={styles.statValue}>{stats.total_workouts}</Text>
           <Text style={styles.statLabel}>Workouts</Text>
         </TouchableOpacity>
@@ -146,7 +147,7 @@ const HomeScreen = ({ navigation }: any) => {
           style={styles.statCard}
           onPress={() => navigation.navigate('ProgramsStack')}
         >
-          <Text style={styles.statIcon}>💪</Text>
+          <Ionicons name="barbell-outline" size={28} color={themeColors.accent} style={{ marginBottom: 6 }} />
           <Text style={styles.statValue}>{stats.total_exercises}</Text>
           <Text style={styles.statLabel}>Exercises</Text>
         </TouchableOpacity>
@@ -155,7 +156,7 @@ const HomeScreen = ({ navigation }: any) => {
           style={styles.statCard}
           onPress={() => navigation.navigate('CalendarStack')}
         >
-          <Text style={styles.statIcon}>📅</Text>
+          <Ionicons name="calendar-outline" size={28} color={themeColors.accent} style={{ marginBottom: 6 }} />
           <Text style={styles.statValue}>{workouts7Days}</Text>
           <Text style={styles.statLabel}>Last 7 Days</Text>
         </TouchableOpacity>
@@ -176,7 +177,7 @@ const HomeScreen = ({ navigation }: any) => {
           return favorites.map(({ program, workouts, exerciseCounts }) => (
             <View key={program.id} style={styles.favoriteProgramTile}>
               <View style={styles.favoriteProgramHeader}>
-                <Text style={styles.favoriteStar}>★</Text>
+                <Ionicons name="star" size={18} color={themeColors.accent} />
                 <Text style={styles.favoriteProgramName}>{program.name}</Text>
               </View>
               {workouts.length === 0 ? (
