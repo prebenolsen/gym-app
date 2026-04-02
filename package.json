@@ -9,18 +9,18 @@
     "backend"
   ],
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web:mobile": "expo start --web",
+    "start": "npm run dev --workspace=mobile",
+    "android": "npm run android --workspace=mobile",
+    "ios": "npm run ios --workspace=mobile",
+    "web:mobile": "npm run web --workspace=mobile",
+    "mobile:dev": "npm run dev --workspace=mobile",
+    "mobile:android": "npm run android --workspace=mobile",
+    "mobile:ios": "npm run ios --workspace=mobile",
+    "mobile:web": "npm run web --workspace=mobile",
     "web:dev": "npm run dev --workspace=web",
     "backend:dev": "npm run dev --workspace=backend"
   },
   "dependencies": {
-    "expo": "^55.0.9",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-native-web": "^0.21.0",
     "tailwindcss": "^4.2.2",
     "typescript": "~5.9.2"
   }
