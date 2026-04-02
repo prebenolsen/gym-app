@@ -173,7 +173,7 @@ const HomePage = () => {
                         >
                           <span className="workout-row-tile-name">{workout.name}</span>
                           <span className="workout-row-tile-count">
-                            🏋️ {exerciseCounts[workout.id] ?? 0}{' '}
+                          {exerciseCounts[workout.id] ?? 0}{' '}
                             {(exerciseCounts[workout.id] ?? 0) === 1 ? 'exercise' : 'exercises'}
                           </span>
                         </button>
