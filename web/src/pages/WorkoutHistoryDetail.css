@@ -24,23 +24,24 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  background: white;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
 }
 
 .session-header h1 {
   margin: 0 0 8px 0;
   font-size: 28px;
-  color: #333;
+  color: var(--color-text-strong);
 }
 
 .session-date {
   margin: 0;
   font-size: 14px;
-  color: #666;
+  color: var(--color-text-strong);
 }
 
 .session-stats {
@@ -56,7 +57,7 @@
 
 .stat-label {
   font-size: 12px;
-  color: #999;
+  color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-weight: 600;
@@ -66,7 +67,7 @@
 .stat-value {
   font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-text-strong);
 }
 
 .exercises-section {
@@ -76,16 +77,17 @@
 }
 
 .exercise-card {
-  background: white;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
 }
 
 .exercise-card h3 {
   margin: 0 0 16px 0;
   font-size: 18px;
-  color: #333;
+  color: var(--color-text-strong);
   font-weight: 600;
 }
 
@@ -96,38 +98,39 @@
 }
 
 .sets-table thead {
-  background: #f5f5f5;
-  border-bottom: 2px solid #e0e0e0;
+  background: var(--color-surface-soft);
+  border-bottom: 2px solid var(--color-border);
 }
 
 .sets-table th {
   padding: 12px;
-  text-align: left;
+  text-align: center;
   font-size: 12px;
   font-weight: 600;
-  color: #666;
+  color: var(--color-accent-500);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .sets-table tbody tr {
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--color-border);
   transition: background 0.2s;
 }
 
 .sets-table tbody tr:hover {
-  background: #fafafa;
+  background: var(--color-surface-soft);
 }
 
 .sets-table td {
   padding: 12px;
   font-size: 14px;
-  color: #333;
+  color: var(--color-text-strong);
+  text-align: center;
 }
 
 .set-number {
   font-weight: 600;
-  color: #666;
+  color: var(--color-text-strong);
 }
 
 .weight {
@@ -136,16 +139,16 @@
 }
 
 .reps {
-  color: #666;
+  color: var(--color-text-strong);
 }
 
 .exercise-totals {
   display: flex;
   justify-content: space-between;
   padding-top: 12px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--color-border);
   font-size: 13px;
-  color: #666;
+  color: var(--color-text-strong);
 }
 
 .total-sets {
@@ -158,14 +161,15 @@
 }
 
 .error-state {
-  background: white;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 40px;
   text-align: center;
 }
 
 .error-state p {
-  color: #999;
+  color: var(--color-text-strong);
   margin-bottom: 20px;
 }
 
@@ -185,11 +189,12 @@
 }
 
 .empty-exercises {
-  background: white;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 40px;
   text-align: center;
-  color: #999;
+  color: var(--color-text-strong);
 }
 
 /* Responsive */
