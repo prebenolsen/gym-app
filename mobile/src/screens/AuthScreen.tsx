@@ -9,6 +9,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  ImageBackground,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -85,93 +86,102 @@ const AuthScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>
-          {mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Forgot Password'}
-        </Text>
-        <Text style={styles.subtitle}>
-          {mode === 'login'
-            ? 'Sign in with your email and password.'
-            : mode === 'signup'
-            ? 'Register with your email and choose a password.'
-            : 'Enter your email to receive a password reset link.'}
-        </Text>
+    <ImageBackground
+      source={require('../../../shared/assets/Copilot_20260402_133811.png')}
+      style={styles.container}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        <View style={styles.card}>
+          <Text style={styles.title}>
+            {mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Forgot Password'}
+          </Text>
+          <Text style={styles.subtitle}>
+            {mode === 'login'
+              ? 'Sign in with your email and password.'
+              : mode === 'signup'
+              ? 'Register with your email and choose a password.'
+              : 'Enter your email to receive a password reset link.'}
+          </Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-          placeholderTextColor={colors.textMuted}
-        />
-
-        {mode !== 'forgot' && (
           <TextInput
             style={styles.input}
-            placeholder="Password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
+            placeholder="Email"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
             placeholderTextColor={colors.textMuted}
           />
-        )}
 
-        {mode === 'signup' && (
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm password"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholderTextColor={colors.textMuted}
-          />
-        )}
-
-        <TouchableOpacity
-          style={[styles.primaryButton, loading && styles.disabledButton]}
-          disabled={loading}
-          onPress={handleSubmit}
-        >
-          {loading ? (
-            <ActivityIndicator color={colors.surface} />
-          ) : (
-            <Text style={styles.primaryButtonText}>
-              {mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Email'}
-            </Text>
-          )}
-        </TouchableOpacity>
-
-        <View style={styles.links}>
-          {mode !== 'login' && (
-            <TouchableOpacity onPress={() => setMode('login')}>
-              <Text style={styles.link}>Back to sign in</Text>
-            </TouchableOpacity>
-          )}
-          {mode !== 'signup' && (
-            <TouchableOpacity onPress={() => setMode('signup')}>
-              <Text style={styles.link}>Create account</Text>
-            </TouchableOpacity>
-          )}
           {mode !== 'forgot' && (
-            <TouchableOpacity onPress={() => setMode('forgot')}>
-              <Text style={styles.link}>Forgot password?</Text>
-            </TouchableOpacity>
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+              placeholderTextColor={colors.textMuted}
+            />
           )}
+
+          {mode === 'signup' && (
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm password"
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholderTextColor={colors.textMuted}
+            />
+          )}
+
+          <TouchableOpacity
+            style={[styles.primaryButton, loading && styles.disabledButton]}
+            disabled={loading}
+            onPress={handleSubmit}
+          >
+            {loading ? (
+              <ActivityIndicator color={colors.surface} />
+            ) : (
+              <Text style={styles.primaryButtonText}>
+                {mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Email'}
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.links}>
+            {mode !== 'login' && (
+              <TouchableOpacity onPress={() => setMode('login')}>
+                <Text style={styles.link}>Back to sign in</Text>
+              </TouchableOpacity>
+            )}
+            {mode !== 'signup' && (
+              <TouchableOpacity onPress={() => setMode('signup')}>
+                <Text style={styles.link}>Create account</Text>
+              </TouchableOpacity>
+            )}
+            {mode !== 'forgot' && (
+              <TouchableOpacity onPress={() => setMode('forgot')}>
+                <Text style={styles.link}>Forgot password?</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  overlay: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: 'rgba(7, 14, 22, 0.45)',
     padding: 20,
   },
   card: {
