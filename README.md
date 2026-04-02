@@ -338,3 +338,4 @@ For issues or questions, check the terminal output for detailed error messages.
 
 npm run backend:dev
 npm run -w shared build
+npx expo start --lan # telefon
