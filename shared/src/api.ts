@@ -302,6 +302,10 @@ class ApiClient {
     return this.request('GET', `/workouts/history/by-date?date=${date}`);
   }
 
+  async getWorkoutsByMonth(month: string): Promise<WorkoutHistoryByDate[]> {
+    return this.request('GET', `/workouts/history/by-month?month=${month}`);
+  }
+
   async getSessionDetails(sessionId: string): Promise<WorkoutSessionDetail> {
     return this.request('GET', `/workout-sessions/${sessionId}/details`);
   }

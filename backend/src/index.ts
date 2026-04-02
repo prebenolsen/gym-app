@@ -781,6 +781,59 @@ app.get('/workouts/history/by-date', async (req, res) => {
   }
 });
 
+// Get all finished sessions for a specific month
+app.get('/workouts/history/by-month', async (req, res) => {
+  try {
+    const { month } = req.query;
+
+    if (!month || typeof month !== 'string' || !/^\d{4}-\d{2}$/.test(month)) {
+      return res.status(400).json({ error: 'month parameter required (YYYY-MM)' });
+    }
+
+    const [yearStr, monthStr] = month.split('-');
+    const year = Number(yearStr);
+    const monthIndex = Number(monthStr) - 1;
+
+    const startOfMonth = new Date(Date.UTC(year, monthIndex, 1));
+    const endOfMonth = new Date(Date.UTC(year, monthIndex + 1, 0));
+
+    const startDateTime = startOfMonth.toISOString().slice(0, 19);
+    const endDateTime = `${endOfMonth.toISOString().slice(0, 10)}T23:59:59`;
+
+    const { data: sessions, error } = await supabase
+      .from('workout_sessions')
+      .select('id, workout_id, started_at, ended_at, status')
+      .eq('user_id', req.userId)
+      .eq('status', 'finished')
+      .gte('started_at', startDateTime)
+      .lte('started_at', endDateTime)
+      .order('started_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Enrich with workout names
+    const enriched = await Promise.all(
+      (sessions || []).map(async (session: any) => {
+        const { data: workout } = await supabase
+          .from('workouts')
+          .select('name')
+          .eq('id', session.workout_id)
+          .single();
+
+        return {
+          ...session,
+          workout_name: workout?.name || 'Unknown',
+        };
+      })
+    );
+
+    res.json(enriched);
+  } catch (err: unknown) {
+    const errorMsg = formatError(err);
+    res.status(500).json({ error: errorMsg });
+  }
+});
+
 // Get details of a finished session (with exercises and sets)
 app.get('/workout-sessions/:sessionId/details', async (req, res) => {
   try {

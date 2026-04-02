@@ -16,7 +16,7 @@ const CalendarPage = () => {
   const [datesWithWorkouts, setDatesWithWorkouts] = useState<Set<string>>(
     new Set()
   );
-  const [workoutsOnDay, setWorkoutsOnDay] = useState<WorkoutHistoryByDate[]>([]);
+  const [workoutsInMonth, setWorkoutsInMonth] = useState<WorkoutHistoryByDate[]>([]);
   const [loadingDates, setLoadingDates] = useState(true);
   const [loadingWorkouts, setLoadingWorkouts] = useState(false);
 
@@ -58,15 +58,21 @@ const CalendarPage = () => {
     }
   };
 
-  const loadWorkoutsForDay = async (date: Date) => {
+  const formatMonthToString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+  };
+
+  const loadWorkoutsForMonth = async (date: Date) => {
     try {
       setLoadingWorkouts(true);
-      const dateStr = formatDateToString(date);
-      const workouts = await api.getWorkoutsByDate(dateStr);
-      setWorkoutsOnDay(workouts);
+      const monthStr = formatMonthToString(date);
+      const workouts = await api.getWorkoutsByMonth(monthStr);
+      setWorkoutsInMonth(workouts);
     } catch (err) {
       console.error('Failed to load workouts:', err);
-      setWorkoutsOnDay([]);
+      setWorkoutsInMonth([]);
     } finally {
       setLoadingWorkouts(false);
     }
@@ -77,8 +83,8 @@ const CalendarPage = () => {
   }, [calendarMonth]);
 
   useEffect(() => {
-    loadWorkoutsForDay(selectedDate);
-  }, [selectedDate]);
+    loadWorkoutsForMonth(calendarMonth);
+  }, [calendarMonth]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleDateChange = (value: any) => {
@@ -140,6 +146,13 @@ const CalendarPage = () => {
     });
   };
 
+  const formatMonthDisplay = (date: Date): string => {
+    return date.toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
   return (
     <div className="calendar-page">
       <div className="calendar-container">
@@ -164,15 +177,15 @@ const CalendarPage = () => {
       </div>
 
       <div className="workouts-container">
-        <h2>{formatDateDisplay(selectedDate)}</h2>
+        <h2>{formatMonthDisplay(calendarMonth)}</h2>
 
         {loadingWorkouts ? (
           <p className="loading">Loading workouts...</p>
-        ) : workoutsOnDay.length === 0 ? (
-          <p className="empty-state">No workouts completed on this day</p>
+        ) : workoutsInMonth.length === 0 ? (
+          <p className="empty-state">No workouts completed in this month</p>
         ) : (
           <div className="workouts-list">
-            {workoutsOnDay.map((workout) => (
+            {workoutsInMonth.map((workout) => (
               <div
                 key={workout.id}
                 className="workout-history-item"
