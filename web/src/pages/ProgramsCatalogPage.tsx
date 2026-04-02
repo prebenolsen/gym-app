@@ -137,11 +137,7 @@ const ProgramsCatalogPage = () => {
 
             <div className="template-stats">
               <div className="stat-item">
-                <span className="stat-label">Workouts</span>
-                <span className="stat-value">{template.workoutCount}</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Total Exercises</span>
+                <span className="stat-label">Exercises</span>
                 <span className="stat-value">
                   {template.workouts.reduce((sum, w) => sum + w.exercises.length, 0)}
                 </span>
