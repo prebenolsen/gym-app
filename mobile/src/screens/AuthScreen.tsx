@@ -93,21 +93,20 @@ const AuthScreen = () => {
     >
       <View style={styles.overlay}>
         <View style={styles.card}>
+          <View style={styles.authHeader}>
+            <Text style={styles.authLogoIcon}>💪</Text>
+            <Text style={styles.authHeaderText}>GymApp</Text>
+          </View>
+
           <Text style={styles.title}>
             {mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Forgot Password'}
-          </Text>
-          <Text style={styles.subtitle}>
-            {mode === 'login'
-              ? 'Sign in with your email and password.'
-              : mode === 'signup'
-              ? 'Register with your email and choose a password.'
-              : 'Enter your email to receive a password reset link.'}
           </Text>
 
           <TextInput
             style={styles.input}
             placeholder="Email"
             autoCapitalize="none"
+            autoCorrect={false}
             keyboardType="email-address"
             value={email}
             onChangeText={setEmail}
@@ -118,6 +117,8 @@ const AuthScreen = () => {
             <TextInput
               style={styles.input}
               placeholder="Password"
+              autoCapitalize="none"
+              autoCorrect={false}
               secureTextEntry
               value={password}
               onChangeText={setPassword}
@@ -129,6 +130,8 @@ const AuthScreen = () => {
             <TextInput
               style={styles.input}
               placeholder="Confirm password"
+              autoCapitalize="none"
+              autoCorrect={false}
               secureTextEntry
               value={confirmPassword}
               onChangeText={setConfirmPassword}
@@ -194,16 +197,26 @@ const styles = StyleSheet.create({
     padding: 20,
     ...shadow.card,
   },
+  authHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    marginBottom: 16,
+  },
+  authLogoIcon: {
+    fontSize: 32,
+  },
+  authHeaderText: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.textStrong,
+  },
   title: {
     fontSize: 24,
     fontWeight: '700',
     color: colors.textStrong,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  subtitle: {
-    color: colors.textMuted,
-    marginBottom: 16,
+    marginBottom: 14,
     textTransform: 'uppercase',
   },
   input: {
@@ -215,7 +228,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 10,
-    textTransform: 'uppercase',
   },
   primaryButton: {
     backgroundColor: colors.accent,
@@ -234,7 +246,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   links: {
-    marginTop: 14,
+    marginTop: 22,
     gap: 10,
   },
   link: {
