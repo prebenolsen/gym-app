@@ -102,7 +102,7 @@ const ProgramsPage = () => {
               onClick={() => navigate('/programs-catalog')}
               className="btn-import-first"
             >
-              📚 Import a Program Template
+              + Import a Program Template
             </button>
           </div>
         </div>
@@ -117,9 +117,9 @@ const ProgramsPage = () => {
         <div className="header-buttons">
           <button
             onClick={() => navigate('/programs-catalog')}
-            className="btn-secondary"
+            className="btn-primary"
           >
-            📚 Import Template
+            + Import Template
           </button>
           {!showNewProgram && (
             <button

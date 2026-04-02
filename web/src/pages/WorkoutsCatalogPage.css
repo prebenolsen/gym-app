@@ -145,19 +145,17 @@
 .sets-badge,
 .rest-badge {
   font-size: 11px;
-  padding: 2px 8px;
-  border-radius: var(--radius-xs);
+  padding: 2px 0;
   white-space: nowrap;
 }
 
 .sets-badge {
-  background-color: var(--color-info-100);
-  color: var(--color-info-600);
+  color: var(--color-text-muted);
 }
 
 .rest-badge {
-  background-color: var(--color-warning-100);
-  color: var(--color-warning-600);
+  color: var(--color-text-muted);
+  margin-left: 6px;
 }
 
 .btn-import {

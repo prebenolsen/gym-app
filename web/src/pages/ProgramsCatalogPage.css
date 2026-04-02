@@ -159,27 +159,26 @@
 }
 
 .workout-item {
-  background-color: var(--color-accent-100);
-  border: 1px solid var(--color-accent-200);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
+  padding: 8px 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.workout-item:last-child {
+  border-bottom: none;
 }
 
 .workout-name {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-text-strong);
 }
 
 .exercise-count {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--color-text-muted);
-  background-color: white;
-  padding: 3px 8px;
-  border-radius: var(--radius-xs);
 }
 
 .btn-import {
