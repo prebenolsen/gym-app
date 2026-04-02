@@ -15,6 +15,7 @@ import {
   type ExerciseHistorySummary,
 } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
+import { usePreferences } from '../context/PreferencesContext';
 import { useApi } from '../hooks/useApi';
 
 type ProgramWithWorkouts = {
@@ -24,6 +25,7 @@ type ProgramWithWorkouts = {
 };
 
 const HomeScreen = ({ navigation }: any) => {
+  const { formatWeight } = usePreferences();
   const [stats, setStats] = useState<WorkoutStats | null>(null);
   const [programTree, setProgramTree] = useState<ProgramWithWorkouts[]>([]);
   const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null);
@@ -228,7 +230,7 @@ const HomeScreen = ({ navigation }: any) => {
                   Times exercised: {exercise.times_done}
                 </Text>
                 <Text style={styles.exerciseStatText}>
-                  Max: {exercise.personal_best.toFixed(1)} kg
+                  Max: {formatWeight(exercise.personal_best)}
                 </Text>
               </View>
             </TouchableOpacity>

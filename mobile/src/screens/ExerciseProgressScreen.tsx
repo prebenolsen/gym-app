@@ -9,12 +9,14 @@ import {
 } from 'react-native';
 import { type ExerciseProgressHistory } from '@gym-app/shared';
 import { useApi } from '../hooks/useApi';
+import { usePreferences } from '../context/PreferencesContext';
 import { colors, radius, shadow } from '../theme';
 
 type ViewMode = 'max-weight' | 'total-volume';
 
 const ExerciseProgressScreen = ({ route, navigation }: any) => {
   const { exerciseId } = route.params;
+  const { unit, convertFromKg, formatWeight } = usePreferences();
   const api = useApi();
   const [data, setData] = useState<ExerciseProgressHistory | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('max-weight');
@@ -74,7 +76,7 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
         </TouchableOpacity>
         <Text style={styles.title}>{data.exercise_name}</Text>
         <Text style={styles.personalBest}>
-          Personal Best: <Text style={styles.personalBestValue}>{personalBest.toFixed(1)} kg</Text>
+          Personal Best: <Text style={styles.personalBestValue}>{formatWeight(personalBest)}</Text>
         </Text>
       </View>
 
@@ -119,7 +121,7 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
           </View>
           <View style={styles.metricCard}>
             <Text style={styles.metricLabel}>Total Volume</Text>
-            <Text style={styles.metricValue}>{Math.round(totalVolume)} kg</Text>
+            <Text style={styles.metricValue}>{Math.round(convertFromKg(totalVolume))} {unit}</Text>
           </View>
         </View>
 
@@ -130,13 +132,15 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
           </Text>
           {(() => {
             const values = data.history.map((e) =>
-              viewMode === 'max-weight' ? e.max_weight : e.total_volume
+              viewMode === 'max-weight' ? convertFromKg(e.max_weight) : convertFromKg(e.total_volume)
             );
             const maxVal = Math.max(...values, 1);
             const recent = data.history.slice(-15); // show last 15 entries
 
             return recent.map((entry, idx) => {
-              const val = viewMode === 'max-weight' ? entry.max_weight : entry.total_volume;
+              const val = viewMode === 'max-weight'
+                ? convertFromKg(entry.max_weight)
+                : convertFromKg(entry.total_volume);
               const pct = maxVal > 0 ? (val / maxVal) * 100 : 0;
               return (
                 <View key={idx} style={styles.barRow}>
@@ -156,16 +160,16 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
           <Text style={styles.sectionTitle}>Workout History</Text>
           <View style={styles.tableHeader}>
             <Text style={[styles.tableCell, styles.tableHeaderText, { flex: 1.5 }]}>Date</Text>
-            <Text style={[styles.tableCell, styles.tableHeaderText]}>Max (kg)</Text>
-            <Text style={[styles.tableCell, styles.tableHeaderText]}>Vol (kg)</Text>
+            <Text style={[styles.tableCell, styles.tableHeaderText]}>Max ({unit})</Text>
+            <Text style={[styles.tableCell, styles.tableHeaderText]}>Vol ({unit})</Text>
             <Text style={[styles.tableCell, styles.tableHeaderText]}>Sets</Text>
             <Text style={[styles.tableCell, styles.tableHeaderText]}>Reps</Text>
           </View>
           {data.history.map((entry, idx) => (
             <View key={idx} style={[styles.tableRow, idx % 2 === 0 && styles.tableRowEven]}>
               <Text style={[styles.tableCell, { flex: 1.5 }]}>{entry.date.slice(5)}</Text>
-              <Text style={styles.tableCell}>{entry.max_weight.toFixed(1)}</Text>
-              <Text style={styles.tableCell}>{Math.round(entry.total_volume)}</Text>
+              <Text style={styles.tableCell}>{convertFromKg(entry.max_weight).toFixed(1)}</Text>
+              <Text style={styles.tableCell}>{Math.round(convertFromKg(entry.total_volume))}</Text>
               <Text style={styles.tableCell}>{entry.sets}</Text>
               <Text style={styles.tableCell}>{entry.total_reps}</Text>
             </View>

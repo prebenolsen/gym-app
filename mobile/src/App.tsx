@@ -21,8 +21,8 @@ import WorkoutHistoryDetailScreen from './screens/WorkoutHistoryDetailScreen';
 import AuthScreen from './screens/AuthScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { PreferencesProvider, usePreferences } from './context/PreferencesContext';
 import { useApi } from './hooks/useApi';
-import { colors } from './theme';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -110,17 +110,21 @@ const CalendarStackNavigator = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppRoutes />
-    </AuthProvider>
+    <PreferencesProvider>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </PreferencesProvider>
   );
 }
 
 const AppRoutes = () => {
   const { session, loading } = useAuth();
+  const { ready, colors } = usePreferences();
   const api = useApi();
   const [hasActiveSession, setHasActiveSession] = useState(false);
   const [loadingActiveSession, setLoadingActiveSession] = useState(true);
+  const styles = createStyles(colors);
 
   useEffect(() => {
     let isMounted = true;
@@ -162,7 +166,7 @@ const AppRoutes = () => {
 
   const isActiveWorkoutEnabled = hasActiveSession && !loadingActiveSession;
 
-  if (loading) {
+  if (loading || !ready) {
     return null;
   }
 
@@ -277,28 +281,29 @@ const AppRoutes = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  tabBarWrapper: {
-    backgroundColor: colors.surface,
-  },
-  tabBarFooter: {
-    width: '100%',
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: 6,
-    paddingBottom: 10,
-    alignItems: 'center',
-  },
-  versionText: {
-    fontSize: 12,
-    color: colors.textMuted,
-    paddingTop: 2,
-  },
-  disabledTabButton: {
-    opacity: 0.85,
-  },
-});
+const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors']) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+    },
+    tabBarWrapper: {
+      backgroundColor: themeColors.surface,
+    },
+    tabBarFooter: {
+      width: '100%',
+      borderTopWidth: 1,
+      borderTopColor: themeColors.border,
+      paddingTop: 6,
+      paddingBottom: 10,
+      alignItems: 'center',
+    },
+    versionText: {
+      fontSize: 12,
+      color: themeColors.textMuted,
+      paddingTop: 2,
+    },
+    disabledTabButton: {
+      opacity: 0.85,
+    },
+  });
