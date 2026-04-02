@@ -101,7 +101,7 @@ const HomeScreen = ({ navigation }: any) => {
           </Text>
           <TouchableOpacity
             style={styles.btnGetStarted}
-            onPress={() => navigation.getParent()?.navigate('ProgramsStack')}
+            onPress={() => navigation.navigate('ProgramsStack')}
           >
             <Text style={styles.btnGetStartedText}>Get started! 💪</Text>
           </TouchableOpacity>
@@ -115,7 +115,7 @@ const HomeScreen = ({ navigation }: any) => {
       {activeSession && (
         <TouchableOpacity
           style={styles.activeSessionCard}
-          onPress={() => navigation.getParent()?.navigate('ActiveWorkoutStack')}
+          onPress={() => navigation.navigate('ActiveWorkoutStack')}
         >
           <Text style={styles.activeSessionText}>You have an active workout session.</Text>
           <Text style={styles.activeSessionBtn}>Resume Active Workout →</Text>
@@ -126,7 +126,7 @@ const HomeScreen = ({ navigation }: any) => {
       <View style={styles.statsGrid}>
         <TouchableOpacity
           style={styles.statCard}
-          onPress={() => navigation.getParent()?.navigate('ProgramsStack')}
+          onPress={() => navigation.navigate('ProgramsStack')}
         >
           <Text style={styles.statIcon}>📋</Text>
           <Text style={styles.statValue}>{stats.total_programs}</Text>
@@ -135,7 +135,7 @@ const HomeScreen = ({ navigation }: any) => {
 
         <TouchableOpacity
           style={styles.statCard}
-          onPress={() => navigation.getParent()?.navigate('ActiveWorkoutStack')}
+          onPress={() => navigation.navigate('ActiveWorkoutStack')}
         >
           <Text style={styles.statIcon}>🏋️</Text>
           <Text style={styles.statValue}>{stats.total_workouts}</Text>
@@ -144,7 +144,7 @@ const HomeScreen = ({ navigation }: any) => {
 
         <TouchableOpacity
           style={styles.statCard}
-          onPress={() => navigation.getParent()?.navigate('ExercisesStack')}
+          onPress={() => navigation.navigate('ProgramsStack')}
         >
           <Text style={styles.statIcon}>💪</Text>
           <Text style={styles.statValue}>{stats.total_exercises}</Text>
@@ -153,7 +153,7 @@ const HomeScreen = ({ navigation }: any) => {
 
         <TouchableOpacity
           style={styles.statCard}
-          onPress={() => navigation.getParent()?.navigate('CalendarStack')}
+          onPress={() => navigation.navigate('CalendarStack')}
         >
           <Text style={styles.statIcon}>📅</Text>
           <Text style={styles.statValue}>{workouts7Days}</Text>
@@ -187,7 +187,7 @@ const HomeScreen = ({ navigation }: any) => {
                     key={workout.id}
                     style={styles.workoutRowTile}
                     onPress={() => {
-                      navigation.getParent()?.navigate('ProgramsStack', {
+                      navigation.navigate('ProgramsStack', {
                         screen: 'WorkoutDetail',
                         params: {
                           programId: program.id,
@@ -219,7 +219,7 @@ const HomeScreen = ({ navigation }: any) => {
               key={exercise.exercise_id}
               style={styles.exerciseCard}
               onPress={() => {
-                navigation.getParent()?.navigate('ExercisesStack', {
+                navigation.navigate('ProgramsStack', {
                   screen: 'ExerciseProgress',
                   params: { exerciseId: exercise.exercise_id },
                 });

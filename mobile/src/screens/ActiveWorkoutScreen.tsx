@@ -19,12 +19,43 @@ type SetDraft = {
   reps: string;
 };
 
+type SavedSetTracking = Record<number, boolean>;
+
+const normalizeDraftValue = (value: string): string => value.trim().replace(',', '.');
+
+const hasDraftChanged = (draft: SetDraft, baseline?: SetDraft): boolean => {
+  if (!baseline) return true;
+
+  const baselineWeight = Number(normalizeDraftValue(baseline.weight));
+  const draftWeight = Number(normalizeDraftValue(draft.weight));
+  const baselineReps = Number(normalizeDraftValue(baseline.reps));
+  const draftReps = Number(normalizeDraftValue(draft.reps));
+
+  const weightChanged =
+    Number.isNaN(baselineWeight) || Number.isNaN(draftWeight)
+      ? normalizeDraftValue(draft.weight) !== normalizeDraftValue(baseline.weight)
+      : baselineWeight !== draftWeight;
+
+  const repsChanged =
+    Number.isNaN(baselineReps) || Number.isNaN(draftReps)
+      ? normalizeDraftValue(draft.reps) !== normalizeDraftValue(baseline.reps)
+      : baselineReps !== draftReps;
+
+  return weightChanged || repsChanged;
+};
+
 const formatDuration = (seconds: number): string => {
   const mins = Math.floor(seconds / 60)
     .toString()
     .padStart(2, '0');
   const secs = (seconds % 60).toString().padStart(2, '0');
   return `${mins}:${secs}`;
+};
+
+const parseApiDate = (value: string): number => {
+  const hasTz = /[zZ]|[+\-]\d{2}:?\d{2}$/.test(value);
+  const normalized = hasTz ? value : `${value}Z`;
+  return new Date(normalized).getTime();
 };
 
 const ActiveWorkoutScreen = ({ navigation }: any) => {
@@ -38,10 +69,31 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [setDraftsByExercise, setSetDraftsByExercise] = useState<Record<string, SetDraft[]>>({});
+  const [savedSetsByExercise, setSavedSetsByExercise] = useState<Record<string, SavedSetTracking>>({});
+  const [savedDraftBaselinesByExercise, setSavedDraftBaselinesByExercise] = useState<Record<string, SetDraft[]>>({});
+  const [dirtySavedSetsByExercise, setDirtySavedSetsByExercise] = useState<Record<string, SavedSetTracking>>({});
+  const [lastEditedSetIndexByExercise, setLastEditedSetIndexByExercise] = useState<Record<string, number | null>>({});
   const [savingSet, setSavingSet] = useState<number | null>(null);
   const [restSecondsLeft, setRestSecondsLeft] = useState(0);
 
   const currentExercise = exercises[currentIndex] ?? null;
+  const currentDrafts = currentExercise ? setDraftsByExercise[currentExercise.id] ?? [] : [];
+  const currentSavedSets = currentExercise ? savedSetsByExercise[currentExercise.id] ?? {} : {};
+  const currentDirtySavedSets = currentExercise
+    ? dirtySavedSetsByExercise[currentExercise.id] ?? {}
+    : {};
+  const activeSaveIndex = currentExercise
+    ? (lastEditedSetIndexByExercise[currentExercise.id] ?? null)
+    : null;
+
+  const firstUnsavedSetIndex = currentDrafts.findIndex((_, idx) => !currentSavedSets[idx + 1]);
+  const activeSaveSetNumber = activeSaveIndex !== null ? activeSaveIndex + 1 : null;
+  const activeSaveIsSaved =
+    activeSaveSetNumber !== null && currentSavedSets[activeSaveSetNumber] === true;
+  const activeSaveShouldOverwrite =
+    activeSaveSetNumber !== null &&
+    activeSaveIsSaved &&
+    currentDirtySavedSets[activeSaveSetNumber] === true;
 
   const formatWeightInput = (kg: number): string => {
     const converted = convertFromKg(kg);
@@ -60,6 +112,32 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     setSetDraftsByExercise((prev) => ({
       ...prev,
       [exercise.id]: drafts,
+    }));
+
+    const tracking: SavedSetTracking = {};
+    savedSets.forEach((set) => {
+      tracking[set.set_number] = true;
+    });
+
+    setSavedSetsByExercise((prev) => ({
+      ...prev,
+      [exercise.id]: tracking,
+    }));
+
+    setSavedDraftBaselinesByExercise((prev) => ({
+      ...prev,
+      [exercise.id]: drafts,
+    }));
+
+    setDirtySavedSetsByExercise((prev) => ({
+      ...prev,
+      [exercise.id]: {},
+    }));
+
+    const firstUnsavedIndex = drafts.findIndex((_, idx) => !tracking[idx + 1]);
+    setLastEditedSetIndexByExercise((prev) => ({
+      ...prev,
+      [exercise.id]: firstUnsavedIndex >= 0 ? firstUnsavedIndex : drafts.length > 0 ? drafts.length - 1 : null,
     }));
   };
 
@@ -102,7 +180,7 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
         hydrateDrafts(workoutExercises[index], savedSets);
       }
 
-      const startedAtMs = new Date(activeSession.started_at).getTime();
+      const startedAtMs = parseApiDate(activeSession.started_at);
       const nowMs = Date.now();
       setElapsedSeconds(Math.max(0, Math.floor((nowMs - startedAtMs) / 1000)));
     } catch (err) {
@@ -120,7 +198,7 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     if (!session) return;
 
     const timer = setInterval(() => {
-      const startedAtMs = new Date(session.started_at).getTime();
+      const startedAtMs = parseApiDate(session.started_at);
       const nowMs = Date.now();
       setElapsedSeconds(Math.max(0, Math.floor((nowMs - startedAtMs) / 1000)));
     }, 1000);
@@ -166,11 +244,30 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     field: keyof SetDraft,
     value: string
   ) => {
+    setLastEditedSetIndexByExercise((prev) => ({
+      ...prev,
+      [exerciseId]: index,
+    }));
+
     setSetDraftsByExercise((prev) => {
       const current = prev[exerciseId] ?? [];
       const next = current.map((row, rowIndex) =>
         rowIndex === index ? { ...row, [field]: value } : row
       );
+
+      const setNumber = index + 1;
+      if (savedSetsByExercise[exerciseId]?.[setNumber]) {
+        const baseline = savedDraftBaselinesByExercise[exerciseId]?.[index];
+        const isDirty = hasDraftChanged(next[index], baseline);
+        setDirtySavedSetsByExercise((prevDirty) => ({
+          ...prevDirty,
+          [exerciseId]: {
+            ...(prevDirty[exerciseId] ?? {}),
+            [setNumber]: isDirty,
+          },
+        }));
+      }
+
       return { ...prev, [exerciseId]: next };
     });
   };
@@ -198,6 +295,29 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
         weight: Number(convertToKg(weightInput).toFixed(2)),
         reps,
       });
+
+      setSavedSetsByExercise((prev) => ({
+        ...prev,
+        [currentExercise.id]: {
+          ...(prev[currentExercise.id] ?? {}),
+          [index + 1]: true,
+        },
+      }));
+
+      setSavedDraftBaselinesByExercise((prev) => ({
+        ...prev,
+        [currentExercise.id]: (prev[currentExercise.id] ?? drafts).map((row, rowIndex) =>
+          rowIndex === index ? { ...draft } : row
+        ),
+      }));
+
+      setDirtySavedSetsByExercise((prev) => ({
+        ...prev,
+        [currentExercise.id]: {
+          ...(prev[currentExercise.id] ?? {}),
+          [index + 1]: false,
+        },
+      }));
 
       setRestSecondsLeft(currentExercise.rest_seconds);
     } catch (err) {
@@ -296,14 +416,14 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{title}</Text>
-        {currentExercise ? (
-          <Text style={styles.currentExerciseTitle}>
-            Exercise {currentIndex + 1}/{exercises.length}: {currentExercise.name}
-          </Text>
-        ) : null}
-        <Text style={styles.restTimerText}>
-          {restSecondsLeft > 0 ? `Rest Timer: ${formatDuration(restSecondsLeft)}` : 'Rest Timer: Ready'}
-        </Text>
+        <View style={styles.headerActionsRow}>
+          <TouchableOpacity style={styles.cancelButton} onPress={handleCancelWorkout}>
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.finishButton} onPress={handleFinishWorkout}>
+            <Text style={styles.finishButtonText}>Finish</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView style={styles.list}>
@@ -318,71 +438,129 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
               <Text style={styles.setsHeaderCell}>Set</Text>
               <Text style={styles.setsHeaderCell}>Weight ({unit})</Text>
               <Text style={styles.setsHeaderCell}>Reps</Text>
-              <Text style={styles.setsHeaderCell}>Save</Text>
+              <Text style={styles.setsStatusHeaderCell}></Text>
             </View>
 
-            {(setDraftsByExercise[currentExercise.id] ?? []).map((draft, setIndex) => (
-              <View key={`${currentExercise.id}-${setIndex}`} style={styles.setRow}>
+            {currentDrafts.map((draft, setIndex) => {
+              const setNumber = setIndex + 1;
+              const isSaved = currentSavedSets[setNumber] === true;
+              const canEdit = firstUnsavedSetIndex === setIndex || isSaved;
+              const isLocked = !canEdit && !isSaved;
+
+              return (
+              <View
+                key={`${currentExercise.id}-${setIndex}`}
+                style={[
+                  styles.setRow,
+                  isLocked && styles.setRowLocked,
+                ]}
+              >
                 <Text style={styles.setCellLabel}>{setIndex + 1}</Text>
                 <TextInput
-                  style={styles.setInput}
+                  style={[
+                    styles.setInput,
+                    isLocked && styles.setInputLocked,
+                  ]}
                   value={draft.weight}
+                  onFocus={() =>
+                    setLastEditedSetIndexByExercise((prev) => ({
+                      ...prev,
+                      [currentExercise.id]: setIndex,
+                    }))
+                  }
                   keyboardType="decimal-pad"
                   onChangeText={(value) =>
                     handleSetFieldChange(currentExercise.id, setIndex, 'weight', value)
                   }
+                  editable={canEdit}
                 />
                 <TextInput
-                  style={styles.setInput}
+                  style={[
+                    styles.setInput,
+                    isLocked && styles.setInputLocked,
+                  ]}
                   value={draft.reps}
+                  onFocus={() =>
+                    setLastEditedSetIndexByExercise((prev) => ({
+                      ...prev,
+                      [currentExercise.id]: setIndex,
+                    }))
+                  }
                   keyboardType="number-pad"
                   onChangeText={(value) =>
                     handleSetFieldChange(currentExercise.id, setIndex, 'reps', value)
                   }
+                  editable={canEdit}
                 />
-                <TouchableOpacity
-                  style={styles.saveSetButton}
-                  onPress={() => handleSaveSet(setIndex)}
-                  disabled={savingSet === setIndex}
-                >
-                  <Text style={styles.saveSetButtonText}>
-                    {savingSet === setIndex ? '...' : 'Save'}
-                  </Text>
-                </TouchableOpacity>
+                <View style={styles.setStatusCell}>
+                  <Text style={styles.setStatusText}>{isSaved ? '✓' : ''}</Text>
+                </View>
               </View>
-            ))}
+              );
+            })}
 
-            <View style={styles.exerciseNavRow}>
-              <TouchableOpacity
-                style={[styles.navButton, currentIndex === 0 && styles.navButtonDisabled]}
-                onPress={() => handleNavigateExercise('prev')}
-                disabled={currentIndex === 0}
-              >
-                <Text style={styles.navButtonText}>Previous</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.navButton,
-                  currentIndex >= exercises.length - 1 && styles.navButtonDisabled,
-                ]}
-                onPress={() => handleNavigateExercise('next')}
-                disabled={currentIndex >= exercises.length - 1}
-              >
-                <Text style={styles.navButtonText}>Next</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         )}
       </ScrollView>
 
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.cancelButton} onPress={handleCancelWorkout}>
-          <Text style={styles.cancelButtonText}>Cancel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.finishButton} onPress={handleFinishWorkout}>
-          <Text style={styles.finishButtonText}>Finish</Text>
-        </TouchableOpacity>
-      </View>
+      {currentExercise ? (
+        <View style={styles.bottomActionsWrap}>
+          <Text style={styles.restTimerText}>
+            {restSecondsLeft > 0 ? `Rest: ${restSecondsLeft}s` : 'Rest: Ready'}
+          </Text>
+          <View style={styles.bottomActionsBar}>
+            <TouchableOpacity
+              style={[styles.navButton, currentIndex === 0 && styles.navButtonDisabled]}
+              onPress={() => handleNavigateExercise('prev')}
+              disabled={currentIndex === 0}
+            >
+              <Text style={styles.navButtonText}>Previous</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.saveSetButton,
+                activeSaveShouldOverwrite && styles.saveSetButtonOverwrite,
+              ]}
+              onPress={() => activeSaveIndex !== null && handleSaveSet(activeSaveIndex)}
+              disabled={activeSaveIndex === null || savingSet === activeSaveIndex}
+            >
+              <Text style={styles.saveSetButtonText}>
+                {activeSaveSetNumber === null
+                  ? 'Save'
+                  : savingSet === activeSaveIndex
+                    ? `Saving #${activeSaveSetNumber}...`
+                    : activeSaveShouldOverwrite
+                      ? `Overwrite #${activeSaveSetNumber}`
+                      : `Save #${activeSaveSetNumber}`}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.navButton,
+                currentIndex >= exercises.length - 1 && styles.navButtonDisabled,
+              ]}
+              onPress={() => handleNavigateExercise('next')}
+              disabled={currentIndex >= exercises.length - 1}
+            >
+              <Text style={styles.navButtonText}>Next</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.exerciseProgressRow}>
+            {exercises.map((exercise, index) => (
+              <View
+                key={exercise.id}
+                style={[
+                  styles.exerciseProgressMark,
+                  index === currentIndex && styles.exerciseProgressMarkActive,
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 };
@@ -405,24 +583,23 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     borderBottomWidth: 1,
     padding: 16,
   },
+  headerActionsRow: {
+    marginTop: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   title: {
     color: themeColors.textStrong,
     fontSize: 22,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
-  currentExerciseTitle: {
-    marginTop: 6,
-    color: themeColors.textStrong,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    fontSize: 12,
-  },
   restTimerText: {
-    marginTop: 4,
     color: themeColors.textMuted,
-    textTransform: 'uppercase',
     fontSize: 12,
+    marginBottom: 6,
+    textAlign: 'center',
   },
   list: {
     flex: 1,
@@ -434,7 +611,7 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     padding: 14,
-    marginBottom: 10,
+    marginBottom: 6,
     ...shadow.card,
   },
   exerciseName: {
@@ -464,14 +641,25 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
   },
+  setsStatusHeaderCell: {
+    width: 24,
+  },
   setRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    borderRadius: radius.sm,
+    paddingHorizontal: 4,
+    paddingVertical: 3,
+  },
+  setRowLocked: {
+    opacity: 0.45,
   },
   setCellLabel: {
-    width: 24,
+    width: 30,
     color: themeColors.textStrong,
     fontWeight: '700',
     textAlign: 'center',
@@ -481,27 +669,40 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: themeColors.border,
     borderRadius: radius.sm,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
     color: themeColors.textStrong,
     backgroundColor: themeColors.background,
+  },
+  setInputLocked: {
+    backgroundColor: themeColors.accentSoft,
+  },
+  setStatusCell: {
+    width: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  setStatusText: {
+    color: themeColors.accent,
+    fontWeight: '700',
+    fontSize: 16,
   },
   saveSetButton: {
     backgroundColor: themeColors.accent,
     borderRadius: radius.sm,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+    flex: 1.1,
+    alignItems: 'center',
+  },
+  saveSetButtonOverwrite: {
+    backgroundColor: themeColors.danger,
   },
   saveSetButtonText: {
     color: '#fff',
     fontWeight: '700',
     fontSize: 11,
     textTransform: 'uppercase',
-  },
-  exerciseNavRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 8,
   },
   navButton: {
     flex: 1,
@@ -518,41 +719,69 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   navButtonText: {
     color: themeColors.accent,
     fontWeight: '700',
-    fontSize: 12,
+    fontSize: 11,
     textTransform: 'uppercase',
   },
-  actions: {
-    flexDirection: 'row',
-    gap: 10,
-    padding: 16,
+  bottomActionsWrap: {
     borderTopWidth: 1,
     borderTopColor: themeColors.border,
     backgroundColor: themeColors.surface,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 10,
+  },
+  bottomActionsBar: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  exerciseProgressRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  exerciseProgressMark: {
+    width: 18,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: themeColors.border,
+  },
+  exerciseProgressMarkActive: {
+    height: 5,
+    backgroundColor: themeColors.accent,
   },
   cancelButton: {
-    flex: 1,
-    backgroundColor: themeColors.danger,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: themeColors.danger,
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    minWidth: 92,
   },
   cancelButtonText: {
-    color: '#fff',
+    color: themeColors.danger,
     fontWeight: '700',
+    fontSize: 11,
     textTransform: 'uppercase',
   },
   finishButton: {
-    flex: 1,
-    backgroundColor: themeColors.success,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: themeColors.success,
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    minWidth: 92,
   },
   finishButtonText: {
-    color: '#fff',
+    color: themeColors.success,
     fontWeight: '700',
+    fontSize: 11,
     textTransform: 'uppercase',
   },
   emptyTitle: {

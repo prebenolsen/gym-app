@@ -9,7 +9,6 @@ import HomeScreen from './screens/HomeScreen';
 import ProgramsScreen from './screens/ProgramsScreen';
 import ProgramDetailScreen from './screens/ProgramDetailScreen';
 import WorkoutDetailScreen from './screens/WorkoutDetailScreen';
-import ExercisesScreen from './screens/ExercisesScreen';
 import ExercisesCatalogScreen from './screens/ExercisesCatalogScreen';
 import ExerciseProgressScreen from './screens/ExerciseProgressScreen';
 import ProgramsCatalogScreen from './screens/ProgramsCatalogScreen';
@@ -28,8 +27,17 @@ const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 const tabIconStyle = ({ color, opacity = 1 }: { color: string; opacity?: number }) => ({
   color,
-  fontSize: 19,
+  fontSize: 24,
   opacity,
+});
+
+const createTabIconWrapperStyle = (isFocused: boolean, accentColor: string) => ({
+  borderBottomWidth: isFocused ? 2 : 0,
+  borderBottomColor: accentColor,
+  justifyContent: 'center' as const,
+  minWidth: 28,
+  minHeight: 30,
+  alignItems: 'center' as const,
 });
 
 const ProgramsStackNavigator = () => {
@@ -62,17 +70,6 @@ const ProgramsStackNavigator = () => {
       <Stack.Screen
         name="WorkoutsCatalog"
         component={WorkoutsCatalogScreen}
-      />
-    </Stack.Navigator>
-  );
-};
-
-const ExercisesStackNavigator = () => {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen
-        name="ExercisesList"
-        component={ExercisesScreen}
       />
       <Stack.Screen
         name="ExerciseProgress"
@@ -195,8 +192,13 @@ const AppRoutes = () => {
               backgroundColor: colors.surface,
               borderTopColor: colors.border,
               borderTopWidth: 1,
-              height: 64,
-              paddingTop: 6,
+              height: 70,
+              paddingTop: 0,
+              paddingBottom: 0,
+            },
+            tabBarItemStyle: {
+              alignItems: 'center',
+              justifyContent: 'center',
             },
           }}
         >
@@ -204,8 +206,10 @@ const AppRoutes = () => {
             name="Home"
             component={HomeScreen}
             options={{
-              tabBarIcon: ({ color }) => (
-                <Text style={tabIconStyle({ color })}>⚡</Text>
+              tabBarIcon: ({ color, focused }) => (
+                <View style={createTabIconWrapperStyle(focused, colors.accent)}>
+                  <Text style={tabIconStyle({ color })}>⚡</Text>
+                </View>
               ),
             }}
           />
@@ -213,8 +217,10 @@ const AppRoutes = () => {
             name="ProgramsStack"
             component={ProgramsStackNavigator}
             options={{
-              tabBarIcon: ({ color }) => (
-                <Text style={tabIconStyle({ color })}>📋</Text>
+              tabBarIcon: ({ color, focused }) => (
+                <View style={createTabIconWrapperStyle(focused, colors.accent)}>
+                  <Text style={tabIconStyle({ color })}>📋</Text>
+                </View>
               ),
             }}
           />
@@ -222,15 +228,17 @@ const AppRoutes = () => {
             name="ActiveWorkoutStack"
             component={ActiveWorkoutStackNavigator}
             options={{
-              tabBarIcon: ({ color }) => (
-                <Text
-                  style={tabIconStyle({
-                    color: isActiveWorkoutEnabled ? color : colors.textMuted,
-                    opacity: isActiveWorkoutEnabled ? 1 : 0.45,
-                  })}
-                >
-                  🏋️
-                </Text>
+              tabBarIcon: ({ color, focused }) => (
+                <View style={createTabIconWrapperStyle(focused, colors.accent)}>
+                  <Text
+                    style={tabIconStyle({
+                      color: isActiveWorkoutEnabled ? color : colors.textMuted,
+                      opacity: isActiveWorkoutEnabled ? 1 : 0.45,
+                    })}
+                  >
+                    🏋️
+                  </Text>
+                </View>
               ),
               tabBarButton: (props) => {
                 if (isActiveWorkoutEnabled) {
@@ -252,17 +260,10 @@ const AppRoutes = () => {
             name="CalendarStack"
             component={CalendarStackNavigator}
             options={{
-              tabBarIcon: ({ color }) => (
-                <Text style={tabIconStyle({ color })}>📅</Text>
-              ),
-            }}
-          />
-          <Tab.Screen
-            name="ExercisesStack"
-            component={ExercisesStackNavigator}
-            options={{
-              tabBarIcon: ({ color }) => (
-                <Text style={tabIconStyle({ color })}>💪</Text>
+              tabBarIcon: ({ color, focused }) => (
+                <View style={createTabIconWrapperStyle(focused, colors.accent)}>
+                  <Text style={tabIconStyle({ color })}>📅</Text>
+                </View>
               ),
             }}
           />
@@ -270,8 +271,10 @@ const AppRoutes = () => {
             name="Settings"
             component={SettingsScreen}
             options={{
-              tabBarIcon: ({ color }) => (
-                <Text style={tabIconStyle({ color })}>⚙️</Text>
+              tabBarIcon: ({ color, focused }) => (
+                <View style={createTabIconWrapperStyle(focused, colors.accent)}>
+                  <Text style={tabIconStyle({ color })}>⚙️</Text>
+                </View>
               ),
             }}
           />

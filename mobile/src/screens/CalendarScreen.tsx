@@ -18,6 +18,13 @@ const toMonthKey = (date: Date): string => {
   return `${year}-${month}`;
 };
 
+const toDateKey = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const formatMonthHeading = (date: Date): string =>
   date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
 
@@ -39,13 +46,47 @@ const formatDuration = (startIso: string, endIso: string | null): string => {
   return `${hours}:${String(minutes).padStart(2, '0')}`;
 };
 
+const WEEKDAY_LABELS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+type CalendarDayCell = {
+  date: Date;
+  inCurrentMonth: boolean;
+};
+
+const getCalendarCells = (monthDate: Date): CalendarDayCell[] => {
+  const firstOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+  const startOffset = firstOfMonth.getDay();
+  const gridStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1 - startOffset);
+
+  return Array.from({ length: 42 }).map((_, idx) => {
+    const date = new Date(gridStart);
+    date.setDate(gridStart.getDate() + idx);
+    return {
+      date,
+      inCurrentMonth: date.getMonth() === monthDate.getMonth(),
+    };
+  });
+};
+
 const CalendarScreen = ({ navigation }: any) => {
   const api = useApi();
   const { colors: themeColors } = usePreferences();
   const styles = createStyles(themeColors);
   const [monthDate, setMonthDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
+  const [loadingDates, setLoadingDates] = useState(true);
   const [workouts, setWorkouts] = useState<WorkoutHistoryByDate[]>([]);
+  const [datesWithWorkouts, setDatesWithWorkouts] = useState<Set<string>>(new Set());
+
+  const calendarCells = useMemo(() => getCalendarCells(monthDate), [monthDate]);
+
+  const selectedDayKey = useMemo(() => toDateKey(selectedDate), [selectedDate]);
+
+  const workoutsForSelectedDay = useMemo(
+    () => workouts.filter((entry) => entry.started_at.slice(0, 10) === selectedDayKey),
+    [workouts, selectedDayKey]
+  );
 
   const loadWorkouts = async (date: Date) => {
     setLoading(true);
@@ -61,14 +102,86 @@ const CalendarScreen = ({ navigation }: any) => {
     }
   };
 
+  const loadDatesWithWorkouts = async (date: Date) => {
+    setLoadingDates(true);
+    try {
+      const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+      const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+      const startDate = new Date(startOfMonth);
+      startDate.setDate(startDate.getDate() - 7);
+
+      const endDate = new Date(endOfMonth);
+      endDate.setDate(endDate.getDate() + 7);
+
+      const dates = await api.getDatesWithWorkouts(toDateKey(startDate), toDateKey(endDate));
+      setDatesWithWorkouts(new Set(dates));
+    } catch (err) {
+      console.error('Failed to load dates with workouts:', err);
+      setDatesWithWorkouts(new Set());
+    } finally {
+      setLoadingDates(false);
+    }
+  };
+
   useEffect(() => {
     loadWorkouts(monthDate);
+    loadDatesWithWorkouts(monthDate);
   }, [monthDate]);
 
   const heading = useMemo(() => formatMonthHeading(monthDate), [monthDate]);
 
   const shiftMonth = (offset: number) => {
-    setMonthDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + offset, 1));
+    setMonthDate((prev) => {
+      const next = new Date(prev.getFullYear(), prev.getMonth() + offset, 1);
+      setSelectedDate(next);
+      return next;
+    });
+  };
+
+  const renderCalendarGrid = () => {
+    return (
+      <View style={styles.calendarCard}>
+        <View style={styles.weekdaysRow}>
+          {WEEKDAY_LABELS.map((label) => (
+            <Text key={label} style={styles.weekdayText}>
+              {label}
+            </Text>
+          ))}
+        </View>
+
+        <View style={styles.daysGrid}>
+          {calendarCells.map((cell) => {
+            const key = toDateKey(cell.date);
+            const hasWorkout = datesWithWorkouts.has(key);
+            const isSelected = key === selectedDayKey;
+
+            return (
+              <TouchableOpacity
+                key={key}
+                style={[
+                  styles.dayCell,
+                  !cell.inCurrentMonth && styles.dayCellOutside,
+                  isSelected && styles.dayCellSelected,
+                ]}
+                onPress={() => setSelectedDate(cell.date)}
+              >
+                <Text
+                  style={[
+                    styles.dayCellText,
+                    !cell.inCurrentMonth && styles.dayCellTextOutside,
+                    isSelected && styles.dayCellTextSelected,
+                  ]}
+                >
+                  {cell.date.getDate()}
+                </Text>
+                {hasWorkout ? <View style={styles.workoutDot} /> : null}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+    );
   };
 
   return (
@@ -77,39 +190,48 @@ const CalendarScreen = ({ navigation }: any) => {
         <Text style={styles.title}>Workout History</Text>
         <View style={styles.monthRow}>
           <TouchableOpacity style={styles.monthButton} onPress={() => shiftMonth(-1)}>
-            <Text style={styles.monthButtonText}>◀</Text>
+            <Text style={styles.monthButtonText}>{'<'}</Text>
           </TouchableOpacity>
           <Text style={styles.monthLabel}>{heading}</Text>
           <TouchableOpacity style={styles.monthButton} onPress={() => shiftMonth(1)}>
-            <Text style={styles.monthButtonText}>▶</Text>
+            <Text style={styles.monthButtonText}>{'>'}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {loading ? (
+      {loading || loadingDates ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={themeColors.accent} />
         </View>
-      ) : workouts.length === 0 ? (
-        <View style={styles.centered}>
-          <Text style={styles.emptyText}>No workouts completed in this month</Text>
-        </View>
       ) : (
         <ScrollView style={styles.list}>
-          {workouts.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.historyItem}
-              onPress={() => navigation.navigate('WorkoutHistoryDetail', { sessionId: item.id })}
-            >
-              <Text style={styles.workoutName}>{item.workout_name}</Text>
-              <Text style={styles.metaText}>Start: {formatTime(item.started_at)}</Text>
-              {item.ended_at ? <Text style={styles.metaText}>End: {formatTime(item.ended_at)}</Text> : null}
-              <Text style={styles.metaText}>
-                Duration: {formatDuration(item.started_at, item.ended_at)}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {renderCalendarGrid()}
+
+          <View style={styles.listHeaderBlock}>
+            <Text style={styles.listTitle}>Workouts</Text>
+            <Text style={styles.listSubtitle}>{selectedDayKey}</Text>
+          </View>
+
+          {workoutsForSelectedDay.length === 0 ? (
+            <View style={styles.emptyBlock}>
+              <Text style={styles.emptyText}>No workouts for selected date</Text>
+            </View>
+          ) : (
+            workoutsForSelectedDay.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.historyItem}
+                onPress={() => navigation.navigate('WorkoutHistoryDetail', { sessionId: item.id })}
+              >
+                <Text style={styles.workoutName}>{item.workout_name}</Text>
+                <Text style={styles.metaText}>Start: {formatTime(item.started_at)}</Text>
+                {item.ended_at ? <Text style={styles.metaText}>End: {formatTime(item.ended_at)}</Text> : null}
+                <Text style={styles.metaText}>
+                  Duration: {formatDuration(item.started_at, item.ended_at)}
+                </Text>
+              </TouchableOpacity>
+            ))
+          )}
         </ScrollView>
       )}
     </View>
@@ -156,9 +278,85 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     color: themeColors.textStrong,
     fontWeight: '700',
   },
+  calendarCard: {
+    backgroundColor: themeColors.surface,
+    borderColor: themeColors.border,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: 10,
+    marginBottom: 14,
+    ...shadow.card,
+  },
+  weekdaysRow: {
+    flexDirection: 'row',
+    marginBottom: 6,
+  },
+  weekdayText: {
+    flex: 1,
+    textAlign: 'center',
+    color: themeColors.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    rowGap: 6,
+  },
+  dayCell: {
+    width: '14.2857%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: radius.sm,
+    minHeight: 42,
+  },
+  dayCellOutside: {
+    opacity: 0.5,
+  },
+  dayCellSelected: {
+    backgroundColor: themeColors.accentSoft,
+    borderColor: themeColors.accent,
+    borderWidth: 1,
+  },
+  dayCellText: {
+    color: themeColors.textStrong,
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  dayCellTextOutside: {
+    color: themeColors.textMuted,
+  },
+  dayCellTextSelected: {
+    color: themeColors.accent,
+    fontWeight: '700',
+  },
+  workoutDot: {
+    marginTop: 3,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: themeColors.accent,
+  },
   list: {
     flex: 1,
     padding: 16,
+  },
+  listHeaderBlock: {
+    marginBottom: 10,
+    gap: 3,
+  },
+  listTitle: {
+    color: themeColors.textStrong,
+    fontSize: 16,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  listSubtitle: {
+    color: themeColors.textMuted,
+    fontSize: 12,
+    textTransform: 'uppercase',
   },
   historyItem: {
     backgroundColor: themeColors.surface,
@@ -185,6 +383,13 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
+  },
+  emptyBlock: {
+    backgroundColor: themeColors.surface,
+    borderColor: themeColors.border,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: 14,
   },
   emptyText: {
     color: themeColors.textMuted,
