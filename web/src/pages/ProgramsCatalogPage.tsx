@@ -1,7 +1,5 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PROGRAM_TEMPLATES, type ProgramTemplate } from '@gym-app/shared';
-import { useApi } from '../hooks/useApi';
 import './ProgramsCatalogPage.css';
 
 const TIME_PER_SET_SECONDS = {
@@ -73,36 +71,6 @@ const getProgramAverageWorkoutEstimateMinutes = (
 
 const ProgramsCatalogPage = () => {
   const navigate = useNavigate();
-  const api = useApi();
-
-  const [importing, setImporting] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  const handleImportTemplate = async (templateId: string) => {
-    setImporting(templateId);
-    setError(null);
-    try {
-      const template = PROGRAM_TEMPLATES.find(
-        (t: ProgramTemplate) => t.id === templateId
-      );
-      if (!template) {
-        throw new Error('Template not found');
-      }
-
-      await api.createProgramWithWorkouts(template);
-      setSuccess(true);
-
-      // Redirect back to programs page after short delay to show success feedback
-      setTimeout(() => {
-        navigate('/programs');
-      }, 1000);
-    } catch (err) {
-      console.error('Failed to import template:', err);
-      setError('Failed to import program template. Please try again.');
-      setImporting(null);
-    }
-  };
 
   return (
     <div className="programs-catalog-page">
@@ -117,11 +85,6 @@ const ProgramsCatalogPage = () => {
           </p>
         </div>
       </div>
-
-      {error && <div className="error-message">{error}</div>}
-      {success && (
-        <div className="success-message">Program imported successfully! Redirecting...</div>
-      )}
 
       <div className="templates-grid">
         {PROGRAM_TEMPLATES.map((template: ProgramTemplate) => {
@@ -166,10 +129,9 @@ const ProgramsCatalogPage = () => {
 
             <button
               className="btn-import"
-              onClick={() => handleImportTemplate(template.id)}
-              disabled={importing !== null}
+              onClick={() => navigate(`/programs-catalog/${template.id}`)}
             >
-              {importing === template.id ? 'Importing...' : 'Import Program'}
+              View &amp; Edit Program
             </button>
             </div>
           );

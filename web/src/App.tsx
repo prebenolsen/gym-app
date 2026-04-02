@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import ProgramsPage from './pages/ProgramsPage';
 import ProgramDetailPage from './pages/ProgramDetailPage';
 import ProgramsCatalogPage from './pages/ProgramsCatalogPage';
+import ProgramTemplatePage from './pages/ProgramTemplatePage';
 import WorkoutDetailPage from './pages/WorkoutDetailPage';
 import WorkoutsCatalogPage from './pages/WorkoutsCatalogPage';
 import ExercisesPage from './pages/ExercisesPage';
@@ -45,6 +46,7 @@ function AppContent() {
             <Route path="/" element={<HomePage />} />
             <Route path="/programs" element={<ProgramsPage />} />
             <Route path="/programs-catalog" element={<ProgramsCatalogPage />} />
+            <Route path="/programs-catalog/:templateId" element={<ProgramTemplatePage />} />
             <Route path="/programs/:programId" element={<ProgramDetailPage />} />
             <Route path="/programs/:programId/workouts-catalog" element={<WorkoutsCatalogPage />} />
             <Route
