@@ -91,8 +91,10 @@ const CalendarPage = () => {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleActiveStartDateChange = (value: any) => {
-    if (value instanceof Date) {
-      setCalendarMonth(value);
+    if (value && value.activeStartDate instanceof Date) {
+          } else if (value instanceof Date) {
+            setCalendarMonth(value);
+      setCalendarMonth(value.activeStartDate || value);
     }
   };
 
