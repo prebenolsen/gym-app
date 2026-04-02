@@ -16,7 +16,7 @@ import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
 
 const SettingsScreen = () => {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const {
     theme,
     setTheme,
@@ -128,6 +128,7 @@ const SettingsScreen = () => {
 
       <View style={styles.card}>
         <Text style={styles.title}>Account</Text>
+        <Text style={styles.accountEmail}>{user?.email ?? 'No email available'}</Text>
 
         <TouchableOpacity style={styles.primaryButton} onPress={() => signOut()}>
           <Text style={styles.primaryButtonText}>Log Out</Text>
@@ -156,7 +157,6 @@ const SettingsScreen = () => {
 
         <View style={styles.dangerBox}>
           <Text style={styles.dangerTitle}>Delete Account</Text>
-          <Text style={styles.dangerText}>This permanently deletes your account and all data.</Text>
           <TouchableOpacity style={styles.dangerButton} onPress={handleDeleteAccount}>
             <Text style={styles.dangerButtonText}>Delete Account</Text>
           </TouchableOpacity>
@@ -190,6 +190,11 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       marginBottom: 12,
       textTransform: 'uppercase',
+    },
+    accountEmail: {
+      color: themeColors.textMuted,
+      marginTop: -6,
+      marginBottom: 12,
     },
     settingRow: {
       flexDirection: 'row',
@@ -287,11 +292,6 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.danger,
       fontWeight: '700',
       marginBottom: 6,
-      textTransform: 'uppercase',
-    },
-    dangerText: {
-      color: themeColors.textMuted,
-      marginBottom: 10,
       textTransform: 'uppercase',
     },
     dangerButton: {
