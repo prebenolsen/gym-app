@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import './LoginPage.css';
 
 const LoginPage = () => {
   const { signIn } = useAuth();
+  const navigate = useNavigate();
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,10 +38,17 @@ const LoginPage = () => {
           throw signupError;
         }
 
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData.session) {
+          navigate('/');
+          return;
+        }
+
         setMessage('Account created. If email confirmation is required, check your inbox.');
         setMode('login');
       } else {
         await signIn(email.trim(), password);
+        navigate('/');
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Authentication failed';

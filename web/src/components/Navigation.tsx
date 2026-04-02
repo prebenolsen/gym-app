@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useApi } from '../hooks/useApi';
 import './Navigation.css';
 
 const navItems = [
@@ -10,6 +12,25 @@ const navItems = [
 
 const Navigation = () => {
   const location = useLocation();
+  const api = useApi();
+  const [hasActiveSession, setHasActiveSession] = useState(false);
+  const [loadingActiveSession, setLoadingActiveSession] = useState(true);
+
+  useEffect(() => {
+    const fetchActiveSession = async () => {
+      try {
+        const session = await api.getActiveSession();
+        setHasActiveSession(!!session);
+      } catch (err) {
+        console.error('Failed to fetch active workout session:', err);
+        setHasActiveSession(false);
+      } finally {
+        setLoadingActiveSession(false);
+      }
+    };
+
+    fetchActiveSession();
+  }, [location.pathname, api]);
 
   const isActive = (path: string) => {
     if (path === '/active-workout') return location.pathname === '/active-workout';
@@ -29,10 +50,17 @@ const Navigation = () => {
       <ul className="nav-links">
         {navItems.map(({ path, label, icon }) => (
           <li key={path}>
-            <Link className={isActive(path) ? 'active' : ''} to={path}>
-              <span className="nav-icon">{icon}</span>
-              <span className="nav-label">{label}</span>
-            </Link>
+            {path === '/active-workout' && (!hasActiveSession || loadingActiveSession) ? (
+              <span className="nav-disabled" aria-disabled="true">
+                <span className="nav-icon">{icon}</span>
+                <span className="nav-label">{label}</span>
+              </span>
+            ) : (
+              <Link className={isActive(path) ? 'active' : ''} to={path}>
+                <span className="nav-icon">{icon}</span>
+                <span className="nav-label">{label}</span>
+              </Link>
+            )}
           </li>
         ))}
       </ul>
