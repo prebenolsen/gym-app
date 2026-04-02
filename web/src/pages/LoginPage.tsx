@@ -85,16 +85,10 @@ const LoginPage = () => {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h1>
-          {mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Forgot Password'}
-        </h1>
-        <p className="auth-subtitle">
-          {mode === 'login'
-            ? 'Sign in with your email and password.'
-            : mode === 'signup'
-            ? 'Register with your email and password.'
-            : 'Enter your email and we will send a reset link.'}
-        </p>
+        <div className="auth-header">
+          <span className="auth-logo-icon">💪</span>
+          <h1>GymApp</h1>
+        </div>
 
         <form onSubmit={mode === 'forgot' ? handleForgotPassword : handleAuth} className="auth-form">
           <label>
