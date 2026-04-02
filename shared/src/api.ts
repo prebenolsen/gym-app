@@ -107,6 +107,35 @@ class ApiClient {
     return this.request('DELETE', '/account');
   }
 
+  async createProgramWithWorkouts(
+    template: {
+      name: string;
+      workouts: { name: string; exercises: { name: string; sets: number; rest_seconds: number }[] }[];
+    }
+  ): Promise<void> {
+    try {
+      // Step 1: Create the program
+      const newProgram = await this.createProgram({ name: template.name });
+
+      // Step 2: For each workout in the template
+      for (const workout of template.workouts) {
+        const newWorkout = await this.createWorkout(newProgram.id, { name: workout.name });
+
+        // Step 3: For each exercise in this workout
+        for (const exercise of workout.exercises) {
+          await this.createExercise(newWorkout.id, {
+            name: exercise.name,
+            sets: exercise.sets,
+            rest_seconds: exercise.rest_seconds,
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to import program template:', err);
+      throw err;
+    }
+  }
+
   /* === WORKOUTS === */
 
   async getWorkouts(programId: string): Promise<Workout[]> {
@@ -131,6 +160,28 @@ class ApiClient {
 
   async deleteWorkout(id: string): Promise<void> {
     return this.request('DELETE', `/workouts/${id}`);
+  }
+
+  async createWorkoutWithExercises(
+    programId: string,
+    template: { name: string; exercises: { name: string; sets: number; rest_seconds: number }[] }
+  ): Promise<void> {
+    try {
+      // Step 1: Create the workout
+      const newWorkout = await this.createWorkout(programId, { name: template.name });
+
+      // Step 2: Create all exercises for the workout
+      for (const exercise of template.exercises) {
+        await this.createExercise(newWorkout.id, {
+          name: exercise.name,
+          sets: exercise.sets,
+          rest_seconds: exercise.rest_seconds,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to import workout template:', err);
+      throw err;
+    }
   }
 
   async reorderWorkouts(

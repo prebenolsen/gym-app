@@ -1,0 +1,216 @@
+.workouts-catalog-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.catalog-header {
+  margin-bottom: 40px;
+}
+
+.catalog-header h1 {
+  font-size: 32px;
+  margin: 0 0 8px 0;
+  color: var(--color-text-strong);
+}
+
+.catalog-subtitle {
+  font-size: 16px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.error-message {
+  background-color: var(--color-error-100);
+  color: var(--color-error-600);
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--color-error-600);
+}
+
+.success-message {
+  background-color: var(--color-success-100);
+  color: var(--color-success-600);
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--color-success-600);
+}
+
+.templates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.template-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+
+.template-card:hover {
+  border-color: var(--color-accent-500);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.template-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.template-name {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--color-text-strong);
+}
+
+.template-category {
+  display: inline-block;
+  background-color: var(--color-accent-100);
+  color: var(--color-accent-600);
+  padding: 4px 12px;
+  border-radius: var(--radius-xs);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.template-description {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+.template-exercises {
+  flex: 1;
+  margin-bottom: 20px;
+}
+
+.exercises-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-strong);
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.exercises-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.exercise-item {
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.exercise-name {
+  font-size: 13px;
+  color: var(--color-text-strong);
+  font-weight: 500;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.exercise-meta {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sets-badge,
+.rest-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+}
+
+.sets-badge {
+  background-color: var(--color-info-100);
+  color: var(--color-info-600);
+}
+
+.rest-badge {
+  background-color: var(--color-warning-100);
+  color: var(--color-warning-600);
+}
+
+.btn-import {
+  background-color: var(--color-accent-500);
+  color: white;
+  border: none;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-import:hover:not(:disabled) {
+  background-color: var(--color-accent-600);
+}
+
+.btn-import:disabled {
+  background-color: var(--color-accent-300);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-back {
+  display: inline-block;
+  background-color: var(--color-text-muted);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-back:hover:not(:disabled) {
+  background-color: var(--color-text-strong);
+}
+
+.btn-back:disabled {
+  background-color: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (max-width: 768px) {
+  .templates-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog-header h1 {
+    font-size: 24px;
+  }
+}

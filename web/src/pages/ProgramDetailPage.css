@@ -70,6 +70,42 @@
   color: var(--color-text-strong);
 }
 
+.section-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-secondary {
+  background-color: var(--color-text-muted);
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-text-strong);
+}
+
+.btn-primary {
+  background-color: var(--color-accent-500);
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-accent-600);
+}
+
 .workouts-list {
   display: flex;
   flex-direction: column;

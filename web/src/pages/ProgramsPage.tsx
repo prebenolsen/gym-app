@@ -95,6 +95,15 @@ const ProgramsPage = () => {
                 Create Program
               </button>
             </div>
+
+            <div className="first-program-divider">or</div>
+
+            <button
+              onClick={() => navigate('/programs-catalog')}
+              className="btn-import-first"
+            >
+              📚 Import a Program Template
+            </button>
           </div>
         </div>
       </div>
@@ -105,14 +114,22 @@ const ProgramsPage = () => {
     <div className="programs-page">
       <div className="programs-header">
         <h1>Programs</h1>
-        {!showNewProgram && (
+        <div className="header-buttons">
           <button
-            onClick={() => { setShowNewProgram(true); setNewProgramName(''); }}
-            className="btn-primary"
+            onClick={() => navigate('/programs-catalog')}
+            className="btn-secondary"
           >
-            + Create Program
+            📚 Import Template
           </button>
-        )}
+          {!showNewProgram && (
+            <button
+              onClick={() => { setShowNewProgram(true); setNewProgramName(''); }}
+              className="btn-primary"
+            >
+              + Create Program
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="programs-list">

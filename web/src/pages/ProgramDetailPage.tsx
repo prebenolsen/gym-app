@@ -140,11 +140,16 @@ const ProgramDetailPage = () => {
       <div className="workouts-section">
         <div className="section-header">
           <h2>Workouts</h2>
-          {!showNewWorkout && (
-            <button onClick={() => { setShowNewWorkout(true); setNewWorkoutName(''); }} className="btn-primary">
-              + Add Workout
+          <div className="section-buttons">
+            <button onClick={() => navigate(`/programs/${programId}/workouts-catalog`)} className="btn-secondary">
+              📚 Import Template
             </button>
-          )}
+            {!showNewWorkout && (
+              <button onClick={() => { setShowNewWorkout(true); setNewWorkoutName(''); }} className="btn-primary">
+                + Add Workout
+              </button>
+            )}
+          </div>
         </div>
 
         {workouts.length === 0 && !showNewWorkout && (

@@ -6,7 +6,9 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import HomePage from './pages/HomePage';
 import ProgramsPage from './pages/ProgramsPage';
 import ProgramDetailPage from './pages/ProgramDetailPage';
+import ProgramsCatalogPage from './pages/ProgramsCatalogPage';
 import WorkoutDetailPage from './pages/WorkoutDetailPage';
+import WorkoutsCatalogPage from './pages/WorkoutsCatalogPage';
 import ExercisesPage from './pages/ExercisesPage';
 import ActiveWorkoutPage from './pages/ActiveWorkoutPage';
 import CalendarPage from './pages/CalendarPage';
@@ -42,7 +44,9 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/programs" element={<ProgramsPage />} />
+            <Route path="/programs-catalog" element={<ProgramsCatalogPage />} />
             <Route path="/programs/:programId" element={<ProgramDetailPage />} />
+            <Route path="/programs/:programId/workouts-catalog" element={<WorkoutsCatalogPage />} />
             <Route
               path="/programs/:programId/workouts/:workoutId"
               element={<WorkoutDetailPage />}
