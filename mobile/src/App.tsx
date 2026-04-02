@@ -193,7 +193,7 @@ const AppRoutes = () => {
               backgroundColor: colors.surface,
               borderTopColor: colors.border,
               borderTopWidth: 1,
-              height: 70,
+              height: 80,
               paddingTop: 0,
               paddingBottom: 0,
             },
@@ -209,7 +209,7 @@ const AppRoutes = () => {
             options={{
               tabBarIcon: ({ color, focused }) => (
             <View style={createTabIconWrapperStyle(focused, colors.accent)}>
-              <Ionicons name="flash" size={24} color={color} />
+              <Ionicons name="flash" size={28} color={color} />
             </View>
           ),
             }}
@@ -220,7 +220,7 @@ const AppRoutes = () => {
             options={{
               tabBarIcon: ({ color, focused }) => (
                 <View style={createTabIconWrapperStyle(focused, colors.accent)}>
-                  <Ionicons name="clipboard-outline" size={24} color={color} />
+                  <Ionicons name="clipboard-outline" size={28} color={color} />
                 </View>
               ),
             }}
@@ -233,7 +233,7 @@ const AppRoutes = () => {
                 <View style={createTabIconWrapperStyle(focused, colors.accent)}>
                   <Ionicons
                     name="barbell-outline"
-                    size={24}
+                    size={28}
                     color={isActiveWorkoutEnabled ? color : colors.textMuted}
                     style={{ opacity: isActiveWorkoutEnabled ? 1 : 0.45 }}
                   />
@@ -260,7 +260,7 @@ const AppRoutes = () => {
             options={{
               tabBarIcon: ({ color, focused }) => (
                 <View style={createTabIconWrapperStyle(focused, colors.accent)}>
-                  <Ionicons name="calendar-outline" size={24} color={color} />
+                  <Ionicons name="calendar-outline" size={28} color={color} />
                 </View>
               ),
             }}
@@ -271,7 +271,7 @@ const AppRoutes = () => {
             options={{
               tabBarIcon: ({ color, focused }) => (
                 <View style={createTabIconWrapperStyle(focused, colors.accent)}>
-                  <Ionicons name="settings-outline" size={24} color={color} />
+                  <Ionicons name="settings-outline" size={28} color={color} />
                 </View>
               ),
             }}
