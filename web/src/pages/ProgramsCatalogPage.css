@@ -106,7 +106,7 @@
 
 .template-stats {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-bottom: 20px;
   padding: 12px;
@@ -133,6 +133,11 @@
   font-size: 24px;
   font-weight: 700;
   color: var(--color-accent-500);
+}
+
+.stat-value-time {
+  font-size: 16px;
+  text-align: center;
 }
 
 .template-workouts {

@@ -4,6 +4,73 @@ import { PROGRAM_TEMPLATES, type ProgramTemplate } from '@gym-app/shared';
 import { useApi } from '../hooks/useApi';
 import './ProgramsCatalogPage.css';
 
+const TIME_PER_SET_SECONDS = {
+  low: 30,
+  high: 45,
+};
+
+const roundDownToNearestFive = (value: number): number =>
+  Math.floor(value / 5) * 5;
+
+const roundUpToNearestFive = (value: number): number =>
+  Math.ceil(value / 5) * 5;
+
+const getExerciseTimeSecondsRange = (
+  sets: number,
+  restSeconds: number,
+  timePerSetSecondsRange = TIME_PER_SET_SECONDS
+): { low: number; high: number } => {
+  const low =
+    sets * timePerSetSecondsRange.low +
+    Math.max(sets - 1, 0) * restSeconds;
+  const high =
+    sets * timePerSetSecondsRange.high +
+    Math.max(sets - 1, 0) * restSeconds;
+
+  return { low, high };
+};
+
+const getProgramAverageWorkoutEstimateMinutes = (
+  template: ProgramTemplate
+): { low: number; high: number } => {
+  if (template.workouts.length === 0) {
+    return { low: 0, high: 0 };
+  }
+
+  const totalRangeSeconds = template.workouts.reduce(
+    (programTotal, workout) => {
+      const workoutRangeSeconds = workout.exercises.reduce(
+        (workoutTotal, exercise) => {
+          const exerciseRange = getExerciseTimeSecondsRange(
+            exercise.sets,
+            exercise.rest_seconds
+          );
+
+          return {
+            low: workoutTotal.low + exerciseRange.low,
+            high: workoutTotal.high + exerciseRange.high,
+          };
+        },
+        { low: 0, high: 0 }
+      );
+
+      return {
+        low: programTotal.low + workoutRangeSeconds.low,
+        high: programTotal.high + workoutRangeSeconds.high,
+      };
+    },
+    { low: 0, high: 0 }
+  );
+
+  const avgLowMinutes = totalRangeSeconds.low / template.workoutCount / 60;
+  const avgHighMinutes = totalRangeSeconds.high / template.workoutCount / 60;
+
+  return {
+    low: roundDownToNearestFive(avgLowMinutes),
+    high: roundUpToNearestFive(avgHighMinutes),
+  };
+};
+
 const ProgramsCatalogPage = () => {
   const navigate = useNavigate();
   const api = useApi();
@@ -11,7 +78,6 @@ const ProgramsCatalogPage = () => {
   const [importing, setImporting] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [successProgramId, setSuccessProgramId] = useState<string | null>(null);
 
   const handleImportTemplate = async (templateId: string) => {
     setImporting(templateId);
@@ -58,8 +124,11 @@ const ProgramsCatalogPage = () => {
       )}
 
       <div className="templates-grid">
-        {PROGRAM_TEMPLATES.map((template: ProgramTemplate) => (
-          <div key={template.id} className="template-card">
+        {PROGRAM_TEMPLATES.map((template: ProgramTemplate) => {
+          const estimatedTime = getProgramAverageWorkoutEstimateMinutes(template);
+
+          return (
+            <div key={template.id} className="template-card">
             <div className="template-header">
               <h2 className="template-name">{template.name}</h2>
             </div>
@@ -75,6 +144,12 @@ const ProgramsCatalogPage = () => {
                 <span className="stat-label">Total Exercises</span>
                 <span className="stat-value">
                   {template.workouts.reduce((sum, w) => sum + w.exercises.length, 0)}
+                </span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Estimated Time</span>
+                <span className="stat-value stat-value-time">
+                  {estimatedTime.low}-{estimatedTime.high} minutes
                 </span>
               </div>
             </div>
@@ -100,8 +175,9 @@ const ProgramsCatalogPage = () => {
             >
               {importing === template.id ? 'Importing...' : 'Import Program'}
             </button>
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
