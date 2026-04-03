@@ -491,7 +491,7 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
             ) : (
           <View style={styles.exerciseCard}>
             <Text style={styles.exerciseName}>{currentExercise.name}</Text>
-            <Text style={styles.exerciseMeta}>Rest: {currentExercise.rest_seconds}s</Text>
+            <Text style={styles.exerciseMeta}>Rest: {currentExercise.rest_seconds} seconds</Text>
 
             <View style={styles.setsHeaderRow}>
               <Text style={styles.setsHeaderCell}>Set</Text>
