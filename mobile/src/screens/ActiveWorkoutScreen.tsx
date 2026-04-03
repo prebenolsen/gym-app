@@ -421,16 +421,16 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
         const goNext = (dx < -SWIPE_THRESHOLD || vx < -0.8) && canSwipeNextRef.current;
         const goPrev = (dx > SWIPE_THRESHOLD || vx > 0.8) && canSwipePrevRef.current;
         if (goNext) {
-          Animated.timing(swipeX, { toValue: -SCREEN_WIDTH, duration: 200, useNativeDriver: true }).start(() => {
+          Animated.timing(swipeX, { toValue: -SCREEN_WIDTH, duration: 100, useNativeDriver: true }).start(() => {
             handleNavigateRef.current('next');
             swipeX.setValue(SCREEN_WIDTH);
-            Animated.timing(swipeX, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+            Animated.timing(swipeX, { toValue: 0, duration: 100, useNativeDriver: true }).start();
           });
         } else if (goPrev) {
-          Animated.timing(swipeX, { toValue: SCREEN_WIDTH, duration: 200, useNativeDriver: true }).start(() => {
+          Animated.timing(swipeX, { toValue: SCREEN_WIDTH, duration: 100, useNativeDriver: true }).start(() => {
             handleNavigateRef.current('prev');
             swipeX.setValue(-SCREEN_WIDTH);
-            Animated.timing(swipeX, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+            Animated.timing(swipeX, { toValue: 0, duration: 100, useNativeDriver: true }).start();
           });
         } else {
           Animated.spring(swipeX, {
