@@ -340,3 +340,22 @@ npm run backend:dev
 npm run -w shared build
 npx expo start --lan # i mobile
 npm run web:dev # i app, denne trengs for mobil
+
+Expo Go troubleshooting steps (LAN)
+
+1️⃣ Start backend
+npm run backend:dev
+
+2️⃣ Start web
+npm run web:dev
+
+3️⃣ Start Expo (initial attempt)
+cd mobile
+npx expo start --lan
+
+4️⃣ If Expo Go shows “Something went wrong”, clear caches
+Kill node processes:
+Stop-Process -Name node -Force
+
+✅ This command fixed the issue:
+npx expo start --lan -c

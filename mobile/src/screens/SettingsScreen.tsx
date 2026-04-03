@@ -156,7 +156,6 @@ const SettingsScreen = () => {
         </TouchableOpacity>
 
         <View style={styles.dangerBox}>
-          <Text style={styles.dangerTitle}>Delete Account</Text>
           <TouchableOpacity style={styles.dangerButton} onPress={handleDeleteAccount}>
             <Text style={styles.dangerButtonText}>Delete Account</Text>
           </TouchableOpacity>
