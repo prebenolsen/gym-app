@@ -25,6 +25,20 @@ type ProgramWithWorkouts = {
   exerciseCounts: Record<string, number>;
 };
 
+const getWorkoutMessage = (count: number): string => {
+  switch (count) {
+    case 0: return "💪 Welcome back! Let's make the next 7 days count";
+    case 1: return "👍 1 workout in the last 7 days — hey, it's a start!";
+    case 2: return "💪 Not bad — 2 workouts in the last 7 days. The gains are coming!";
+    case 3: return "🔥 Look at you — 3 workouts in the last 7 days. You're actually doing it!";
+    case 4: return "⚡ 4 workouts in the last 7 days — you're on a roll!";
+    case 5: return "💥 5 workouts in the last 7 days?! Now that's impressive!";
+    case 6: return "🚀 Call the newspaper — 6 workouts in the last 7 days? Absolute headline!";
+    case 7: return "🏆 7 workouts in 7 days. We're not worthy!";
+    default: return "💪 Welcome back! Let's make the next 7 days count";
+  }
+};
+
 const HomeScreen = ({ navigation }: any) => {
   const { formatWeight, colors: themeColors } = usePreferences();
   const styles = createStyles(themeColors);
@@ -112,7 +126,12 @@ const HomeScreen = ({ navigation }: any) => {
   }
 
   return (
+  <View style={styles.screenWrapper}>
+    <View style={styles.header}>
+      <Text style={styles.headerMessage}>{getWorkoutMessage(workouts7Days)}</Text>
+    </View>
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+
       {activeSession && (
         <TouchableOpacity
           style={styles.activeSessionCard}
@@ -240,6 +259,7 @@ const HomeScreen = ({ navigation }: any) => {
         </View>
       )}
     </ScrollView>
+  </View>
   );
 };
 
@@ -278,6 +298,23 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: '700',
       fontSize: 16,
     },
+    screenWrapper: {
+    flex: 1,
+    backgroundColor: themeColors.background,
+    },
+    header: {
+      backgroundColor: themeColors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+    },
+    headerMessage: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: themeColors.textStrong,
+      lineHeight: 24,
+    },
     activeSessionCard: {
       backgroundColor: themeColors.accentSoft,
       borderRadius: radius.md,
@@ -313,10 +350,6 @@ const createStyles = (themeColors: typeof colors) =>
       borderWidth: 1,
       borderColor: themeColors.border,
       ...shadow.card,
-    },
-    statIcon: {
-      fontSize: 28,
-      marginBottom: 6,
     },
     statValue: {
       fontSize: 24,
@@ -360,10 +393,6 @@ const createStyles = (themeColors: typeof colors) =>
       alignItems: 'center',
       gap: 8,
       marginBottom: 10,
-    },
-    favoriteStar: {
-      fontSize: 18,
-      color: themeColors.accent,
     },
     favoriteProgramName: {
       fontSize: 15,

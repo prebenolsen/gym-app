@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
+  Dimensions,
+  PanResponder,
   ScrollView,
   StyleSheet,
   Text,
@@ -58,6 +61,9 @@ const parseApiDate = (value: string): number => {
   const normalized = hasTz ? value : `${value}Z`;
   return new Date(normalized).getTime();
 };
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const SWIPE_THRESHOLD = 60;
 
 const ActiveWorkoutScreen = ({ navigation }: any) => {
   const api = useApi();
@@ -393,6 +399,54 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     ]);
   };
 
+  const swipeX = useRef(new Animated.Value(0)).current;
+  const handleNavigateRef = useRef(handleNavigateExercise);
+  const canSwipeNextRef = useRef(false);
+  const canSwipePrevRef = useRef(false);
+  handleNavigateRef.current = handleNavigateExercise;
+  canSwipeNextRef.current = currentIndex < exercises.length - 1;
+  canSwipePrevRef.current = currentIndex > 0;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, { dx, dy }) =>
+        Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10,
+      onPanResponderMove: (_, { dx }) => {
+        const atLeft = !canSwipePrevRef.current && dx > 0;
+        const atRight = !canSwipeNextRef.current && dx < 0;
+        swipeX.setValue((atLeft || atRight) ? dx * 0.25 : dx);
+      },
+      onPanResponderRelease: (_, { dx, vx }) => {
+        const goNext = (dx < -SWIPE_THRESHOLD || vx < -0.8) && canSwipeNextRef.current;
+        const goPrev = (dx > SWIPE_THRESHOLD || vx > 0.8) && canSwipePrevRef.current;
+        if (goNext) {
+          Animated.timing(swipeX, { toValue: -SCREEN_WIDTH, duration: 200, useNativeDriver: true }).start(() => {
+            handleNavigateRef.current('next');
+            swipeX.setValue(SCREEN_WIDTH);
+            Animated.timing(swipeX, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+          });
+        } else if (goPrev) {
+          Animated.timing(swipeX, { toValue: SCREEN_WIDTH, duration: 200, useNativeDriver: true }).start(() => {
+            handleNavigateRef.current('prev');
+            swipeX.setValue(-SCREEN_WIDTH);
+            Animated.timing(swipeX, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+          });
+        } else {
+          Animated.spring(swipeX, {
+            toValue: 0,
+            useNativeDriver: true,
+            friction: 8,
+            tension: 100,
+          }).start();
+        }
+      },
+      onPanResponderTerminate: () => {
+        Animated.spring(swipeX, { toValue: 0, useNativeDriver: true }).start();
+      },
+    })
+  ).current;
+
   const title = useMemo(() => {
     if (!workout) return 'Active Workout';
     return `${workout.name} (${formatDuration(elapsedSeconds)})`;
@@ -429,10 +483,12 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
         </View>
       </View>
 
-      <ScrollView style={styles.list}>
-        {!currentExercise ? (
-          <Text style={styles.emptyText}>No exercises found for this workout.</Text>
-        ) : (
+      <View style={styles.swipeRegion} {...panResponder.panHandlers}>
+        <Animated.View style={{ flex: 1, transform: [{ translateX: swipeX }] }}>
+          <ScrollView style={styles.list}>
+            {!currentExercise ? (
+              <Text style={styles.emptyText}>No exercises found for this workout.</Text>
+            ) : (
           <View style={styles.exerciseCard}>
             <Text style={styles.exerciseName}>{currentExercise.name}</Text>
             <Text style={styles.exerciseMeta}>Rest: {currentExercise.rest_seconds}s</Text>
@@ -503,8 +559,10 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
             })}
 
           </View>
-        )}
-      </ScrollView>
+            )}
+          </ScrollView>
+        </Animated.View>
+      </View>
 
       {currentExercise ? (
         <View style={styles.bottomActionsWrap}>
@@ -607,6 +665,10 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   list: {
     flex: 1,
     padding: 16,
+  },
+  swipeRegion: {
+    flex: 1,
+    overflow: 'hidden',
   },
   exerciseCard: {
     backgroundColor: themeColors.surface,
