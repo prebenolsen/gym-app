@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
+  Dimensions,
   View,
   Text,
   ScrollView,
@@ -8,11 +9,21 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { type ExerciseProgressHistory } from '@gym-app/shared';
+import { LineChart } from 'react-native-gifted-charts';
 import { useApi } from '../hooks/useApi';
 import { usePreferences } from '../context/PreferencesContext';
 import { colors, radius, shadow } from '../theme';
 
 type ViewMode = 'max-weight' | 'total-volume';
+type RangeKey = '1m' | '3m' | '6m' | '12m' | 'all';
+
+const RANGE_OPTIONS: { key: RangeKey; label: string; days?: number }[] = [
+  { key: '1m', label: '1M', days: 30 },
+  { key: '3m', label: '3M', days: 90 },
+  { key: '6m', label: '6M', days: 180 },
+  { key: '12m', label: '12M', days: 365 },
+  { key: 'all', label: 'All' },
+];
 
 const ExerciseProgressScreen = ({ route, navigation }: any) => {
   const { exerciseId } = route.params;
@@ -21,14 +32,21 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
   const api = useApi();
   const [data, setData] = useState<ExerciseProgressHistory | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('max-weight');
+  const [range, setRange] = useState<RangeKey>('3m');
   const [loading, setLoading] = useState(true);
+  const chartWidth = Math.max(Dimensions.get('window').width - 88, 260);
 
   useEffect(() => {
     const fetchProgress = async () => {
-      if (!exerciseId) return;
+      if (!exerciseId) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        const progressData = await api.getExerciseProgress(exerciseId, 90);
+        const selected = RANGE_OPTIONS.find((option) => option.key === range);
+        const progressData = await api.getExerciseProgress(exerciseId, selected?.days);
         setData(progressData);
       } catch (err) {
         console.error('Failed to fetch exercise progress:', err);
@@ -36,8 +54,9 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
         setLoading(false);
       }
     };
+
     fetchProgress();
-  }, [exerciseId]);
+  }, [api, exerciseId, range]);
 
   if (loading) {
     return (
@@ -47,14 +66,14 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
     );
   }
 
-  if (!data || data.history.length === 0) {
+  if (!data) {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Text style={styles.backBtnText}>← Back</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>{data?.exercise_name ?? 'Exercise'}</Text>
+          <Text style={styles.title}>Exercise</Text>
         </View>
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>No data available for this exercise yet.</Text>
@@ -63,11 +82,36 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
     );
   }
 
+  const hasHistory = data.history.length > 0;
   const personalBest = data.history.reduce((max, e) => Math.max(max, e.max_weight), 0);
   const totalTimesExercised = data.history.length;
   const totalRepetitions = data.history.reduce((sum, e) => sum + e.total_reps, 0);
   const totalSets = data.history.reduce((sum, e) => sum + e.sets, 0);
   const totalVolume = data.history.reduce((sum, e) => sum + e.total_volume, 0);
+
+  const chartData = useMemo(() => {
+    if (!hasHistory) return [];
+
+    const stride = Math.max(1, Math.ceil(data.history.length / 6));
+    return data.history.map((entry, idx) => {
+      const rawValue = viewMode === 'max-weight'
+        ? convertFromKg(entry.max_weight)
+        : convertFromKg(entry.total_volume);
+      const showLabel = idx % stride === 0 || idx === data.history.length - 1;
+
+      return {
+        value: Number(rawValue.toFixed(1)),
+        label: showLabel ? entry.date.slice(5) : '',
+        dataPointText: Number(rawValue.toFixed(1)).toString(),
+      };
+    });
+  }, [hasHistory, data.history, viewMode, convertFromKg]);
+
+  const maxChartValue = useMemo(() => {
+    if (chartData.length === 0) return 1;
+    const highest = Math.max(...chartData.map((point) => point.value), 1);
+    return Math.ceil(highest * 1.1);
+  }, [chartData]);
 
   return (
     <View style={styles.container}>
@@ -106,6 +150,23 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.rangeSection}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rangeRow}>
+            {RANGE_OPTIONS.map((option) => {
+              const active = range === option.key;
+              return (
+                <TouchableOpacity
+                  key={option.key}
+                  style={[styles.rangeChip, active && styles.rangeChipActive]}
+                  onPress={() => setRange(option.key)}
+                >
+                  <Text style={[styles.rangeChipText, active && styles.rangeChipTextActive]}>{option.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+
         {/* Summary metrics */}
         <View style={styles.metricsGrid}>
           <View style={styles.metricCard}>
@@ -126,55 +187,74 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
           </View>
         </View>
 
-        {/* Progress bars visualization */}
+        {/* Graph visualization */}
         <View style={styles.chartSection}>
           <Text style={styles.sectionTitle}>
             {viewMode === 'max-weight' ? 'Max Weight Over Time' : 'Total Volume Over Time'}
           </Text>
-          {(() => {
-            const values = data.history.map((e) =>
-              viewMode === 'max-weight' ? convertFromKg(e.max_weight) : convertFromKg(e.total_volume)
-            );
-            const maxVal = Math.max(...values, 1);
-            const recent = data.history.slice(-15); // show last 15 entries
-
-            return recent.map((entry, idx) => {
-              const val = viewMode === 'max-weight'
-                ? convertFromKg(entry.max_weight)
-                : convertFromKg(entry.total_volume);
-              const pct = maxVal > 0 ? (val / maxVal) * 100 : 0;
-              return (
-                <View key={idx} style={styles.barRow}>
-                  <Text style={styles.barDate}>{entry.date.slice(5)}</Text>
-                  <View style={styles.barTrack}>
-                    <View style={[styles.barFill, { width: `${pct}%` }]} />
-                  </View>
-                  <Text style={styles.barValue}>{val.toFixed(1)}</Text>
-                </View>
-              );
-            });
-          })()}
+          {hasHistory ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chartScrollContent}>
+              <LineChart
+                data={chartData}
+                width={Math.max(chartWidth, chartData.length * 38)}
+                height={220}
+                noOfSections={4}
+                maxValue={maxChartValue}
+                spacing={38}
+                initialSpacing={10}
+                endSpacing={10}
+                color={themeColors.accent}
+                thickness={3}
+                dataPointsRadius={4}
+                dataPointsColor={themeColors.accent}
+                yAxisColor={themeColors.border}
+                xAxisColor={themeColors.border}
+                yAxisTextStyle={{ color: themeColors.textMuted, fontSize: 11 }}
+                xAxisLabelTextStyle={{ color: themeColors.textMuted, fontSize: 10 }}
+                rulesColor={themeColors.border}
+                hideRules={false}
+                isAnimated
+                animationDuration={450}
+                areaChart
+                startFillColor={themeColors.accent}
+                endFillColor={themeColors.accent}
+                startOpacity={0.2}
+                endOpacity={0.02}
+                showDataPointOnFocus
+                showStripOnFocus
+                stripColor={themeColors.accent}
+              />
+            </ScrollView>
+          ) : (
+            <Text style={styles.emptyGraphText}>No workout data in this date range.</Text>
+          )}
         </View>
 
         {/* History table */}
         <View style={styles.historySection}>
           <Text style={styles.sectionTitle}>Workout History</Text>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.tableCell, styles.tableHeaderText, { flex: 1.5 }]}>Date</Text>
-            <Text style={[styles.tableCell, styles.tableHeaderText]}>Max ({unit})</Text>
-            <Text style={[styles.tableCell, styles.tableHeaderText]}>Vol ({unit})</Text>
-            <Text style={[styles.tableCell, styles.tableHeaderText]}>Sets</Text>
-            <Text style={[styles.tableCell, styles.tableHeaderText]}>Reps</Text>
-          </View>
-          {data.history.map((entry, idx) => (
-            <View key={idx} style={[styles.tableRow, idx % 2 === 0 && styles.tableRowEven]}>
-              <Text style={[styles.tableCell, { flex: 1.5 }]}>{entry.date.slice(5)}</Text>
-              <Text style={styles.tableCell}>{convertFromKg(entry.max_weight).toFixed(1)}</Text>
-              <Text style={styles.tableCell}>{Math.round(convertFromKg(entry.total_volume))}</Text>
-              <Text style={styles.tableCell}>{entry.sets}</Text>
-              <Text style={styles.tableCell}>{entry.total_reps}</Text>
-            </View>
-          ))}
+          {hasHistory ? (
+            <>
+              <View style={styles.tableHeader}>
+                <Text style={[styles.tableCell, styles.tableHeaderText, { flex: 1.5 }]}>Date</Text>
+                <Text style={[styles.tableCell, styles.tableHeaderText]}>Max ({unit})</Text>
+                <Text style={[styles.tableCell, styles.tableHeaderText]}>Vol ({unit})</Text>
+                <Text style={[styles.tableCell, styles.tableHeaderText]}>Sets</Text>
+                <Text style={[styles.tableCell, styles.tableHeaderText]}>Reps</Text>
+              </View>
+              {data.history.map((entry, idx) => (
+                <View key={idx} style={[styles.tableRow, idx % 2 === 0 && styles.tableRowEven]}>
+                  <Text style={[styles.tableCell, { flex: 1.5 }]}>{entry.date.slice(5)}</Text>
+                  <Text style={styles.tableCell}>{convertFromKg(entry.max_weight).toFixed(1)}</Text>
+                  <Text style={styles.tableCell}>{Math.round(convertFromKg(entry.total_volume))}</Text>
+                  <Text style={styles.tableCell}>{entry.sets}</Text>
+                  <Text style={styles.tableCell}>{entry.total_reps}</Text>
+                </View>
+              ))}
+            </>
+          ) : (
+            <Text style={styles.emptyGraphText}>No history rows in this date range.</Text>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -262,6 +342,34 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   toggleBtnTextActive: {
     color: '#fff',
   },
+  rangeSection: {
+    marginBottom: 16,
+  },
+  rangeRow: {
+    gap: 8,
+    paddingRight: 4,
+  },
+  rangeChip: {
+    borderWidth: 1,
+    borderColor: themeColors.border,
+    backgroundColor: themeColors.surface,
+    borderRadius: radius.pill,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  rangeChipActive: {
+    borderColor: themeColors.accent,
+    backgroundColor: themeColors.accent,
+  },
+  rangeChipText: {
+    color: themeColors.textMuted,
+    fontWeight: '700',
+    fontSize: 12,
+    textTransform: 'uppercase',
+  },
+  rangeChipTextActive: {
+    color: '#fff',
+  },
   metricsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -298,41 +406,22 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     marginBottom: 20,
     ...shadow.card,
   },
+  chartScrollContent: {
+    paddingRight: 8,
+  },
+  emptyGraphText: {
+    color: themeColors.textMuted,
+    fontSize: 13,
+    textAlign: 'center',
+    paddingVertical: 24,
+    textTransform: 'uppercase',
+  },
   sectionTitle: {
     fontSize: 13,
     fontWeight: '700',
     color: themeColors.textStrong,
     textTransform: 'uppercase',
     marginBottom: 12,
-  },
-  barRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-    gap: 8,
-  },
-  barDate: {
-    fontSize: 11,
-    color: themeColors.textMuted,
-    width: 36,
-  },
-  barTrack: {
-    flex: 1,
-    height: 10,
-    backgroundColor: themeColors.border,
-    borderRadius: 5,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: '100%',
-    backgroundColor: themeColors.accent,
-    borderRadius: 5,
-  },
-  barValue: {
-    fontSize: 11,
-    color: themeColors.textMuted,
-    width: 40,
-    textAlign: 'right',
   },
   historySection: {
     backgroundColor: themeColors.surface,
