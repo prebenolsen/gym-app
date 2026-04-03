@@ -35,6 +35,8 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
   const [range, setRange] = useState<RangeKey>('3m');
   const [loading, setLoading] = useState(true);
   const chartWidth = Math.max(Dimensions.get('window').width - 88, 260);
+  const history = data?.history ?? [];
+  const hasHistory = history.length > 0;
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -57,6 +59,30 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
 
     fetchProgress();
   }, [api, exerciseId, range]);
+
+  const chartData = useMemo(() => {
+    if (!hasHistory) return [];
+
+    const stride = Math.max(1, Math.ceil(history.length / 6));
+    return history.map((entry, idx) => {
+      const rawValue = viewMode === 'max-weight'
+        ? convertFromKg(entry.max_weight)
+        : convertFromKg(entry.total_volume);
+      const showLabel = idx % stride === 0 || idx === history.length - 1;
+
+      return {
+        value: Number(rawValue.toFixed(1)),
+        label: showLabel ? entry.date.slice(5) : '',
+        dataPointText: Number(rawValue.toFixed(1)).toString(),
+      };
+    });
+  }, [hasHistory, history, viewMode, convertFromKg]);
+
+  const maxChartValue = useMemo(() => {
+    if (chartData.length === 0) return 1;
+    const highest = Math.max(...chartData.map((point) => point.value), 1);
+    return Math.ceil(highest * 1.1);
+  }, [chartData]);
 
   if (loading) {
     return (
@@ -82,36 +108,11 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
     );
   }
 
-  const hasHistory = data.history.length > 0;
   const personalBest = data.history.reduce((max, e) => Math.max(max, e.max_weight), 0);
   const totalTimesExercised = data.history.length;
   const totalRepetitions = data.history.reduce((sum, e) => sum + e.total_reps, 0);
   const totalSets = data.history.reduce((sum, e) => sum + e.sets, 0);
   const totalVolume = data.history.reduce((sum, e) => sum + e.total_volume, 0);
-
-  const chartData = useMemo(() => {
-    if (!hasHistory) return [];
-
-    const stride = Math.max(1, Math.ceil(data.history.length / 6));
-    return data.history.map((entry, idx) => {
-      const rawValue = viewMode === 'max-weight'
-        ? convertFromKg(entry.max_weight)
-        : convertFromKg(entry.total_volume);
-      const showLabel = idx % stride === 0 || idx === data.history.length - 1;
-
-      return {
-        value: Number(rawValue.toFixed(1)),
-        label: showLabel ? entry.date.slice(5) : '',
-        dataPointText: Number(rawValue.toFixed(1)).toString(),
-      };
-    });
-  }, [hasHistory, data.history, viewMode, convertFromKg]);
-
-  const maxChartValue = useMemo(() => {
-    if (chartData.length === 0) return 1;
-    const highest = Math.max(...chartData.map((point) => point.value), 1);
-    return Math.ceil(highest * 1.1);
-  }, [chartData]);
 
   return (
     <View style={styles.container}>
