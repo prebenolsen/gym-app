@@ -91,6 +91,7 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
   const [lastEditedSetIndexByExercise, setLastEditedSetIndexByExercise] = useState<Record<string, number | null>>({});
   const [savingSet, setSavingSet] = useState<number | null>(null);
   const [restSecondsLeft, setRestSecondsLeft] = useState(0);
+  const [pendingDefaultRestSeconds, setPendingDefaultRestSeconds] = useState<number | null>(null);
   const lastRestSoundSecondRef = useRef<number | null>(null);
 
   const currentExercise = exercises[currentIndex] ?? null;
@@ -372,6 +373,7 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
       }));
 
       setRestSecondsLeft(currentExercise.rest_seconds);
+      setPendingDefaultRestSeconds(null);
     } catch (err) {
       console.error('Failed to save workout set:', err);
       Alert.alert('Error', 'Failed to save set');
@@ -392,6 +394,7 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
             : exercise
         )
       );
+      setPendingDefaultRestSeconds(null);
     } catch (err) {
       console.error('Failed to update default rest timer:', err);
       Alert.alert('Error', 'Failed to save default rest timer');
@@ -405,19 +408,8 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     if (nextRestSeconds === restSecondsLeft) return;
 
     setRestSecondsLeft(nextRestSeconds);
-
-    Alert.alert(
-      'Save as default rest?',
-      `Use ${nextRestSeconds}s as the default rest timer for ${currentExercise.name}?`,
-      [
-        { text: 'No', style: 'cancel' },
-        {
-          text: 'Save',
-          onPress: () => {
-            updateExerciseDefaultRest(nextRestSeconds);
-          },
-        },
-      ]
+    setPendingDefaultRestSeconds(
+      nextRestSeconds === currentExercise.rest_seconds ? null : nextRestSeconds
     );
   };
 
@@ -665,6 +657,17 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
                   <Text style={styles.restAdjustButtonText}>+5</Text>
                 </TouchableOpacity>
               </View>
+
+              {pendingDefaultRestSeconds !== null ? (
+                <TouchableOpacity
+                  style={styles.saveDefaultRestButton}
+                  onPress={() => updateExerciseDefaultRest(pendingDefaultRestSeconds)}
+                >
+                  <Text style={styles.saveDefaultRestButtonText}>
+                    Save new default rest timer ({pendingDefaultRestSeconds} seconds)
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
           ) : null}
 
@@ -935,6 +938,21 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     fontWeight: '700',
     fontSize: 12,
     textTransform: 'uppercase',
+  },
+  saveDefaultRestButton: {
+    marginTop: 10,
+    backgroundColor: themeColors.accent,
+    borderRadius: radius.sm,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+  },
+  saveDefaultRestButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 11,
+    textTransform: 'uppercase',
+    textAlign: 'center',
   },
   bottomActionsBar: {
     flexDirection: 'row',
