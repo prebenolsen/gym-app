@@ -15,6 +15,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
+import BrandLogo from '../components/BrandLogo';
 
 type Mode = 'login' | 'signup' | 'forgot';
 
@@ -97,8 +98,7 @@ const AuthScreen = () => {
       <View style={styles.overlay}>
         <View style={styles.card}>
           <View style={styles.authHeader}>
-            <Text style={styles.authLogoIcon}>💪</Text>
-            <Text style={styles.authHeaderText}>GymApp</Text>
+            <BrandLogo width={170} color={themeColors.textStrong} />
           </View>
 
           <Text style={styles.title}>
@@ -201,19 +201,9 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     ...shadow.card,
   },
   authHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
     marginBottom: 16,
-  },
-  authLogoIcon: {
-    fontSize: 32,
-  },
-  authHeaderText: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: themeColors.textStrong,
   },
   title: {
     fontSize: 24,

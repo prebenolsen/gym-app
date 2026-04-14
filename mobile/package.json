@@ -1,7 +1,7 @@
 {
   "name": "@gym-app/mobile",
   "version": "0.0.1",
-  "description": "Gym app mobile frontend - React Native",
+  "description": "GymApp mobile frontend - React Native",
   "main": "index.js",
   "type": "module",
   "scripts": {

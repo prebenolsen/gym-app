@@ -1,7 +1,7 @@
 {
   "name": "@gym-app/web",
   "version": "0.0.1",
-  "description": "Gym app web frontend - React",
+  "description": "GymApp web frontend - React",
   "type": "module",
   "scripts": {
     "dev": "vite",

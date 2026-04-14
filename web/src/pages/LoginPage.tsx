@@ -86,8 +86,11 @@ const LoginPage = () => {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-header">
-          <span className="auth-logo-icon">💪</span>
-          <h1>GymApp</h1>
+          <img
+            src="../../shared/assets/logo-weak-cursiv-k-barbell-under.svg"
+            alt="GymApp logo"
+            className="auth-logo-image"
+          />
         </div>
 
         <form onSubmit={mode === 'forgot' ? handleForgotPassword : handleAuth} className="auth-form">

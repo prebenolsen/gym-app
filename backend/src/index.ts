@@ -1217,5 +1217,5 @@ app.get('/health', (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Gym app backend running on port ${PORT}`);
+  console.log(`GymApp backend running on port ${PORT}`);
 });

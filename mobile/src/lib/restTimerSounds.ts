@@ -23,7 +23,8 @@ const toneConfig: Record<ToneKind, ToneConfig> = {
 
 const toneCache = new Map<string, string>();
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(() => resolve(), ms));
 
 const toBase64 = (bytes: Uint8Array): string => {
   const chars =

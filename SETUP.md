@@ -1,6 +1,6 @@
-# Gym App - Setup Guide
+# GymApp - Setup Guide
 
-Complete step-by-step guide to get the gym app running locally.
+Complete step-by-step guide to get GymApp running locally.
 
 ## Prerequisites
 
@@ -153,7 +153,7 @@ npm run backend:dev
 
 You should see:
 ```
-🏋️ Gym app backend running on port 3000
+🏋️ GymApp backend running on port 3000
 ```
 
 **Keep this terminal open!**
@@ -184,7 +184,7 @@ Go to **http://localhost:5173** in your browser.
 
 You should see:
 - **Navigation** on the left: "Home" and "Programs"
-- **Sidebar** with title "💪 Gym App"
+- **Sidebar** with title "GymApp"
 - **Home page** with stats showing 0 programs/workouts/exercises
 
 ---

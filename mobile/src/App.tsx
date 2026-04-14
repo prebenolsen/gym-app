@@ -180,7 +180,7 @@ const AppRoutes = () => {
             <View style={styles.tabBarWrapper}>
               <BottomTabBar {...props} />
               <View style={styles.tabBarFooter}>
-                <Text style={styles.versionText}>GymApp - version 0.1</Text>
+                <Text style={styles.versionText}>Version 0.1</Text>
               </View>
             </View>
           )}

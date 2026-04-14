@@ -1,5 +1,5 @@
 /**
- * Core data models for the gym app
+ * Core data models for GymApp
  */
 
 export interface Program {

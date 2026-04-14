@@ -1,4 +1,4 @@
-# 🏋️ QUICK START - Gym App
+# 🏋️ QUICK START - GymApp
 
 **⏱️ 5-minute setup to get the app running**
 
@@ -65,7 +65,7 @@ npm install
 
 # Terminal 2: Start backend (keep running)
 npm run backend:dev
-# Should show: 🏋️ Gym app backend running on port 3000
+# Should show: 🏋️ GymApp backend running on port 3000
 
 # Terminal 3: Start web app (keep running)
 npm run web:dev

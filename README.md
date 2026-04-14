@@ -1,6 +1,6 @@
-# Gym App - Workout Tracker
+# GymApp - Workout Tracker
 
-A full-stack three-tier gym workout management app with web and mobile frontends.
+A full-stack three-tier GymApp workout management app with web and mobile frontends.
 
 ## Features
 

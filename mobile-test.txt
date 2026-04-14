@@ -1,4 +1,4 @@
-# Gym App - Testing on Android with Expo Go
+# GymApp - Testing on Android with Expo Go
 ## Complete Step-by-Step Guide
 
 ---
@@ -49,7 +49,7 @@
    ```
 4. Wait for message:
    ```
-   🏋️ Gym app backend running on port 3000
+   🏋️ GymApp backend running on port 3000
    ```
 5. ✅ Leave this terminal open (DO NOT CLOSE)
 
@@ -400,7 +400,7 @@ Verify these work correctly:
 Terminal 1 (Backend):
 cd D:\Gym-App\gym-app
 npm run backend:dev
-→ Wait for: 🏋️ Gym app backend running on port 3000
+→ Wait for: 🏋️ GymApp backend running on port 3000
 
 Terminal 2 (Mobile):
 cd D:\Gym-App\gym-app

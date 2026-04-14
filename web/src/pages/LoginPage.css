@@ -25,19 +25,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
   margin-bottom: 26px;
 }
 
-.auth-header h1 {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--color-text-strong);
-}
-
-.auth-logo-icon {
-  font-size: 32px;
+.auth-logo-image {
+  width: 180px;
+  height: auto;
+  display: block;
 }
 
 .auth-form {

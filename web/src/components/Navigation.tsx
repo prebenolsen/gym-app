@@ -43,8 +43,11 @@ const Navigation = () => {
   return (
     <nav className="navigation">
       <div className="nav-header">
-        <span className="nav-logo-icon">💪</span>
-        <h1>GymApp</h1>
+        <img
+          src="../../shared/assets/logo-weak-cursiv-k-barbell-under.svg"
+          alt="GymApp logo"
+          className="nav-logo-image"
+        />
       </div>
 
       <ul className="nav-links">
