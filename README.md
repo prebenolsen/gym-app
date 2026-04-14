@@ -359,3 +359,13 @@ Stop-Process -Name node -Force
 
 ✅ This command fixed the issue:
 npx expo start --lan -c
+
+
+På telefon er cmd viktig:
+adb reverse --remove-all
+adb reverse tcp:8081 tcp:8081
+adb reverse tcp:3000 tcp:3000
+
+
+Riktig kommando:
+npx expo start -c --localhost

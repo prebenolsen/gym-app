@@ -24,6 +24,14 @@ import type {
 } from './types';
 
 type TokenProvider = () => string | null | Promise<string | null>;
+type ApiErrorKind = 'network' | 'auth' | 'api';
+type ApiRequestError = Error & {
+  kind?: ApiErrorKind;
+  status?: number;
+  details?: unknown;
+  url?: string;
+  method?: string;
+};
 
 class ApiClient {
   baseURL: string;
@@ -58,7 +66,21 @@ class ApiClient {
       options.body = JSON.stringify(data);
     }
 
-    const response = await fetch(url, options);
+    let response: Response;
+    try {
+      response = await fetch(url, options);
+    } catch (cause) {
+      const networkError = new Error(
+        `Network request failed for ${method} ${path}. ` +
+          'In Android USB debug mode, verify adb reverse is active for ports 3000 and 8081.'
+      ) as ApiRequestError;
+      networkError.kind = 'network';
+      networkError.url = url;
+      networkError.method = method;
+      networkError.details = cause;
+      throw networkError;
+    }
+
     const responseText = await response.text();
     let parsedBody: unknown = null;
 
@@ -71,12 +93,18 @@ class ApiClient {
     }
 
     if (!response.ok) {
+      const isAuthError = response.status === 401 || response.status === 403;
+      const fallbackMessage = isAuthError
+        ? `Authentication failed: ${response.status} ${response.statusText}`
+        : `API Error: ${response.status} ${response.statusText}`;
       const error = new Error(
-        (parsedBody as { error?: string } | null)?.error ||
-          `API Error: ${response.status} ${response.statusText}`
-      ) as Error & { status?: number; details?: unknown };
+        (parsedBody as { error?: string } | null)?.error || fallbackMessage
+      ) as ApiRequestError;
+      error.kind = isAuthError ? 'auth' : 'api';
       error.status = response.status;
       error.details = parsedBody;
+      error.url = url;
+      error.method = method;
       throw error;
     }
 
