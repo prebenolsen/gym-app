@@ -408,8 +408,11 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     if (nextRestSeconds === restSecondsLeft) return;
 
     setRestSecondsLeft(nextRestSeconds);
+
+    const defaultBaseline = pendingDefaultRestSeconds ?? currentExercise.rest_seconds;
+    const nextDefaultRestSeconds = Math.max(0, defaultBaseline + deltaSeconds);
     setPendingDefaultRestSeconds(
-      nextRestSeconds === currentExercise.rest_seconds ? null : nextRestSeconds
+      nextDefaultRestSeconds === currentExercise.rest_seconds ? null : nextDefaultRestSeconds
     );
   };
 
