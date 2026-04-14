@@ -24,6 +24,12 @@ const SettingsScreen = () => {
     setAccent,
     unit,
     setUnit,
+    soundEnabled,
+    setSoundEnabled,
+    prepareSoundEnabled,
+    setPrepareSoundEnabled,
+    prepareSoundSeconds,
+    setPrepareSoundSeconds,
     colors: themeColors,
   } = usePreferences();
   const api = useApi();
@@ -124,6 +130,53 @@ const SettingsScreen = () => {
             <Text style={[styles.chipText, unit === 'lb' && styles.chipTextActive]}>lb</Text>
           </TouchableOpacity>
         </View>
+
+        <Text style={styles.section}>Sounds</Text>
+        <View style={styles.settingRow}>
+          <View style={styles.settingInfo}>
+            <Text style={styles.settingLabel}>Enable Sounds</Text>
+            <Text style={styles.settingHelp}>Countdown cues at 3, 2, 1 and completion.</Text>
+          </View>
+          <Switch
+            value={soundEnabled}
+            onValueChange={setSoundEnabled}
+            thumbColor="#FFFFFF"
+            trackColor={{ false: themeColors.border, true: themeColors.accent }}
+          />
+        </View>
+
+        <View style={styles.settingRow}>
+          <View style={styles.settingInfo}>
+            <Text style={styles.settingLabel}>Prepare Cue</Text>
+            <Text style={styles.settingHelp}>Play an early warning sound before completion.</Text>
+          </View>
+          <Switch
+            value={soundEnabled && prepareSoundEnabled}
+            onValueChange={setPrepareSoundEnabled}
+            thumbColor="#FFFFFF"
+            disabled={!soundEnabled}
+            trackColor={{ false: themeColors.border, true: themeColors.accent }}
+          />
+        </View>
+
+        {soundEnabled && prepareSoundEnabled ? (
+          <View style={styles.prepareInputWrap}>
+            <Text style={styles.prepareInputLabel}>Prepare At (seconds)</Text>
+            <TextInput
+              style={styles.prepareInput}
+              value={String(prepareSoundSeconds)}
+              onChangeText={(value) => {
+                const parsed = Number(value);
+                if (Number.isInteger(parsed) && parsed >= 1) {
+                  setPrepareSoundSeconds(parsed);
+                }
+              }}
+              keyboardType="number-pad"
+              placeholder="10"
+              placeholderTextColor={themeColors.textMuted}
+            />
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.card}>
@@ -213,6 +266,26 @@ const createStyles = (themeColors: typeof colors) =>
     settingHelp: {
       color: themeColors.textMuted,
       fontSize: 13,
+    },
+    prepareInputWrap: {
+      marginTop: 8,
+      gap: 6,
+    },
+    prepareInputLabel: {
+      color: themeColors.textMuted,
+      fontSize: 12,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    prepareInput: {
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: radius.sm,
+      backgroundColor: themeColors.background,
+      color: themeColors.textStrong,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      textTransform: 'uppercase',
     },
     section: {
       marginTop: 16,

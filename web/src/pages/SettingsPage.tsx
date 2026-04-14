@@ -15,7 +15,18 @@ const ACCENT_OPTIONS: { value: AccentColor; label: string; swatch: string; ring:
 
 const SettingsPage = () => {
   const { unit, setUnit } = useUnit();
-  const { theme, setTheme, accent, setAccent } = useTheme();
+  const {
+    theme,
+    setTheme,
+    accent,
+    setAccent,
+    soundEnabled,
+    setSoundEnabled,
+    prepareSoundEnabled,
+    setPrepareSoundEnabled,
+    prepareSoundSeconds,
+    setPrepareSoundSeconds,
+  } = useTheme();
   const { signOut } = useAuth();
   const api = useApi();
   const [newPassword, setNewPassword] = useState('');
@@ -116,6 +127,49 @@ const SettingsPage = () => {
                 );
               })}
             </div>
+          </div>
+
+          <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="font-medium text-foreground">Sounds</p>
+                <p className="text-sm text-muted-foreground">Enable countdown and completion beeps.</p>
+              </div>
+              <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
+            </div>
+
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="font-medium text-foreground">Prepare Cue</p>
+                <p className="text-sm text-muted-foreground">Play a pre-countdown alert before the final beeps.</p>
+              </div>
+              <Switch
+                checked={soundEnabled && prepareSoundEnabled}
+                disabled={!soundEnabled}
+                onCheckedChange={setPrepareSoundEnabled}
+              />
+            </div>
+
+            {soundEnabled && prepareSoundEnabled ? (
+              <div className="mt-4 flex max-w-xs flex-col gap-2">
+                <label htmlFor="prepare-seconds" className="text-sm font-medium text-foreground">
+                  Prepare At (seconds)
+                </label>
+                <input
+                  id="prepare-seconds"
+                  type="number"
+                  min={1}
+                  value={prepareSoundSeconds}
+                  onChange={(event) => {
+                    const next = Number(event.target.value);
+                    if (Number.isInteger(next) && next >= 1) {
+                      setPrepareSoundSeconds(next);
+                    }
+                  }}
+                  className="rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                />
+              </div>
+            ) : null}
           </div>
         </CardContent>
       </Card>

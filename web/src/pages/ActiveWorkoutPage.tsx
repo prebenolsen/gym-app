@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   type Exercise,
@@ -9,7 +9,9 @@ import {
   type ExerciseLastPerformance,
 } from '@gym-app/shared';
 import { useUnit } from '../context/UnitContext';
+import { useTheme } from '../context/ThemeContext';
 import { useApi } from '../hooks/useApi';
+import { playCompletionBeep, playCountdownBeep, playPrepareBeep } from '../lib/restTimerSounds';
 import './ActiveWorkoutPage.css';
 
 type SetDraft = {
@@ -52,6 +54,7 @@ const ActiveWorkoutPage = () => {
   const navigate = useNavigate();
   const api = useApi();
   const { unit, convertFromKg, convertToKg, formatWeight } = useUnit();
+  const { soundEnabled, prepareSoundEnabled, prepareSoundSeconds } = useTheme();
 
   const [loading, setLoading] = useState(true);
   const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null);
@@ -67,6 +70,7 @@ const ActiveWorkoutPage = () => {
   const [lastEditedSetIndex, setLastEditedSetIndex] = useState<number | null>(null);
   const [savedDraftBaseline, setSavedDraftBaseline] = useState<SetDraft[]>([]);
   const [dirtySavedSets, setDirtySavedSets] = useState<SavedSetTracking>({});
+  const lastSoundSecondRef = useRef<number | null>(null);
 
   const currentExercise = exercises[currentIndex] || null;
 
@@ -209,6 +213,39 @@ const ActiveWorkoutPage = () => {
 
     return () => clearInterval(timer);
   }, [restSecondsLeft]);
+
+  useEffect(() => {
+    if (!soundEnabled) {
+      lastSoundSecondRef.current = restSecondsLeft;
+      return;
+    }
+
+    if (lastSoundSecondRef.current === restSecondsLeft) {
+      return;
+    }
+
+    if (restSecondsLeft === 0 && lastSoundSecondRef.current !== 0) {
+      playCompletionBeep();
+      lastSoundSecondRef.current = restSecondsLeft;
+      return;
+    }
+
+    if (restSecondsLeft > 0 && restSecondsLeft <= 3) {
+      playCountdownBeep();
+    }
+
+    if (
+      restSecondsLeft > 0 &&
+      prepareSoundEnabled &&
+      Number.isInteger(prepareSoundSeconds) &&
+      prepareSoundSeconds > 0 &&
+      restSecondsLeft === prepareSoundSeconds
+    ) {
+      playPrepareBeep();
+    }
+
+    lastSoundSecondRef.current = restSecondsLeft;
+  }, [restSecondsLeft, soundEnabled, prepareSoundEnabled, prepareSoundSeconds]);
 
   useEffect(() => {
     const loadSetsForCurrentExercise = async () => {

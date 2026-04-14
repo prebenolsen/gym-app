@@ -17,6 +17,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
+import { playCompletionBeep, playCountdownBeep, playPrepareBeep } from '../lib/restTimerSounds';
 
 type SetDraft = {
   weight: string;
@@ -67,7 +68,15 @@ const SWIPE_THRESHOLD = 60;
 
 const ActiveWorkoutScreen = ({ navigation }: any) => {
   const api = useApi();
-  const { colors: themeColors, unit, convertFromKg, convertToKg } = usePreferences();
+  const {
+    colors: themeColors,
+    unit,
+    convertFromKg,
+    convertToKg,
+    soundEnabled,
+    prepareSoundEnabled,
+    prepareSoundSeconds,
+  } = usePreferences();
   const styles = createStyles(themeColors);
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<WorkoutSession | null>(null);
@@ -82,6 +91,7 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
   const [lastEditedSetIndexByExercise, setLastEditedSetIndexByExercise] = useState<Record<string, number | null>>({});
   const [savingSet, setSavingSet] = useState<number | null>(null);
   const [restSecondsLeft, setRestSecondsLeft] = useState(0);
+  const lastRestSoundSecondRef = useRef<number | null>(null);
 
   const currentExercise = exercises[currentIndex] ?? null;
   const currentDrafts = currentExercise ? setDraftsByExercise[currentExercise.id] ?? [] : [];
@@ -232,6 +242,39 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
   }, [restSecondsLeft]);
 
   useEffect(() => {
+    if (!soundEnabled) {
+      lastRestSoundSecondRef.current = restSecondsLeft;
+      return;
+    }
+
+    if (lastRestSoundSecondRef.current === restSecondsLeft) {
+      return;
+    }
+
+    if (restSecondsLeft === 0 && lastRestSoundSecondRef.current !== 0) {
+      void playCompletionBeep();
+      lastRestSoundSecondRef.current = restSecondsLeft;
+      return;
+    }
+
+    if (restSecondsLeft > 0 && restSecondsLeft <= 3) {
+      void playCountdownBeep();
+    }
+
+    if (
+      restSecondsLeft > 0 &&
+      prepareSoundEnabled &&
+      Number.isInteger(prepareSoundSeconds) &&
+      prepareSoundSeconds > 0 &&
+      restSecondsLeft === prepareSoundSeconds
+    ) {
+      void playPrepareBeep();
+    }
+
+    lastRestSoundSecondRef.current = restSecondsLeft;
+  }, [restSecondsLeft, soundEnabled, prepareSoundEnabled, prepareSoundSeconds]);
+
+  useEffect(() => {
     const loadCurrentExerciseSets = async () => {
       if (!session || !currentExercise) return;
       if (setDraftsByExercise[currentExercise.id]) return;
@@ -335,6 +378,47 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     } finally {
       setSavingSet(null);
     }
+  };
+
+  const updateExerciseDefaultRest = async (nextRestSeconds: number) => {
+    if (!currentExercise) return;
+
+    try {
+      await api.updateExercise(currentExercise.id, { rest_seconds: nextRestSeconds });
+      setExercises((prev) =>
+        prev.map((exercise) =>
+          exercise.id === currentExercise.id
+            ? { ...exercise, rest_seconds: nextRestSeconds }
+            : exercise
+        )
+      );
+    } catch (err) {
+      console.error('Failed to update default rest timer:', err);
+      Alert.alert('Error', 'Failed to save default rest timer');
+    }
+  };
+
+  const adjustRestTimer = (deltaSeconds: number) => {
+    if (!currentExercise || restSecondsLeft <= 0) return;
+
+    const nextRestSeconds = Math.max(0, restSecondsLeft + deltaSeconds);
+    if (nextRestSeconds === restSecondsLeft) return;
+
+    setRestSecondsLeft(nextRestSeconds);
+
+    Alert.alert(
+      'Save as default rest?',
+      `Use ${nextRestSeconds}s as the default rest timer for ${currentExercise.name}?`,
+      [
+        { text: 'No', style: 'cancel' },
+        {
+          text: 'Save',
+          onPress: () => {
+            updateExerciseDefaultRest(nextRestSeconds);
+          },
+        },
+      ]
+    );
   };
 
   const handleNavigateExercise = async (direction: 'prev' | 'next') => {
@@ -491,8 +575,6 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
             ) : (
           <View style={styles.exerciseCard}>
             <Text style={styles.exerciseName}>{currentExercise.name}</Text>
-            <Text style={styles.exerciseMeta}>Rest: {currentExercise.rest_seconds} seconds</Text>
-
             <View style={styles.setsHeaderRow}>
               <Text style={styles.setsHeaderCell}>Set</Text>
               <Text style={styles.setsHeaderCell}>Weight ({unit})</Text>
@@ -565,11 +647,29 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
       </View>
 
       {currentExercise ? (
-        <View style={styles.bottomActionsWrap}>
-          <Text style={styles.restTimerText}>
-            {restSecondsLeft > 0 ? `Rest: ${restSecondsLeft}s` : 'Rest: Ready'}
-          </Text>
-          <View style={styles.bottomActionsBar}>
+        <View style={styles.bottomArea}>
+          {restSecondsLeft > 0 ? (
+            <View style={styles.restTimerBox}>
+              <View style={styles.restTimerRow}>
+                <TouchableOpacity
+                  style={[styles.restAdjustButton, restSecondsLeft <= 0 && styles.restAdjustButtonDisabled]}
+                  onPress={() => adjustRestTimer(-5)}
+                  disabled={restSecondsLeft <= 0}
+                >
+                  <Text style={styles.restAdjustButtonText}>-5</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.restTimerValue}>{restSecondsLeft}s</Text>
+
+                <TouchableOpacity style={styles.restAdjustButton} onPress={() => adjustRestTimer(5)}>
+                  <Text style={styles.restAdjustButtonText}>+5</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : null}
+
+          <View style={styles.bottomActionsWrap}>
+            <View style={styles.bottomActionsBar}>
             <TouchableOpacity
               style={[styles.navButton, currentIndex === 0 && styles.navButtonDisabled]}
               onPress={() => handleNavigateExercise('prev')}
@@ -607,18 +707,19 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
             >
               <Text style={styles.navButtonText}>Next</Text>
             </TouchableOpacity>
-          </View>
+            </View>
 
-          <View style={styles.exerciseProgressRow}>
-            {exercises.map((exercise, index) => (
-              <View
-                key={exercise.id}
-                style={[
-                  styles.exerciseProgressMark,
-                  index === currentIndex && styles.exerciseProgressMarkActive,
-                ]}
-              />
-            ))}
+            <View style={styles.exerciseProgressRow}>
+              {exercises.map((exercise, index) => (
+                <View
+                  key={exercise.id}
+                  style={[
+                    styles.exerciseProgressMark,
+                    index === currentIndex && styles.exerciseProgressMarkActive,
+                  ]}
+                />
+              ))}
+            </View>
           </View>
         </View>
       ) : null}
@@ -655,12 +756,6 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     textTransform: 'uppercase',
-  },
-  restTimerText: {
-    color: themeColors.textMuted,
-    fontSize: 12,
-    marginBottom: 6,
-    textAlign: 'center',
   },
   list: {
     flex: 1,
@@ -788,12 +883,58 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     textTransform: 'uppercase',
   },
   bottomActionsWrap: {
-    borderTopWidth: 1,
-    borderTopColor: themeColors.border,
     backgroundColor: themeColors.surface,
+    borderColor: themeColors.border,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 10,
+  },
+  bottomArea: {
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 10,
+    gap: 6,
+  },
+  restTimerBox: {
+    width: '100%',
+    backgroundColor: themeColors.surface,
+    borderColor: themeColors.border,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+  },
+  restTimerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  restTimerValue: {
+    color: themeColors.textStrong,
+    fontSize: 18,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  restAdjustButton: {
+    minWidth: 68,
+    backgroundColor: themeColors.accentSoft,
+    borderWidth: 1,
+    borderColor: themeColors.accent,
+    borderRadius: radius.sm,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  restAdjustButtonDisabled: {
+    opacity: 0.45,
+  },
+  restAdjustButtonText: {
+    color: themeColors.accent,
+    fontWeight: '700',
+    fontSize: 12,
+    textTransform: 'uppercase',
   },
   bottomActionsBar: {
     flexDirection: 'row',
