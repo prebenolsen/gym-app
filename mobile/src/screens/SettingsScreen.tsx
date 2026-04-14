@@ -130,7 +130,9 @@ const SettingsScreen = () => {
             <Text style={[styles.chipText, unit === 'lb' && styles.chipTextActive]}>lb</Text>
           </TouchableOpacity>
         </View>
+      </View>
 
+      <View style={styles.card}>
         <Text style={styles.section}>Sounds</Text>
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
