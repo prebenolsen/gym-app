@@ -23,6 +23,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { PreferencesProvider, usePreferences } from './context/PreferencesContext';
 import { useApi } from './hooks/useApi';
 import { Ionicons } from '@expo/vector-icons';
+import { APP_INFO } from './constants/appInfo';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -180,7 +181,9 @@ const AppRoutes = () => {
             <View style={styles.tabBarWrapper}>
               <BottomTabBar {...props} />
               <View style={styles.tabBarFooter}>
-                <Text style={styles.versionText}>Version 0.1</Text>
+                <Text style={styles.versionText}>
+                  Version {APP_INFO.version} ({APP_INFO.stage})
+                </Text>
               </View>
             </View>
           )}
