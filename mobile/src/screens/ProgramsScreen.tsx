@@ -159,7 +159,7 @@ const ProgramsScreen = ({ navigation }: any) => {
                       >
                         <Text style={styles.workoutRowName}>{workout.name}</Text>
                         <Text style={styles.workoutRowCount}>
-                          🏋️ {count} {count === 1 ? 'exercise' : 'exercises'}
+                        {count} {count === 1 ? 'exercise' : 'exercises'}
                         </Text>
                       </TouchableOpacity>
                     );
