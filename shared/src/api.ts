@@ -23,11 +23,13 @@ import type {
   ExerciseProgressHistory,
 } from './types';
 
+type TokenProvider = () => string | null | Promise<string | null>;
+
 class ApiClient {
   baseURL: string;
-  private getToken?: () => string | null;
+  private getToken?: TokenProvider;
 
-  constructor(baseURL: string, getToken?: () => string | null) {
+  constructor(baseURL: string, getToken?: TokenProvider) {
     this.baseURL = baseURL;
     this.getToken = getToken;
   }
@@ -45,9 +47,11 @@ class ApiClient {
       },
     };
 
-    const token = this.getToken?.();
+    const token = await this.getToken?.();
     if (token) {
       (options.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+    } else if (this.getToken) {
+      console.info(`API request without auth token: ${method} ${path}`);
     }
 
     if (data) {
