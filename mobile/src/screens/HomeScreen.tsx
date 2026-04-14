@@ -13,6 +13,8 @@ import {
   type Workout,
   type WorkoutSession,
   type ExerciseHistorySummary,
+  type WorkoutHistoryByDate,
+  type Exercise,
 } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
@@ -23,19 +25,69 @@ type ProgramWithWorkouts = {
   program: Program;
   workouts: Workout[];
   exerciseCounts: Record<string, number>;
+  estimatedDurations: Record<string, string>;
 };
+
+const TIME_PER_SET_SECONDS = { low: 30, high: 45 };
+const HISTORY_LOOKBACK_MONTHS = 18;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const roundDownToNearestFive = (value: number) => Math.floor(value / 5) * 5;
+const roundUpToNearestFive = (value: number) => Math.ceil(value / 5) * 5;
+
+const toMonthKey = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+};
+
+const getWorkoutEstimateDuration = (exercises: Exercise[]): string => {
+  if (exercises.length === 0) return '0m';
+
+  const totals = exercises.reduce(
+    (acc, exercise) => {
+      const low =
+        exercise.sets * TIME_PER_SET_SECONDS.low +
+        Math.max(exercise.sets - 1, 0) * exercise.rest_seconds;
+      const high =
+        exercise.sets * TIME_PER_SET_SECONDS.high +
+        Math.max(exercise.sets - 1, 0) * exercise.rest_seconds;
+
+      return { low: acc.low + low, high: acc.high + high };
+    },
+    { low: 0, high: 0 }
+  );
+
+  const lowMinutes = roundDownToNearestFive(totals.low / 60);
+  const highMinutes = roundUpToNearestFive(totals.high / 60);
+  return lowMinutes === highMinutes ? `${lowMinutes}m` : `${lowMinutes}-${highMinutes}m`;
+};
+
+const getDaysSince = (isoDate: string): number => {
+  const date = new Date(isoDate);
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const dateStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  return Math.max(0, Math.floor((todayStart - dateStart) / DAY_MS));
+};
+
+const getDaysSortValue = (days: number | null): number =>
+  days === null ? Number.POSITIVE_INFINITY : days;
+
+const formatDaysSince = (days: number | null): string =>
+  days === null ? 'Never' : `${days}d`;
 
 const getWorkoutMessage = (count: number): string => {
   switch (count) {
-    case 0: return "💪 Welcome back! Let's make the next 7 days count";
-    case 1: return "👍 1 workout in the last 7 days — hey, it's a start!";
-    case 2: return "💪 Not bad — 2 workouts in the last 7 days. The gains are coming!";
-    case 3: return "🔥 Look at you — 3 workouts in the last 7 days. You're actually doing it!";
-    case 4: return "⚡ 4 workouts in the last 7 days — you're on a roll!";
-    case 5: return "💥 5 workouts in the last 7 days?! Now that's impressive!";
-    case 6: return "🚀 Call the newspaper — 6 workouts in the last 7 days? Absolute headline!";
-    case 7: return "🏆 7 workouts in 7 days. We're not worthy!";
-    default: return "💪 Welcome back! Let's make the next 7 days count";
+    case 0: return "Welcome back! Let's make the next 7 days count";
+    case 1: return "1 workout in the last 7 days - hey, it's a start!";
+    case 2: return "Not bad - 2 workouts in the last 7 days. The gains are coming!";
+    case 3: return "Look at you - 3 workouts in the last 7 days. You're actually doing it!";
+    case 4: return "4 workouts in the last 7 days - you're on a roll!";
+    case 5: return "5 workouts in the last 7 days?! Now that's impressive!";
+    case 6: return "Call the newspaper - 6 workouts in the last 7 days? Absolute headline!";
+    case 7: return "7 workouts in 7 days. We're not worthy!";
+    default: return "Welcome back! Let's make the next 7 days count";
   }
 };
 
@@ -47,6 +99,7 @@ const HomeScreen = ({ navigation }: any) => {
   const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null);
   const [workouts7Days, setWorkouts7Days] = useState<number>(0);
   const [exercises, setExercises] = useState<ExerciseHistorySummary[]>([]);
+  const [daysSinceByWorkout, setDaysSinceByWorkout] = useState<Record<string, number | null>>({});
   const [loading, setLoading] = useState(true);
 
   const api = useApi();
@@ -69,15 +122,58 @@ const HomeScreen = ({ navigation }: any) => {
           const exerciseResults = await Promise.all(
             workouts.map((w) => api.getExercises(w.id))
           );
+
           const exerciseCounts: Record<string, number> = {};
-          workouts.forEach((w, i) => { exerciseCounts[w.id] = exerciseResults[i].length; });
-          return { program, workouts, exerciseCounts };
+          const estimatedDurations: Record<string, string> = {};
+
+          workouts.forEach((w, i) => {
+            exerciseCounts[w.id] = exerciseResults[i].length;
+            estimatedDurations[w.id] = getWorkoutEstimateDuration(exerciseResults[i]);
+          });
+
+          return { program, workouts, exerciseCounts, estimatedDurations };
         })
       );
+
+      const workoutIds = workoutsByProgram.flatMap(({ workouts }) => workouts.map((workout) => workout.id));
+
+      const monthKeys = Array.from({ length: HISTORY_LOOKBACK_MONTHS }).map((_, idx) => {
+        const monthDate = new Date();
+        monthDate.setDate(1);
+        monthDate.setMonth(monthDate.getMonth() - idx);
+        return toMonthKey(monthDate);
+      });
+
+      const monthHistories = await Promise.all(
+        monthKeys.map(async (monthKey) => {
+          try {
+            return await api.getWorkoutsByMonth(monthKey);
+          } catch {
+            return [] as WorkoutHistoryByDate[];
+          }
+        })
+      );
+
+      const latestByWorkout: Record<string, string> = {};
+      monthHistories.flat().forEach((entry) => {
+        if (entry.status === 'cancelled') return;
+
+        const existing = latestByWorkout[entry.workout_id];
+        if (!existing || new Date(entry.started_at).getTime() > new Date(existing).getTime()) {
+          latestByWorkout[entry.workout_id] = entry.started_at;
+        }
+      });
+
+      const nextDaysSinceByWorkout: Record<string, number | null> = {};
+      workoutIds.forEach((workoutId) => {
+        const lastPerformed = latestByWorkout[workoutId];
+        nextDaysSinceByWorkout[workoutId] = lastPerformed ? getDaysSince(lastPerformed) : null;
+      });
 
       setStats(statsData);
       setProgramTree(workoutsByProgram);
       setActiveSession(session);
+      setDaysSinceByWorkout(nextDaysSinceByWorkout);
 
       try {
         const workouts7 = await api.getWorkouts7Days();
@@ -118,7 +214,7 @@ const HomeScreen = ({ navigation }: any) => {
             style={styles.btnGetStarted}
             onPress={() => navigation.navigate('ProgramsStack')}
           >
-            <Text style={styles.btnGetStartedText}>Get started! 💪</Text>
+            <Text style={styles.btnGetStartedText}>Get started!</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -126,140 +222,154 @@ const HomeScreen = ({ navigation }: any) => {
   }
 
   return (
-  <View style={styles.screenWrapper}>
-    <View style={styles.header}>
-      <Text style={styles.headerMessage}>{getWorkoutMessage(workouts7Days)}</Text>
-    </View>
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-
-      {activeSession && (
-        <TouchableOpacity
-          style={styles.activeSessionCard}
-          onPress={() => navigation.navigate('ActiveWorkoutStack')}
-        >
-          <Text style={styles.activeSessionText}>You have an active workout session.</Text>
-          <Text style={styles.activeSessionBtn}>Resume Active Workout →</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Stats grid */}
-      <View style={styles.statsGrid}>
-        <TouchableOpacity
-          style={styles.statCard}
-          onPress={() => navigation.navigate('ProgramsStack')}
-        >
-          <Ionicons name="clipboard-outline" size={28} color={themeColors.accent} style={{ marginBottom: 6 }} />
-          <Text style={styles.statValue}>{stats.total_programs}</Text>
-          <Text style={styles.statLabel}>Programs</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.statCard}
-          onPress={() => navigation.navigate('ActiveWorkoutStack')}
-        >
-          <Ionicons name="body-outline" size={28} color={themeColors.accent} style={{ marginBottom: 6 }} />
-          <Text style={styles.statValue}>{stats.total_workouts}</Text>
-          <Text style={styles.statLabel}>Workouts</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.statCard}
-          onPress={() => navigation.navigate('ProgramsStack')}
-        >
-          <Ionicons name="barbell-outline" size={28} color={themeColors.accent} style={{ marginBottom: 6 }} />
-          <Text style={styles.statValue}>{stats.total_exercises}</Text>
-          <Text style={styles.statLabel}>Exercises</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.statCard}
-          onPress={() => navigation.navigate('CalendarStack')}
-        >
-          <Ionicons name="calendar-outline" size={28} color={themeColors.accent} style={{ marginBottom: 6 }} />
-          <Text style={styles.statValue}>{workouts7Days}</Text>
-          <Text style={styles.statLabel}>Last 7 Days</Text>
-        </TouchableOpacity>
+    <View style={styles.screenWrapper}>
+      <View style={styles.header}>
+        <Text style={styles.headerMessage}>{getWorkoutMessage(workouts7Days)}</Text>
       </View>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
-      {/* Favorite workouts */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Favorite Workouts</Text>
-        {(() => {
-          const favorites = programTree.filter(({ program }) => program.is_favorite_program);
-          if (favorites.length === 0) {
-            return (
-              <Text style={styles.noData}>
-                No favorites yet. Open a program and star it to add it here.
-              </Text>
-            );
-          }
-          return favorites.map(({ program, workouts, exerciseCounts }) => (
-            <View key={program.id} style={styles.favoriteProgramTile}>
-              <View style={styles.favoriteProgramHeader}>
-                <Ionicons name="star" size={18} color={themeColors.accent} />
-                <Text style={styles.favoriteProgramName}>{program.name}</Text>
-              </View>
-              {workouts.length === 0 ? (
-                <Text style={styles.noData}>No workouts in this program yet.</Text>
-              ) : (
-                workouts.map((workout) => (
-                  <TouchableOpacity
-                    key={workout.id}
-                    style={styles.workoutRowTile}
-                    onPress={() => {
-                      navigation.navigate('ProgramsStack', {
-                        screen: 'WorkoutDetail',
-                        params: {
-                          programId: program.id,
-                          workoutId: workout.id,
-                          workoutName: workout.name,
-                        },
-                      });
-                    }}
-                  >
-                    <Text style={styles.workoutRowTileName}>{workout.name}</Text>
-                    <Text style={styles.workoutRowTileCount}>
-                      {exerciseCounts[workout.id] ?? 0}{' '}
-                      {(exerciseCounts[workout.id] ?? 0) === 1 ? 'exercise' : 'exercises'}
-                    </Text>
-                  </TouchableOpacity>
-                ))
-              )}
-            </View>
-          ));
-        })()}
-      </View>
+        {activeSession && (
+          <TouchableOpacity
+            style={styles.activeSessionCard}
+            onPress={() => navigation.navigate('ActiveWorkoutStack')}
+          >
+            <Text style={styles.activeSessionText}>You have an active workout session.</Text>
+            <Text style={styles.activeSessionBtn}>Resume Active Workout</Text>
+          </TouchableOpacity>
+        )}
 
-      {/* Exercise progress */}
-      {exercises.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Exercise Progress</Text>
-          {exercises.map((exercise) => (
-            <TouchableOpacity
-              key={exercise.exercise_id}
-              style={styles.exerciseCard}
-              onPress={() => {
-                navigation.navigate('ProgramsStack', {
-                  screen: 'ExerciseProgress',
-                  params: { exerciseId: exercise.exercise_id },
-                });
-              }}
-            >
-              <Text style={styles.exerciseCardName}>{exercise.exercise_name}</Text>
-              <View style={styles.exerciseCardStats}>
-                <Text style={styles.exerciseStatText}>
-                  Times exercised: {exercise.times_done}
-                </Text>
-                <Text style={styles.exerciseStatText}>
-                  Max: {formatWeight(exercise.personal_best)}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.statsGrid}>
+          <TouchableOpacity
+            style={styles.statCard}
+            onPress={() => navigation.navigate('ProgramsStack')}
+          >
+            <Ionicons name="clipboard-outline" size={28} color={themeColors.accent} style={{ marginBottom: 6 }} />
+            <Text style={styles.statValue}>{stats.total_programs}</Text>
+            <Text style={styles.statLabel}>Programs</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.statCard}
+            onPress={() => navigation.navigate('ActiveWorkoutStack')}
+          >
+            <Ionicons name="body-outline" size={28} color={themeColors.accent} style={{ marginBottom: 6 }} />
+            <Text style={styles.statValue}>{stats.total_workouts}</Text>
+            <Text style={styles.statLabel}>Workouts</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.statCard}
+            onPress={() => navigation.navigate('ProgramsStack')}
+          >
+            <Ionicons name="barbell-outline" size={28} color={themeColors.accent} style={{ marginBottom: 6 }} />
+            <Text style={styles.statValue}>{stats.total_exercises}</Text>
+            <Text style={styles.statLabel}>Exercises</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.statCard}
+            onPress={() => navigation.navigate('CalendarStack')}
+          >
+            <Ionicons name="calendar-outline" size={28} color={themeColors.accent} style={{ marginBottom: 6 }} />
+            <Text style={styles.statValue}>{workouts7Days}</Text>
+            <Text style={styles.statLabel}>Last 7 Days</Text>
+          </TouchableOpacity>
         </View>
-      )}
-    </ScrollView>
-  </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Favorite Workouts</Text>
+          {(() => {
+            const favorites = programTree.filter(({ program }) => program.is_favorite_program);
+            if (favorites.length === 0) {
+              return (
+                <Text style={styles.noData}>
+                  No favorites yet. Open a program and star it to add it here.
+                </Text>
+              );
+            }
+
+            return favorites.map(({ program, workouts, exerciseCounts, estimatedDurations }) => (
+              <View key={program.id} style={styles.favoriteProgramTile}>
+                <View style={styles.favoriteProgramHeader}>
+                  <Ionicons name="star" size={18} color={themeColors.accent} />
+                  <Text style={styles.favoriteProgramName}>{program.name}</Text>
+                </View>
+                {workouts.length === 0 ? (
+                  <Text style={styles.noData}>No workouts in this program yet.</Text>
+                ) : (
+                  workouts
+                    .slice()
+                    .sort((a, b) => {
+                      const aDays = getDaysSortValue(daysSinceByWorkout[a.id] ?? null);
+                      const bDays = getDaysSortValue(daysSinceByWorkout[b.id] ?? null);
+                      if (aDays !== bDays) return bDays - aDays;
+                      return a.order - b.order;
+                    })
+                    .map((workout) => (
+                      <TouchableOpacity
+                        key={workout.id}
+                        style={styles.workoutRowTile}
+                        onPress={() => {
+                          navigation.navigate('ProgramsStack', {
+                            screen: 'WorkoutDetail',
+                            params: {
+                              programId: program.id,
+                              workoutId: workout.id,
+                              workoutName: workout.name,
+                            },
+                          });
+                        }}
+                      >
+                        <Text style={styles.workoutRowTileName}>{workout.name}</Text>
+                        <View style={styles.workoutRowMeta}>
+                          <Text style={styles.workoutRowTileDays}>
+                            {formatDaysSince(daysSinceByWorkout[workout.id] ?? null)}
+                          </Text>
+                          <Text style={styles.workoutRowTileDuration}>
+                            {estimatedDurations[workout.id] ?? '0m'}
+                          </Text>
+                          <Text style={styles.workoutRowTileCount}>
+                            {exerciseCounts[workout.id] ?? 0}{' '}
+                            {(exerciseCounts[workout.id] ?? 0) === 1 ? 'exercise' : 'exercises'}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))
+                )}
+              </View>
+            ));
+          })()}
+        </View>
+
+        {exercises.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Your Exercise Progress</Text>
+            {exercises.map((exercise) => (
+              <TouchableOpacity
+                key={exercise.exercise_id}
+                style={styles.exerciseCard}
+                onPress={() => {
+                  navigation.navigate('ProgramsStack', {
+                    screen: 'ExerciseProgress',
+                    params: { exerciseId: exercise.exercise_id },
+                  });
+                }}
+              >
+                <Text style={styles.exerciseCardName}>{exercise.exercise_name}</Text>
+                <View style={styles.exerciseCardStats}>
+                  <Text style={styles.exerciseStatText}>
+                    Times exercised: {exercise.times_done}
+                  </Text>
+                  <Text style={styles.exerciseStatText}>
+                    Max: {formatWeight(exercise.personal_best)}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 };
 
@@ -299,8 +409,8 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 16,
     },
     screenWrapper: {
-    flex: 1,
-    backgroundColor: themeColors.background,
+      flex: 1,
+      backgroundColor: themeColors.background,
     },
     header: {
       backgroundColor: themeColors.surface,
@@ -402,9 +512,7 @@ const createStyles = (themeColors: typeof colors) =>
       flex: 1,
     },
     workoutRowTile: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      alignItems: 'stretch',
       paddingVertical: 10,
       paddingHorizontal: 12,
       backgroundColor: themeColors.accentSoft,
@@ -415,11 +523,32 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 14,
       color: themeColors.textStrong,
       fontWeight: '600',
+      marginBottom: 8,
+    },
+    workoutRowMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+    },
+    workoutRowTileDays: {
+      fontSize: 12,
+      color: themeColors.textMuted,
       flex: 1,
+      textAlign: 'left',
+    },
+    workoutRowTileDuration: {
+      fontSize: 12,
+      color: themeColors.textStrong,
+      fontWeight: '700',
+      flex: 1,
+      textAlign: 'center',
     },
     workoutRowTileCount: {
       fontSize: 12,
       color: themeColors.textMuted,
+      flex: 1,
+      textAlign: 'right',
     },
     exerciseCard: {
       backgroundColor: themeColors.surface,

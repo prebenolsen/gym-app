@@ -133,7 +133,7 @@ const SettingsScreen = () => {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.section}>Sounds</Text>
+        <Text style={styles.title}>Sounds</Text>
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
             <Text style={styles.settingLabel}>Enable Sounds</Text>
