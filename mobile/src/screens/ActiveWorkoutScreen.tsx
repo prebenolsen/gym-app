@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { type Exercise, type Workout, type WorkoutSession, type WorkoutSessionSet } from '@gym-app/shared';
+import { type Exercise, type Workout, type WorkoutSession, type WorkoutSessionSet, type ExerciseLastPerformance } from '@gym-app/shared';
 import { useFocusEffect } from '@react-navigation/native';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
@@ -25,6 +25,10 @@ type SetDraft = {
 };
 
 type SavedSetTracking = Record<number, boolean>;
+
+type PreviousPerformance = {
+  [exerciseId: string]: ExerciseLastPerformance[];
+};
 
 const normalizeDraftValue = (value: string): string => value.trim().replace(',', '.');
 
@@ -92,6 +96,7 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
   const [savingSet, setSavingSet] = useState<number | null>(null);
   const [restSecondsLeft, setRestSecondsLeft] = useState(0);
   const [pendingDefaultRestSeconds, setPendingDefaultRestSeconds] = useState<number | null>(null);
+  const [previousPerformance, setPreviousPerformance] = useState<PreviousPerformance>({});
   const lastRestSoundSecondRef = useRef<number | null>(null);
 
   const currentExercise = exercises[currentIndex] ?? null;
@@ -186,6 +191,23 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
 
       const workoutExercises = await api.getExercises(activeSession.workout_id);
       setExercises(workoutExercises);
+
+      // Load previous performance data for this workout
+      try {
+        const lastPerf = await api.getLastWorkoutPerformance(activeSession.workout_id);
+        if (lastPerf && lastPerf.sets && lastPerf.sets.length > 0) {
+          const perfByExercise: PreviousPerformance = {};
+          lastPerf.sets.forEach((set) => {
+            if (!perfByExercise[set.exercise_id]) {
+              perfByExercise[set.exercise_id] = [];
+            }
+            perfByExercise[set.exercise_id].push(set);
+          });
+          setPreviousPerformance(perfByExercise);
+        }
+      } catch (err) {
+        console.warn('Failed to load previous performance:', err);
+      }
 
       const index = Math.min(
         activeSession.current_exercise_index || 0,
@@ -582,6 +604,8 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
               const isSaved = currentSavedSets[setNumber] === true;
               const canEdit = firstUnsavedSetIndex === setIndex || isSaved;
               const isLocked = !canEdit && !isSaved;
+              const prevPerf = previousPerformance[currentExercise.id];
+              const prevForThisSet = prevPerf?.find((p) => p.set_number === setNumber);
 
               return (
               <View
@@ -592,42 +616,54 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
                 ]}
               >
                 <Text style={styles.setCellLabel}>{setIndex + 1}</Text>
-                <TextInput
-                  style={[
-                    styles.setInput,
-                    isLocked && styles.setInputLocked,
-                  ]}
-                  value={draft.weight}
-                  onFocus={() =>
-                    setLastEditedSetIndexByExercise((prev) => ({
-                      ...prev,
-                      [currentExercise.id]: setIndex,
-                    }))
-                  }
-                  keyboardType="decimal-pad"
-                  onChangeText={(value) =>
-                    handleSetFieldChange(currentExercise.id, setIndex, 'weight', value)
-                  }
-                  editable={canEdit}
-                />
-                <TextInput
-                  style={[
-                    styles.setInput,
-                    isLocked && styles.setInputLocked,
-                  ]}
-                  value={draft.reps}
-                  onFocus={() =>
-                    setLastEditedSetIndexByExercise((prev) => ({
-                      ...prev,
-                      [currentExercise.id]: setIndex,
-                    }))
-                  }
-                  keyboardType="number-pad"
-                  onChangeText={(value) =>
-                    handleSetFieldChange(currentExercise.id, setIndex, 'reps', value)
-                  }
-                  editable={canEdit}
-                />
+                <View style={styles.setInputContainer}>
+                  <TextInput
+                    style={[
+                      styles.setInput,
+                      isLocked && styles.setInputLocked,
+                    ]}
+                    value={draft.weight}
+                    onFocus={() =>
+                      setLastEditedSetIndexByExercise((prev) => ({
+                        ...prev,
+                        [currentExercise.id]: setIndex,
+                      }))
+                    }
+                    keyboardType="decimal-pad"
+                    onChangeText={(value) =>
+                      handleSetFieldChange(currentExercise.id, setIndex, 'weight', value)
+                    }
+                    editable={canEdit}
+                  />
+                  {prevForThisSet ? (
+                    <Text style={styles.previousValueOverlay} numberOfLines={1}>
+                      ({formatWeightInput(prevForThisSet.weight)})
+                    </Text>
+                  ) : null}
+                </View>
+                <View style={styles.setInputContainer}>
+                  <TextInput
+                    style={[
+                      styles.setInput,
+                      isLocked && styles.setInputLocked,
+                    ]}
+                    value={draft.reps}
+                    onFocus={() =>
+                      setLastEditedSetIndexByExercise((prev) => ({
+                        ...prev,
+                        [currentExercise.id]: setIndex,
+                      }))
+                    }
+                    keyboardType="number-pad"
+                    onChangeText={(value) =>
+                      handleSetFieldChange(currentExercise.id, setIndex, 'reps', value)
+                    }
+                    editable={canEdit}
+                  />
+                  {prevForThisSet ? (
+                    <Text style={styles.previousValueOverlay} numberOfLines={1}>({prevForThisSet.reps})</Text>
+                  ) : null}
+                </View>
                 <View style={styles.setStatusCell}>
                   <Text style={styles.setStatusText}>{isSaved ? '✓' : ''}</Text>
                 </View>
@@ -809,6 +845,19 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   },
   setsStatusHeaderCell: {
     width: 24,
+  },
+  setInputContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  previousValueOverlay: {
+    position: 'absolute',
+    right: 8,
+    fontSize: 11,
+    color: themeColors.textMuted,
+    fontStyle: 'italic',
+    top: '50%',
+    marginTop: -5,
   },
   setRow: {
     flexDirection: 'row',
