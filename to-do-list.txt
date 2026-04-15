@@ -1,0 +1,2 @@
+Calves mangler transform. Kanskje gå helt vekk i fra transform? Finne en standard offset som funker for alt.
+Legs også tror jeg er tullete.
