@@ -916,6 +916,7 @@ app.get('/workouts/:workoutId/last-performance', async (req, res) => {
       .eq('user_id', req.userId)
       .eq('status', 'finished')
       .order('ended_at', { ascending: false })
+      .order('id', { ascending: false })
       .limit(1)
       .single();
 
@@ -929,10 +930,12 @@ app.get('/workouts/:workoutId/last-performance', async (req, res) => {
 
     const { data: sets, error: setsError } = await supabase
       .from('workout_session_sets')
-      .select('exercise_id, set_number, weight, reps')
+      .select('exercise_id, set_number, weight, reps, created_at')
       .eq('session_id', lastSession.id)
       .eq('is_deleted', false)
-      .order('set_number', { ascending: true });
+      .order('exercise_id', { ascending: true })
+      .order('set_number', { ascending: true })
+      .order('created_at', { ascending: true });
 
     if (setsError) throw setsError;
 
