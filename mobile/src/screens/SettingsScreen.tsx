@@ -251,9 +251,6 @@ const SettingsScreen = () => {
         <Text style={styles.aboutLine}>Version {APP_INFO.version} (Build {APP_INFO.build})</Text>
         <Text style={styles.aboutLineMuted}>This release is in {APP_INFO.stage}.</Text>
         <Text style={styles.aboutLine}>Developed by {APP_INFO.author}</Text>
-        <Text style={styles.aboutLineMuted}>
-          Suggestions are welcome: {APP_INFO.feedbackEmail}
-        </Text>
 
         <TouchableOpacity
           style={[styles.secondaryButton, feedbackSubmitted && styles.successButton]}
@@ -434,6 +431,7 @@ const createStyles = (themeColors: typeof colors) =>
     },
     primaryButton: {
       backgroundColor: themeColors.accent,
+      flex: 1,
       borderRadius: radius.sm,
       paddingVertical: 12,
       alignItems: 'center',
@@ -484,7 +482,7 @@ const createStyles = (themeColors: typeof colors) =>
       marginTop: 10,
     },
     feedbackCancelButton: {
-      flex: 1,
+      flex: 0.5,
       borderColor: themeColors.border,
       borderWidth: 1,
       borderRadius: radius.sm,
