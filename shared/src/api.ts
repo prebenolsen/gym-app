@@ -366,6 +366,18 @@ class ApiClient {
     const path = days ? `/exercises/${exerciseId}/progress?days=${days}` : `/exercises/${exerciseId}/progress`;
     return this.request('GET', path);
   }
+
+  async getWorkoutSessions(): Promise<WorkoutSession[]> {
+    return this.request('GET', '/workout-sessions');
+  }
+
+  async getExerciseNotes(exerciseId: string): Promise<string | null> {
+    return this.request('GET', `/exercises/${exerciseId}/notes`);
+  }
+
+  async saveExerciseNotes(exerciseId: string, notes: string): Promise<void> {
+    return this.request('PATCH', `/exercises/${exerciseId}/notes`, { notes });
+  }
 }
 
 export default ApiClient;

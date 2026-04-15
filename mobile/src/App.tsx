@@ -15,6 +15,8 @@ import ProgramsCatalogScreen from './screens/ProgramsCatalogScreen';
 import ProgramTemplateScreen from './screens/ProgramTemplateScreen';
 import WorkoutsCatalogScreen from './screens/WorkoutsCatalogScreen';
 import ActiveWorkoutScreen from './screens/ActiveWorkoutScreen';
+import ExerciseHistoryScreen from './screens/ExerciseHistoryScreen';
+import ExerciseNotesScreen from './screens/ExerciseNotesScreen';
 import CalendarScreen from './screens/CalendarScreen';
 import WorkoutHistoryDetailScreen from './screens/WorkoutHistoryDetailScreen';
 import AuthScreen from './screens/AuthScreen';
@@ -87,6 +89,14 @@ const ActiveWorkoutStackNavigator = () => {
       <Stack.Screen
         name="ActiveWorkout"
         component={ActiveWorkoutScreen}
+      />
+      <Stack.Screen
+        name="ExerciseHistory"
+        component={ExerciseHistoryScreen}
+      />
+      <Stack.Screen
+        name="ExerciseNotes"
+        component={ExerciseNotesScreen}
       />
     </Stack.Navigator>
   );

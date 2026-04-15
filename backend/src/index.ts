@@ -491,6 +491,22 @@ app.patch('/workouts/:workoutId/exercises/reorder', async (req, res) => {
 
 // === WORKOUT SESSIONS ===
 
+app.get('/workout-sessions', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('workout_sessions')
+      .select('*')
+      .eq('user_id', req.userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err: unknown) {
+    const errorMsg = formatError(err);
+    res.status(500).json({ error: errorMsg });
+  }
+});
+
 app.get('/workout-sessions/active', async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -1204,6 +1220,63 @@ app.delete('/account', async (req, res) => {
     }
 
     res.status(204).send();
+  } catch (err: unknown) {
+    const errorMsg = formatError(err);
+    res.status(500).json({ error: errorMsg });
+  }
+});
+
+// === EXERCISE NOTES ===
+
+app.get('/exercises/:exerciseId/notes', async (req, res) => {
+  try {
+    const { exerciseId } = req.params;
+
+    const { data, error } = await supabase
+      .from('exercise_notes')
+      .select('notes')
+      .eq('exercise_id', exerciseId)
+      .eq('user_id', req.userId)
+      .maybeSingle();
+
+    if (error) throw error;
+    res.json(data?.notes || null);
+  } catch (err: unknown) {
+    const errorMsg = formatError(err);
+    res.status(500).json({ error: errorMsg });
+  }
+});
+
+app.patch('/exercises/:exerciseId/notes', async (req, res) => {
+  try {
+    const { exerciseId } = req.params;
+    const { notes } = req.body;
+
+    if (typeof notes !== 'string') {
+      res.status(400).json({ error: 'notes must be a string' });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('exercise_notes')
+      .upsert(
+        [
+          {
+            exercise_id: exerciseId,
+            user_id: req.userId,
+            notes,
+            updated_at: new Date().toISOString(),
+          },
+        ],
+        {
+          onConflict: 'exercise_id,user_id',
+        }
+      )
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
   } catch (err: unknown) {
     const errorMsg = formatError(err);
     res.status(500).json({ error: errorMsg });

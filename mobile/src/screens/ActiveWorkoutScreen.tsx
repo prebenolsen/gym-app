@@ -578,6 +578,26 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
           <TouchableOpacity style={styles.cancelButton} onPress={handleCancelWorkout}>
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
+          {currentExercise && (
+            <>
+              <TouchableOpacity
+                style={styles.secondaryButton}
+                onPress={() =>
+                  navigation.navigate('ExerciseHistory', { exerciseId: currentExercise.id, exerciseName: currentExercise.name })
+                }
+              >
+                <Text style={styles.secondaryButtonText}>History</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.secondaryButton}
+                onPress={() =>
+                  navigation.navigate('ExerciseNotes', { exerciseId: currentExercise.id, exerciseName: currentExercise.name })
+                }
+              >
+                <Text style={styles.secondaryButtonText}>Notes</Text>
+              </TouchableOpacity>
+            </>
+          )}
           <TouchableOpacity style={styles.finishButton} onPress={handleFinishWorkout}>
             <Text style={styles.finishButtonText}>Finish</Text>
           </TouchableOpacity>
@@ -792,6 +812,8 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 4,
+    flexWrap: 'wrap',
   },
   title: {
     color: themeColors.textStrong,
@@ -1035,12 +1057,29 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 8,
     paddingHorizontal: 8,
-    minWidth: 92,
+    minWidth: 80,
   },
   cancelButtonText: {
     color: themeColors.danger,
     fontWeight: '700',
     fontSize: 11,
+    textTransform: 'uppercase',
+  },
+  secondaryButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: themeColors.textStrong,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    minWidth: 80,
+  },
+  secondaryButtonText: {
+    color: themeColors.textStrong,
+    fontWeight: '700',
+    fontSize: 10,
     textTransform: 'uppercase',
   },
   finishButton: {
@@ -1052,7 +1091,7 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 8,
     paddingHorizontal: 8,
-    minWidth: 92,
+    minWidth: 80,
   },
   finishButtonText: {
     color: themeColors.success,
