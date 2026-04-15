@@ -20,12 +20,20 @@ const ProgramsScreen = ({ navigation }: any) => {
   const [workoutsByProgram, setWorkoutsByProgram] = useState<Record<string, Workout[]>>({});
   const [exerciseCountByWorkout, setExerciseCountByWorkout] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [showMessage, setShowMessage] = useState(false);
 
   const api = useApi();
 
   useEffect(() => {
     fetchPrograms();
   }, []);
+
+  useEffect(() => {
+    if (showMessage) {
+      const timer = setTimeout(() => setShowMessage(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showMessage]);
 
   const fetchPrograms = async () => {
     setLoading(true);
@@ -54,6 +62,7 @@ const ProgramsScreen = ({ navigation }: any) => {
     try {
       const newProgram = await api.createProgram();
       setPrograms([...programs, newProgram]);
+      setShowMessage(true);
     } catch (err) {
       console.error('Failed to create program:', err);
       Alert.alert('Error', 'Failed to create program');
@@ -110,6 +119,16 @@ const ProgramsScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         </View>
       </View>
+
+      {showMessage && (
+        <TouchableOpacity
+          style={styles.notification}
+          onPress={() => setShowMessage(false)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.notificationText}>Program created successfully!</Text>
+        </TouchableOpacity>
+      )}
 
       <ScrollView style={styles.list}>
         {programs.length === 0 ? (
@@ -305,6 +324,22 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     borderRadius: radius.sm,
   },
   btnSmallText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
+    textTransform: 'uppercase',
+  },
+  notification: {
+    backgroundColor: themeColors.success,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    marginTop: 8,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+  },
+  notificationText: {
     color: '#fff',
     fontWeight: '600',
     fontSize: 14,

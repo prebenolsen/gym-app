@@ -178,6 +178,29 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
     }
   };
 
+  const handleDeleteWorkout = async () => {
+    Alert.alert(
+      'Delete Workout',
+      `Delete "${editName}" and all its exercises?`,
+      [
+        { text: 'Cancel' },
+        {
+          text: 'Delete',
+          onPress: async () => {
+            try {
+              await api.deleteWorkout(workoutId);
+              navigation.goBack();
+            } catch (err) {
+              console.error('Failed to delete workout:', err);
+              Alert.alert('Error', 'Failed to delete workout');
+            }
+          },
+          style: 'destructive',
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -309,11 +332,20 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
           </TouchableOpacity>
         </ScrollView>
       </View>
+
+      <View style={styles.bottomActions}>
+        <TouchableOpacity
+          onPress={handleDeleteWorkout}
+          style={styles.deleteButton}
+        >
+          <Text style={styles.deleteButtonText}>Delete Workout</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
-const createStyles = (themeColors: ThemeColors) =>
+const createStyles = (themeColors: typeof colors) =>
   StyleSheet.create({
   container: {
     flex: 1,
@@ -474,6 +506,26 @@ const createStyles = (themeColors: ThemeColors) =>
   },
   btnDisabled: {
     opacity: 0.5,
+  },
+  bottomActions: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: themeColors.border,
+    backgroundColor: themeColors.surface,
+  },
+  deleteButton: {
+    backgroundColor: themeColors.danger,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 12,
+    textTransform: 'uppercase',
   },
 });
 
