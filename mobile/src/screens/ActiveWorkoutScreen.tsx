@@ -625,7 +625,8 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
               const canEdit = firstUnsavedSetIndex === setIndex || isSaved;
               const isLocked = !canEdit && !isSaved;
               const prevPerf = previousPerformance[currentExercise.id];
-              const prevForThisSet = prevPerf?.find((p) => p.set_number === setNumber);
+              // Get the LAST set matching this set_number (in case multiple attempts exist)
+              const prevForThisSet = prevPerf ? prevPerf.findLast((p) => p.set_number === setNumber) : undefined;
 
               return (
               <View

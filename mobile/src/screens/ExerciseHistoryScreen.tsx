@@ -101,7 +101,7 @@ const ExerciseHistoryScreen = ({ route, navigation }: any) => {
                   <Text style={[styles.tableCell, styles.reps]}>Reps</Text>
                 </View>
                 {group.sets.map((set, idx) => (
-                  <View key={`${group.date}-${set.set_number}`} style={styles.tableRow}>
+                  <View key={`${group.date}-${set.set_number}-${idx}`} style={styles.tableRow}>
                     <Text style={[styles.tableCell, styles.setNumber]}>{set.set_number}</Text>
                     <Text style={[styles.tableCell, styles.weight]}>{formatWeight(set.weight)}</Text>
                     <Text style={[styles.tableCell, styles.reps]}>{set.reps}</Text>
