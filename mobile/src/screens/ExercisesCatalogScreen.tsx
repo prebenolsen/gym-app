@@ -18,6 +18,7 @@ import {
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
+import MuscleMapThumb from '../components/MuscleMapThumb';
 
 const ExercisesCatalogScreen = ({ route, navigation }: any) => {
   const { programId, workoutId, workoutName } = route.params;
@@ -297,6 +298,16 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
                     {exercise.muscleGroup} • {exercise.equipment}
                   </Text>
                 </View>
+                <View style={styles.thumbWrap}>
+                  <MuscleMapThumb
+                    group={exercise.muscleGroup}
+                    size={42}
+                    mutedColor={themeColors.border}
+                    highlightColor={themeColors.accent}
+                    skinColor={themeColors.textMuted}
+                    outlineColor={themeColors.textStrong}
+                  />
+                </View>
               </TouchableOpacity>
             ))
           )}
@@ -448,6 +459,7 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   },
   exerciseInfo: {
     flex: 1,
+    marginRight: 12,
   },
   exerciseName: {
     fontSize: 14,
@@ -460,6 +472,11 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     fontSize: 12,
     color: themeColors.textMuted,
     textTransform: 'uppercase',
+  },
+  thumbWrap: {
+    width: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   spacer: {
     height: 20,
