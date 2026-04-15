@@ -268,11 +268,14 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
         </View>
 
         {/* Exercise List with Checkboxes */}
-        <View style={styles.exercisesSection}>
+        <View style={styles.resultsBox}>
           <Text style={styles.resultsTitle}>
             {filteredExercises.length} Exercise{filteredExercises.length !== 1 ? 's' : ''}
             {selectedExercises.size > 0 && ` (${selectedExercises.size} selected)`}
           </Text>
+        </View>
+
+        <View style={styles.exercisesSection}>
 
           {filteredExercises.length === 0 ? (
             <Text style={styles.noData}>No exercises match your filters.</Text>
@@ -301,7 +304,7 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
                 <View style={styles.thumbWrap}>
                   <MuscleMapThumb
                     group={exercise.muscleGroup}
-                    size={42}
+                    size={80}
                     mutedColor={themeColors.border}
                     highlightColor={themeColors.accent}
                   />
@@ -410,11 +413,19 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     marginBottom: 20,
     ...shadow.card,
   },
+  resultsBox: {
+    backgroundColor: themeColors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+    marginBottom: 10,
+    ...shadow.card,
+  },
   resultsTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: themeColors.textStrong,
-    paddingVertical: 16,
+    paddingVertical: 12,
     paddingHorizontal: 16,
     textTransform: 'uppercase',
   },
@@ -429,7 +440,7 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   },
   exerciseItem: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
@@ -457,7 +468,7 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   },
   exerciseInfo: {
     flex: 1,
-    marginRight: 12,
+    marginRight: 14,
   },
   exerciseName: {
     fontSize: 14,
@@ -472,7 +483,8 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     textTransform: 'uppercase',
   },
   thumbWrap: {
-    width: 44,
+    width: 92,
+    alignSelf: 'stretch',
     alignItems: 'center',
     justifyContent: 'center',
   },
