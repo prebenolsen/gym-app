@@ -304,8 +304,6 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
                     size={42}
                     mutedColor={themeColors.border}
                     highlightColor={themeColors.accent}
-                    skinColor={themeColors.textMuted}
-                    outlineColor={themeColors.textStrong}
                   />
                 </View>
               </TouchableOpacity>
