@@ -290,10 +290,18 @@ const HomeScreen = ({ navigation }: any) => {
 
             return favorites.map(({ program, workouts, exerciseCounts, estimatedDurations }) => (
               <View key={program.id} style={styles.favoriteProgramTile}>
-                <View style={styles.favoriteProgramHeader}>
+                <TouchableOpacity
+                  style={styles.favoriteProgramHeader}
+                  onPress={() => {
+                    navigation.navigate('ProgramsStack', {
+                      screen: 'ProgramDetail',
+                      params: { programId: program.id },
+                    });
+                  }}
+                >
                   <Ionicons name="star" size={18} color={themeColors.accent} />
                   <Text style={styles.favoriteProgramName}>{program.name}</Text>
-                </View>
+                </TouchableOpacity>
                 {workouts.length === 0 ? (
                   <Text style={styles.noData}>No workouts in this program yet.</Text>
                 ) : (
@@ -307,7 +315,7 @@ const HomeScreen = ({ navigation }: any) => {
                     })
                     .map((workout) => (
                       <TouchableOpacity
-                        key={workout.id}
+                        key={`workout-${program.id}-${workout.id}`}
                         style={styles.workoutRowTile}
                         onPress={() => {
                           navigation.navigate('ProgramsStack', {

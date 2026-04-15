@@ -1,0 +1,37 @@
+Potential issues
+
+Missing viewBox from the original SVG
+Incorrect or missing coordinate system
+✅ Transforms applied to parent groups in the original SVG were lost
+✅ Nested group positioning not preserved when extracting paths
+✅ Paths depended on group-level translation or scaling
+SVG was exported with transforms that were not flattened
+✅ Incorrect aspect ratio handling in the renderer
+✅ Width and height scaling distorting the coordinate system
+✅ Incorrect path extraction (truncated or partially copied paths)
+Original SVG used clipping paths or masks that were removed
+✅ Different origin point than expected for the path coordinates
+The SVG relied on defs or referenced elements that are no longer present
+Export from the vector editor introduced transforms or offsets
+✅ Paths were relative to a transformed group rather than absolute coordinates
+Large coordinate system scaled incorrectly by the rendering library
+
+Potential solutions
+
+Verify the original SVG viewBox and ensure the same coordinate system is used
+Render the original SVG file directly to confirm whether the issue is in extraction or rendering
+✅ Inspect the SVG file for transform attributes on groups or paths
+Flatten transforms in the vector editor before exporting
+Ungroup all elements in the vector editor so paths become absolute positioned
+Convert all shapes and groups into simple paths
+Re-export the SVG after flattening transforms and grouping
+✅ Ensure the rendering component preserves the original aspect ratio
+✅ Check that width and height scaling matches the original SVG dimensions
+✅ Validate that all path data was copied completely and correctly
+Inspect the SVG for clipping paths, masks, or defs that might affect layout
+Use the vector editor to visually confirm each muscle path's position
+Compare the rendered result with the original SVG side by side
+Export a simplified SVG containing only paths and no groups
+✅ Normalize the SVG so every element exists directly in the root coordinate space
+✅ Re-mapped abs paths to their exact source SVG IDs and transforms
+✅ Applied transforms on <G> wrappers instead of <Path> elements
