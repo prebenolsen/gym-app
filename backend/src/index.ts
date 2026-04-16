@@ -222,10 +222,7 @@ app.delete('/programs/:id', async (req, res) => {
 
     if (workouts) {
       for (const workout of workouts) {
-        await supabase
-          .from('exercises')
-          .delete()
-          .eq('workout_id', workout.id);
+        await supabase.from('exercises').delete().eq('workout_id', workout.id);
       }
 
       await supabase.from('workouts').delete().eq('program_id', id);
@@ -351,10 +348,7 @@ app.patch('/programs/:programId/workouts/reorder', async (req, res) => {
     const { items } = req.body;
 
     for (const item of items) {
-      await supabase
-        .from('workouts')
-        .update({ order: item.order })
-        .eq('id', item.id);
+      await supabase.from('workouts').update({ order: item.order }).eq('id', item.id);
     }
 
     res.json({ success: true });
@@ -388,11 +382,7 @@ app.get('/workouts/:workoutId/exercises', async (req, res) => {
 app.post('/workouts/:workoutId/exercises', async (req, res) => {
   try {
     const { workoutId } = req.params;
-    const {
-      name,
-      sets = 4,
-      rest_seconds = 120,
-    } = req.body;
+    const { name, sets = 4, rest_seconds = 120 } = req.body;
 
     // Get the next order number
     const { data: existing } = await supabase
@@ -434,8 +424,7 @@ app.put('/exercises/:id', async (req, res) => {
 
     if ('name' in req.body) updates.name = req.body.name;
     if ('sets' in req.body) updates.sets = req.body.sets;
-    if ('rest_seconds' in req.body)
-      updates.rest_seconds = req.body.rest_seconds;
+    if ('rest_seconds' in req.body) updates.rest_seconds = req.body.rest_seconds;
 
     const { data, error } = await supabase
       .from('exercises')
@@ -476,10 +465,7 @@ app.patch('/workouts/:workoutId/exercises/reorder', async (req, res) => {
     const { items } = req.body;
 
     for (const item of items) {
-      await supabase
-        .from('exercises')
-        .update({ order: item.order })
-        .eq('id', item.id);
+      await supabase.from('exercises').update({ order: item.order }).eq('id', item.id);
     }
 
     res.json({ success: true });
@@ -702,7 +688,7 @@ app.post('/workout-sessions/:id/sets', async (req, res) => {
         ],
         {
           onConflict: 'session_id,exercise_id,set_number',
-        }
+        },
       )
       .select()
       .single();
@@ -787,7 +773,7 @@ app.get('/workouts/history/by-date', async (req, res) => {
           ...session,
           workout_name: workout?.name || 'Unknown',
         };
-      })
+      }),
     );
 
     res.json(enriched);
@@ -840,7 +826,7 @@ app.get('/workouts/history/by-month', async (req, res) => {
           ...session,
           workout_name: workout?.name || 'Unknown',
         };
-      })
+      }),
     );
 
     res.json(enriched);
@@ -891,7 +877,7 @@ app.get('/workout-sessions/:sessionId/details', async (req, res) => {
           ...set,
           exercise_name: exercise?.name || 'Unknown',
         };
-      })
+      }),
     );
 
     res.json({
@@ -1023,7 +1009,10 @@ app.get('/exercises/history', async (req, res) => {
     const sessionMap = new Map(sessions?.map((s: any) => [s.id, s]) || []);
 
     // Group sets by exercise
-    const exerciseMap = new Map<string, { count: number; maxWeight: number; lastDate: string; sessionIds: Set<string> }>();
+    const exerciseMap = new Map<
+      string,
+      { count: number; maxWeight: number; lastDate: string; sessionIds: Set<string> }
+    >();
 
     for (const set of sets || []) {
       const session = sessionMap.get(set.session_id || '');
@@ -1066,7 +1055,9 @@ app.get('/exercises/history', async (req, res) => {
     }
 
     // Sort by most recent
-    result.sort((a, b) => new Date(b.last_date).getTime() - new Date(a.last_date).getTime());
+    result.sort(
+      (a, b) => new Date(b.last_date).getTime() - new Date(a.last_date).getTime(),
+    );
 
     res.json(result);
   } catch (err: unknown) {
@@ -1101,7 +1092,7 @@ app.get('/exercises/:exerciseId/progress', async (req, res) => {
 
     // Get the sessions for those sets
     const sessionIds = [...new Set((sets || []).map((s: any) => s.session_id))];
-    
+
     if (sessionIds.length === 0) {
       return res.json({
         exercise_id: exerciseId,
@@ -1123,7 +1114,16 @@ app.get('/exercises/:exerciseId/progress', async (req, res) => {
     const sessionMap = new Map(sessions?.map((s: any) => [s.id, s]) || []);
 
     // Calculate stats per calendar day (group by date so N sets in one workout = 1 row)
-    const dateStats = new Map<string, { date: string; maxWeight: number; totalVolume: number; sets: number; totalReps: number }>();
+    const dateStats = new Map<
+      string,
+      {
+        date: string;
+        maxWeight: number;
+        totalVolume: number;
+        sets: number;
+        totalReps: number;
+      }
+    >();
 
     for (const set of sets || []) {
       const session = sessionMap.get(set.session_id);
@@ -1191,31 +1191,16 @@ app.delete('/account', async (req, res) => {
 
     const sessionIds = (sessions ?? []).map((session) => session.id);
     if (sessionIds.length > 0) {
-      await supabase
-        .from('workout_session_sets')
-        .delete()
-        .in('session_id', sessionIds);
+      await supabase.from('workout_session_sets').delete().in('session_id', sessionIds);
     }
 
-    await supabase
-      .from('workout_sessions')
-      .delete()
-      .eq('user_id', req.userId);
+    await supabase.from('workout_sessions').delete().eq('user_id', req.userId);
 
-    await supabase
-      .from('exercises')
-      .delete()
-      .eq('user_id', req.userId);
+    await supabase.from('exercises').delete().eq('user_id', req.userId);
 
-    await supabase
-      .from('workouts')
-      .delete()
-      .eq('user_id', req.userId);
+    await supabase.from('workouts').delete().eq('user_id', req.userId);
 
-    await supabase
-      .from('programs')
-      .delete()
-      .eq('user_id', req.userId);
+    await supabase.from('programs').delete().eq('user_id', req.userId);
 
     const { error: authDeleteError } = await supabase.auth.admin.deleteUser(req.userId);
     if (authDeleteError) {
@@ -1273,7 +1258,7 @@ app.patch('/exercises/:exerciseId/notes', async (req, res) => {
         ],
         {
           onConflict: 'exercise_id,user_id',
-        }
+        },
       )
       .select()
       .single();

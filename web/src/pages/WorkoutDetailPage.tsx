@@ -78,7 +78,7 @@ const WorkoutDetailPage = () => {
 
   const handleUpdateExercise = async (
     id: string,
-    updates: { sets?: number; rest_seconds?: number; name?: string }
+    updates: { sets?: number; rest_seconds?: number; name?: string },
   ) => {
     try {
       const updated = await api.updateExercise(id, updates);
@@ -99,8 +99,6 @@ const WorkoutDetailPage = () => {
     }
   };
 
-
-
   const handleStartWorkout = async () => {
     if (!workout) return;
 
@@ -111,7 +109,7 @@ const WorkoutDetailPage = () => {
       const apiErr = err as Error & { status?: number };
       if (apiErr.status === 409) {
         const shouldResume = window.confirm(
-          'You already have an active workout session. Press OK to resume it, or Cancel to replace it with this workout.'
+          'You already have an active workout session. Press OK to resume it, or Cancel to replace it with this workout.',
         );
 
         if (shouldResume) {
@@ -138,7 +136,7 @@ const WorkoutDetailPage = () => {
         message.toLowerCase().includes('does not exist')
       ) {
         window.alert(
-          'Workout session tables are missing in Supabase. Run backend/supabase_session_schema.sql, then restart backend:dev.'
+          'Workout session tables are missing in Supabase. Run backend/supabase_session_schema.sql, then restart backend:dev.',
         );
         return;
       }
@@ -187,10 +185,7 @@ const WorkoutDetailPage = () => {
   return (
     <div className="workout-detail-page">
       <div className="detail-header">
-        <button
-          onClick={() => navigate(`/programs/${programId}`)}
-          className="btn-back"
-        >
+        <button onClick={() => navigate(`/programs/${programId}`)} className="btn-back">
           ← Back
         </button>
 
@@ -315,7 +310,11 @@ const WorkoutDetailPage = () => {
         )}
 
         <button
-          onClick={() => navigate(`/exercises?programId=${programId}&workoutId=${workoutId}&workoutName=${encodeURIComponent(workout?.name || '')}`)}
+          onClick={() =>
+            navigate(
+              `/exercises?programId=${programId}&workoutId=${workoutId}&workoutName=${encodeURIComponent(workout?.name || '')}`,
+            )
+          }
           className="btn-large btn-primary btn-catalog"
         >
           Add exercises from the catalog

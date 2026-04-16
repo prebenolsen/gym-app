@@ -11,7 +11,11 @@ import {
 import { useUnit } from '../context/UnitContext';
 import { useTheme } from '../context/ThemeContext';
 import { useApi } from '../hooks/useApi';
-import { playCompletionBeep, playCountdownBeep, playPrepareBeep } from '../lib/restTimerSounds';
+import {
+  playCompletionBeep,
+  playCountdownBeep,
+  playPrepareBeep,
+} from '../lib/restTimerSounds';
 import './ActiveWorkoutPage.css';
 
 type SetDraft = {
@@ -101,7 +105,7 @@ const ActiveWorkoutPage = () => {
     setSetDrafts(nextDrafts);
     setSavedDraftBaseline(nextDrafts);
     setDirtySavedSets({});
-    
+
     // Track which sets are saved
     const tracking: SavedSetTracking = {};
     savedSets.forEach((set) => {
@@ -163,7 +167,7 @@ const ActiveWorkoutPage = () => {
 
       const safeIndex = Math.min(
         session.current_exercise_index || 0,
-        Math.max(workoutExercises.length - 1, 0)
+        Math.max(workoutExercises.length - 1, 0),
       );
       setCurrentIndex(safeIndex);
 
@@ -277,12 +281,12 @@ const ActiveWorkoutPage = () => {
   const handleSetFieldChange = (
     rowIndex: number,
     field: keyof SetDraft,
-    value: string
+    value: string,
   ) => {
     setLastEditedSetIndex(rowIndex);
     setSetDrafts((prev) => {
       const nextDrafts = prev.map((row, idx) =>
-        idx === rowIndex ? { ...row, [field]: value } : row
+        idx === rowIndex ? { ...row, [field]: value } : row,
       );
 
       const setNumber = rowIndex + 1;
@@ -309,7 +313,13 @@ const ActiveWorkoutPage = () => {
     const reps = Number(draft.reps);
     const parsedWeight = Number(draft.weight.replace(',', '.'));
 
-    if (!draft.weight.trim() || Number.isNaN(parsedWeight) || parsedWeight <= 0 || Number.isNaN(reps) || reps <= 0) {
+    if (
+      !draft.weight.trim() ||
+      Number.isNaN(parsedWeight) ||
+      parsedWeight <= 0 ||
+      Number.isNaN(reps) ||
+      reps <= 0
+    ) {
       window.alert('Please provide valid Weight and Reps before saving the set.');
       return;
     }
@@ -329,7 +339,7 @@ const ActiveWorkoutPage = () => {
         [setNumber]: true,
       }));
       setSavedDraftBaseline((prev) =>
-        prev.map((row, idx) => (idx === rowIndex ? { ...draft } : row))
+        prev.map((row, idx) => (idx === rowIndex ? { ...draft } : row)),
       );
       setDirtySavedSets((prev) => ({
         ...prev,
@@ -346,7 +356,11 @@ const ActiveWorkoutPage = () => {
 
   const handleCancelWorkout = async () => {
     if (!activeSession) return;
-    if (!window.confirm('Cancel this workout? Saved sets will be removed from default views.')) {
+    if (
+      !window.confirm(
+        'Cancel this workout? Saved sets will be removed from default views.',
+      )
+    ) {
       return;
     }
 
@@ -377,7 +391,9 @@ const ActiveWorkoutPage = () => {
     return `${workout.name} (${formatDuration(elapsedSeconds)})`;
   }, [workout?.name, elapsedSeconds]);
 
-  const firstUnsavedSetIndex = setDrafts.findIndex((_, idx) => !savedSetsForExercise[idx + 1]);
+  const firstUnsavedSetIndex = setDrafts.findIndex(
+    (_, idx) => !savedSetsForExercise[idx + 1],
+  );
   const activeSaveIndex = lastEditedSetIndex;
   const activeSaveSetNumber = activeSaveIndex !== null ? activeSaveIndex + 1 : null;
   const activeSaveIsSaved =
@@ -425,7 +441,9 @@ const ActiveWorkoutPage = () => {
 
       <div className="exercise-hero">
         <div className="rest-timer-bar">
-          {restSecondsLeft > 0 ? `Rest Timer: ${formatDuration(restSecondsLeft)}` : 'Rest Timer: Ready'}
+          {restSecondsLeft > 0
+            ? `Rest Timer: ${formatDuration(restSecondsLeft)}`
+            : 'Rest Timer: Ready'}
         </div>
         {currentExercise ? (
           <button
@@ -462,8 +480,14 @@ const ActiveWorkoutPage = () => {
                   <input
                     value={draft.weight}
                     onFocus={() => setLastEditedSetIndex(index)}
-                    onChange={(e) => handleSetFieldChange(index, 'weight', e.target.value)}
-                    placeholder={prevForThisSet ? `(${formatWeight(prevForThisSet.weight)})` : "e.g. 10,5"}
+                    onChange={(e) =>
+                      handleSetFieldChange(index, 'weight', e.target.value)
+                    }
+                    placeholder={
+                      prevForThisSet
+                        ? `(${formatWeight(prevForThisSet.weight)})`
+                        : 'e.g. 10,5'
+                    }
                     disabled={!canEdit}
                   />
                 </div>
@@ -472,7 +496,7 @@ const ActiveWorkoutPage = () => {
                     value={draft.reps}
                     onFocus={() => setLastEditedSetIndex(index)}
                     onChange={(e) => handleSetFieldChange(index, 'reps', e.target.value)}
-                    placeholder={prevForThisSet ? `(${prevForThisSet.reps})` : "e.g. 8"}
+                    placeholder={prevForThisSet ? `(${prevForThisSet.reps})` : 'e.g. 8'}
                     disabled={!canEdit}
                   />
                 </div>

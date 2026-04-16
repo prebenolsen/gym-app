@@ -47,38 +47,14 @@ const createTabIconWrapperStyle = (isFocused: boolean, accentColor: string) => (
 const ProgramsStackNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen
-        name="ProgramsList"
-        component={ProgramsScreen}
-      />
-      <Stack.Screen
-        name="ProgramDetail"
-        component={ProgramDetailScreen}
-      />
-      <Stack.Screen
-        name="WorkoutDetail"
-        component={WorkoutDetailScreen}
-      />
-      <Stack.Screen
-        name="ExercisesCatalog"
-        component={ExercisesCatalogScreen}
-      />
-      <Stack.Screen
-        name="ProgramsCatalog"
-        component={ProgramsCatalogScreen}
-      />
-      <Stack.Screen
-        name="ProgramTemplate"
-        component={ProgramTemplateScreen}
-      />
-      <Stack.Screen
-        name="WorkoutsCatalog"
-        component={WorkoutsCatalogScreen}
-      />
-      <Stack.Screen
-        name="ExerciseProgress"
-        component={ExerciseProgressScreen}
-      />
+      <Stack.Screen name="ProgramsList" component={ProgramsScreen} />
+      <Stack.Screen name="ProgramDetail" component={ProgramDetailScreen} />
+      <Stack.Screen name="WorkoutDetail" component={WorkoutDetailScreen} />
+      <Stack.Screen name="ExercisesCatalog" component={ExercisesCatalogScreen} />
+      <Stack.Screen name="ProgramsCatalog" component={ProgramsCatalogScreen} />
+      <Stack.Screen name="ProgramTemplate" component={ProgramTemplateScreen} />
+      <Stack.Screen name="WorkoutsCatalog" component={WorkoutsCatalogScreen} />
+      <Stack.Screen name="ExerciseProgress" component={ExerciseProgressScreen} />
     </Stack.Navigator>
   );
 };
@@ -86,18 +62,9 @@ const ProgramsStackNavigator = () => {
 const ActiveWorkoutStackNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen
-        name="ActiveWorkout"
-        component={ActiveWorkoutScreen}
-      />
-      <Stack.Screen
-        name="ExerciseHistory"
-        component={ExerciseHistoryScreen}
-      />
-      <Stack.Screen
-        name="ExerciseNotes"
-        component={ExerciseNotesScreen}
-      />
+      <Stack.Screen name="ActiveWorkout" component={ActiveWorkoutScreen} />
+      <Stack.Screen name="ExerciseHistory" component={ExerciseHistoryScreen} />
+      <Stack.Screen name="ExerciseNotes" component={ExerciseNotesScreen} />
     </Stack.Navigator>
   );
 };
@@ -105,14 +72,8 @@ const ActiveWorkoutStackNavigator = () => {
 const CalendarStackNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen
-        name="Calendar"
-        component={CalendarScreen}
-      />
-      <Stack.Screen
-        name="WorkoutHistoryDetail"
-        component={WorkoutHistoryDetailScreen}
-      />
+      <Stack.Screen name="Calendar" component={CalendarScreen} />
+      <Stack.Screen name="WorkoutHistoryDetail" component={WorkoutHistoryDetailScreen} />
     </Stack.Navigator>
   );
 };
@@ -221,10 +182,10 @@ const AppRoutes = () => {
             component={HomeScreen}
             options={{
               tabBarIcon: ({ color, focused }) => (
-            <View style={createTabIconWrapperStyle(focused, colors.accent)}>
-              <Ionicons name="flash" size={28} color={color} />
-            </View>
-          ),
+                <View style={createTabIconWrapperStyle(focused, colors.accent)}>
+                  <Ionicons name="flash" size={28} color={color} />
+                </View>
+              ),
             }}
           />
           <Tab.Screen
@@ -289,11 +250,11 @@ const AppRoutes = () => {
               ),
             }}
           />
-                  </Tab.Navigator>
-                </NavigationContainer>
-              </SafeAreaView>
-            );
-          };
+        </Tab.Navigator>
+      </NavigationContainer>
+    </SafeAreaView>
+  );
+};
 
 const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors']) =>
   StyleSheet.create({
@@ -303,7 +264,7 @@ const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors']) 
     },
     tabBarWrapper: {
       backgroundColor: themeColors.surface,
-      marginBottom: 12
+      marginBottom: 12,
     },
     tabBarFooter: {
       width: '100%',

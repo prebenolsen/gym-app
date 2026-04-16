@@ -55,7 +55,7 @@ const getWorkoutEstimateDuration = (exercises: Exercise[]): string => {
 
       return { low: acc.low + low, high: acc.high + high };
     },
-    { low: 0, high: 0 }
+    { low: 0, high: 0 },
   );
 
   const lowMinutes = roundDownToNearestFive(totals.low / 60);
@@ -66,8 +66,16 @@ const getWorkoutEstimateDuration = (exercises: Exercise[]): string => {
 const getDaysSince = (isoDate: string): number => {
   const date = new Date(isoDate);
   const today = new Date();
-  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-  const dateStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const todayStart = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  ).getTime();
+  const dateStart = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+  ).getTime();
   return Math.max(0, Math.floor((todayStart - dateStart) / DAY_MS));
 };
 
@@ -79,15 +87,24 @@ const formatDaysSince = (days: number | null): string =>
 
 const getWorkoutMessage = (count: number): string => {
   switch (count) {
-    case 0: return "Welcome back! Let's make the next 7 days count";
-    case 1: return "1 workout in the last 7 days - hey, it's a start!";
-    case 2: return "Not bad - 2 workouts in the last 7 days. The gains are coming!";
-    case 3: return "Look at you - 3 workouts in the last 7 days. You're actually doing it!";
-    case 4: return "4 workouts in the last 7 days - you're on a roll!";
-    case 5: return "5 workouts in the last 7 days?! Now that's impressive!";
-    case 6: return "Call the newspaper - 6 workouts in the last 7 days? Absolute headline!";
-    case 7: return "7 workouts in 7 days. We're not worthy!";
-    default: return "Welcome back! Let's make the next 7 days count";
+    case 0:
+      return "Welcome back! Let's make the next 7 days count";
+    case 1:
+      return "1 workout in the last 7 days - hey, it's a start!";
+    case 2:
+      return 'Not bad - 2 workouts in the last 7 days. The gains are coming!';
+    case 3:
+      return "Look at you - 3 workouts in the last 7 days. You're actually doing it!";
+    case 4:
+      return "4 workouts in the last 7 days - you're on a roll!";
+    case 5:
+      return "5 workouts in the last 7 days?! Now that's impressive!";
+    case 6:
+      return 'Call the newspaper - 6 workouts in the last 7 days? Absolute headline!';
+    case 7:
+      return "7 workouts in 7 days. We're not worthy!";
+    default:
+      return "Welcome back! Let's make the next 7 days count";
   }
 };
 
@@ -99,7 +116,9 @@ const HomeScreen = ({ navigation }: any) => {
   const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null);
   const [workouts7Days, setWorkouts7Days] = useState<number>(0);
   const [exercises, setExercises] = useState<ExerciseHistorySummary[]>([]);
-  const [daysSinceByWorkout, setDaysSinceByWorkout] = useState<Record<string, number | null>>({});
+  const [daysSinceByWorkout, setDaysSinceByWorkout] = useState<
+    Record<string, number | null>
+  >({});
   const [loading, setLoading] = useState(true);
 
   const api = useApi();
@@ -120,7 +139,7 @@ const HomeScreen = ({ navigation }: any) => {
         programs.map(async (program) => {
           const workouts = await api.getWorkouts(program.id);
           const exerciseResults = await Promise.all(
-            workouts.map((w) => api.getExercises(w.id))
+            workouts.map((w) => api.getExercises(w.id)),
           );
 
           const exerciseCounts: Record<string, number> = {};
@@ -132,10 +151,12 @@ const HomeScreen = ({ navigation }: any) => {
           });
 
           return { program, workouts, exerciseCounts, estimatedDurations };
-        })
+        }),
       );
 
-      const workoutIds = workoutsByProgram.flatMap(({ workouts }) => workouts.map((workout) => workout.id));
+      const workoutIds = workoutsByProgram.flatMap(({ workouts }) =>
+        workouts.map((workout) => workout.id),
+      );
 
       const monthKeys = Array.from({ length: HISTORY_LOOKBACK_MONTHS }).map((_, idx) => {
         const monthDate = new Date();
@@ -151,7 +172,7 @@ const HomeScreen = ({ navigation }: any) => {
           } catch {
             return [] as WorkoutHistoryByDate[];
           }
-        })
+        }),
       );
 
       const latestByWorkout: Record<string, string> = {};
@@ -159,7 +180,10 @@ const HomeScreen = ({ navigation }: any) => {
         if (entry.status === 'cancelled') return;
 
         const existing = latestByWorkout[entry.workout_id];
-        if (!existing || new Date(entry.started_at).getTime() > new Date(existing).getTime()) {
+        if (
+          !existing ||
+          new Date(entry.started_at).getTime() > new Date(existing).getTime()
+        ) {
           latestByWorkout[entry.workout_id] = entry.started_at;
         }
       });
@@ -167,7 +191,9 @@ const HomeScreen = ({ navigation }: any) => {
       const nextDaysSinceByWorkout: Record<string, number | null> = {};
       workoutIds.forEach((workoutId) => {
         const lastPerformed = latestByWorkout[workoutId];
-        nextDaysSinceByWorkout[workoutId] = lastPerformed ? getDaysSince(lastPerformed) : null;
+        nextDaysSinceByWorkout[workoutId] = lastPerformed
+          ? getDaysSince(lastPerformed)
+          : null;
       });
 
       setStats(statsData);
@@ -227,13 +253,14 @@ const HomeScreen = ({ navigation }: any) => {
         <Text style={styles.headerMessage}>{getWorkoutMessage(workouts7Days)}</Text>
       </View>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-
         {activeSession && (
           <TouchableOpacity
             style={styles.activeSessionCard}
             onPress={() => navigation.navigate('ActiveWorkoutStack')}
           >
-            <Text style={styles.activeSessionText}>You have an active workout session.</Text>
+            <Text style={styles.activeSessionText}>
+              You have an active workout session.
+            </Text>
             <Text style={styles.activeSessionBtn}>Resume Active Workout</Text>
           </TouchableOpacity>
         )}
@@ -243,7 +270,12 @@ const HomeScreen = ({ navigation }: any) => {
             style={styles.statCard}
             onPress={() => navigation.navigate('ProgramsStack')}
           >
-            <Ionicons name="clipboard-outline" size={28} color={themeColors.accent} style={{ marginBottom: 6 }} />
+            <Ionicons
+              name="clipboard-outline"
+              size={28}
+              color={themeColors.accent}
+              style={{ marginBottom: 6 }}
+            />
             <Text style={styles.statValue}>{stats.total_programs}</Text>
             <Text style={styles.statLabel}>Programs</Text>
           </TouchableOpacity>
@@ -252,7 +284,12 @@ const HomeScreen = ({ navigation }: any) => {
             style={styles.statCard}
             onPress={() => navigation.navigate('ActiveWorkoutStack')}
           >
-            <Ionicons name="body-outline" size={28} color={themeColors.accent} style={{ marginBottom: 6 }} />
+            <Ionicons
+              name="body-outline"
+              size={28}
+              color={themeColors.accent}
+              style={{ marginBottom: 6 }}
+            />
             <Text style={styles.statValue}>{stats.total_workouts}</Text>
             <Text style={styles.statLabel}>Workouts</Text>
           </TouchableOpacity>
@@ -261,7 +298,12 @@ const HomeScreen = ({ navigation }: any) => {
             style={styles.statCard}
             onPress={() => navigation.navigate('ProgramsStack')}
           >
-            <Ionicons name="barbell-outline" size={28} color={themeColors.accent} style={{ marginBottom: 6 }} />
+            <Ionicons
+              name="barbell-outline"
+              size={28}
+              color={themeColors.accent}
+              style={{ marginBottom: 6 }}
+            />
             <Text style={styles.statValue}>{stats.total_exercises}</Text>
             <Text style={styles.statLabel}>Exercises</Text>
           </TouchableOpacity>
@@ -270,7 +312,12 @@ const HomeScreen = ({ navigation }: any) => {
             style={styles.statCard}
             onPress={() => navigation.navigate('CalendarStack')}
           >
-            <Ionicons name="calendar-outline" size={28} color={themeColors.accent} style={{ marginBottom: 6 }} />
+            <Ionicons
+              name="calendar-outline"
+              size={28}
+              color={themeColors.accent}
+              style={{ marginBottom: 6 }}
+            />
             <Text style={styles.statValue}>{workouts7Days}</Text>
             <Text style={styles.statLabel}>Last 7 Days</Text>
           </TouchableOpacity>
@@ -279,7 +326,9 @@ const HomeScreen = ({ navigation }: any) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Favorite Workouts</Text>
           {(() => {
-            const favorites = programTree.filter(({ program }) => program.is_favorite_program);
+            const favorites = programTree.filter(
+              ({ program }) => program.is_favorite_program,
+            );
             if (favorites.length === 0) {
               return (
                 <Text style={styles.noData}>
@@ -288,64 +337,68 @@ const HomeScreen = ({ navigation }: any) => {
               );
             }
 
-            return favorites.map(({ program, workouts, exerciseCounts, estimatedDurations }) => (
-              <View key={program.id} style={styles.favoriteProgramTile}>
-                <TouchableOpacity
-                  style={styles.favoriteProgramHeader}
-                  onPress={() => {
-                    navigation.navigate('ProgramsStack', {
-                      screen: 'ProgramDetail',
-                      params: { programId: program.id },
-                    });
-                  }}
-                >
-                  <Ionicons name="star" size={18} color={themeColors.accent} />
-                  <Text style={styles.favoriteProgramName}>{program.name}</Text>
-                </TouchableOpacity>
-                {workouts.length === 0 ? (
-                  <Text style={styles.noData}>No workouts in this program yet.</Text>
-                ) : (
-                  workouts
-                    .slice()
-                    .sort((a, b) => {
-                      const aDays = getDaysSortValue(daysSinceByWorkout[a.id] ?? null);
-                      const bDays = getDaysSortValue(daysSinceByWorkout[b.id] ?? null);
-                      if (aDays !== bDays) return bDays - aDays;
-                      return a.order - b.order;
-                    })
-                    .map((workout) => (
-                      <TouchableOpacity
-                        key={`workout-${program.id}-${workout.id}`}
-                        style={styles.workoutRowTile}
-                        onPress={() => {
-                          navigation.navigate('ProgramsStack', {
-                            screen: 'WorkoutDetail',
-                            params: {
-                              programId: program.id,
-                              workoutId: workout.id,
-                              workoutName: workout.name,
-                            },
-                          });
-                        }}
-                      >
-                        <Text style={styles.workoutRowTileName}>{workout.name}</Text>
-                        <View style={styles.workoutRowMeta}>
-                          <Text style={styles.workoutRowTileDays}>
-                            {formatDaysSince(daysSinceByWorkout[workout.id] ?? null)}
-                          </Text>
-                          <Text style={styles.workoutRowTileDuration}>
-                            {estimatedDurations[workout.id] ?? '0m'}
-                          </Text>
-                          <Text style={styles.workoutRowTileCount}>
-                            {exerciseCounts[workout.id] ?? 0}{' '}
-                            {(exerciseCounts[workout.id] ?? 0) === 1 ? 'exercise' : 'exercises'}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    ))
-                )}
-              </View>
-            ));
+            return favorites.map(
+              ({ program, workouts, exerciseCounts, estimatedDurations }) => (
+                <View key={program.id} style={styles.favoriteProgramTile}>
+                  <TouchableOpacity
+                    style={styles.favoriteProgramHeader}
+                    onPress={() => {
+                      navigation.navigate('ProgramsStack', {
+                        screen: 'ProgramDetail',
+                        params: { programId: program.id },
+                      });
+                    }}
+                  >
+                    <Ionicons name="star" size={18} color={themeColors.accent} />
+                    <Text style={styles.favoriteProgramName}>{program.name}</Text>
+                  </TouchableOpacity>
+                  {workouts.length === 0 ? (
+                    <Text style={styles.noData}>No workouts in this program yet.</Text>
+                  ) : (
+                    workouts
+                      .slice()
+                      .sort((a, b) => {
+                        const aDays = getDaysSortValue(daysSinceByWorkout[a.id] ?? null);
+                        const bDays = getDaysSortValue(daysSinceByWorkout[b.id] ?? null);
+                        if (aDays !== bDays) return bDays - aDays;
+                        return a.order - b.order;
+                      })
+                      .map((workout) => (
+                        <TouchableOpacity
+                          key={`workout-${program.id}-${workout.id}`}
+                          style={styles.workoutRowTile}
+                          onPress={() => {
+                            navigation.navigate('ProgramsStack', {
+                              screen: 'WorkoutDetail',
+                              params: {
+                                programId: program.id,
+                                workoutId: workout.id,
+                                workoutName: workout.name,
+                              },
+                            });
+                          }}
+                        >
+                          <Text style={styles.workoutRowTileName}>{workout.name}</Text>
+                          <View style={styles.workoutRowMeta}>
+                            <Text style={styles.workoutRowTileDays}>
+                              {formatDaysSince(daysSinceByWorkout[workout.id] ?? null)}
+                            </Text>
+                            <Text style={styles.workoutRowTileDuration}>
+                              {estimatedDurations[workout.id] ?? '0m'}
+                            </Text>
+                            <Text style={styles.workoutRowTileCount}>
+                              {exerciseCounts[workout.id] ?? 0}{' '}
+                              {(exerciseCounts[workout.id] ?? 0) === 1
+                                ? 'exercise'
+                                : 'exercises'}
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                      ))
+                  )}
+                </View>
+              ),
+            );
           })()}
         </View>
 

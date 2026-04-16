@@ -118,7 +118,9 @@
   border: 1px dashed var(--color-accent-500);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
   text-align: center;
 }
 

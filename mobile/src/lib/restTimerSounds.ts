@@ -27,8 +27,7 @@ const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(() => resolve(), ms));
 
 const toBase64 = (bytes: Uint8Array): string => {
-  const chars =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
   let out = '';
 
   for (let i = 0; i < bytes.length; i += 3) {
@@ -80,17 +79,11 @@ const buildToneDataUri = (hz: number, durationMs: number): string => {
   for (let i = 0; i < sampleCount; i += 1) {
     const t = i / SAMPLE_RATE;
 
-    const envelope =
-      Math.min(1, i / 120) * Math.min(1, (sampleCount - i) / 250);
+    const envelope = Math.min(1, i / 120) * Math.min(1, (sampleCount - i) / 250);
 
-    const sample =
-      Math.sin(2 * Math.PI * hz * t) * amplitude * envelope;
+    const sample = Math.sin(2 * Math.PI * hz * t) * amplitude * envelope;
 
-    view.setInt16(
-      44 + i * BYTES_PER_SAMPLE,
-      Math.floor(sample * 32767),
-      true
-    );
+    view.setInt16(44 + i * BYTES_PER_SAMPLE, Math.floor(sample * 32767), true);
   }
 
   return `data:audio/wav;base64,${toBase64(bytes)}`;

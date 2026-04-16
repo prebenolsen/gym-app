@@ -63,7 +63,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
 
   const handleUpdateExercise = async (
     id: string,
-    updates: { sets?: number; rest_seconds?: number }
+    updates: { sets?: number; rest_seconds?: number },
   ) => {
     try {
       const updated = await api.updateExercise(id, updates);
@@ -92,10 +92,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
     ]);
   };
 
-  const handleMoveExercise = async (
-    index: number,
-    direction: 'up' | 'down'
-  ) => {
+  const handleMoveExercise = async (index: number, direction: 'up' | 'down') => {
     if (
       (direction === 'up' && index === 0) ||
       (direction === 'down' && index === exercises.length - 1)
@@ -168,7 +165,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
               },
             },
             { text: 'Cancel', style: 'cancel' },
-          ]
+          ],
         );
         return;
       }
@@ -179,26 +176,22 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   };
 
   const handleDeleteWorkout = async () => {
-    Alert.alert(
-      'Delete Workout',
-      `Delete "${editName}" and all its exercises?`,
-      [
-        { text: 'Cancel' },
-        {
-          text: 'Delete',
-          onPress: async () => {
-            try {
-              await api.deleteWorkout(workoutId);
-              navigation.goBack();
-            } catch (err) {
-              console.error('Failed to delete workout:', err);
-              Alert.alert('Error', 'Failed to delete workout');
-            }
-          },
-          style: 'destructive',
+    Alert.alert('Delete Workout', `Delete "${editName}" and all its exercises?`, [
+      { text: 'Cancel' },
+      {
+        text: 'Delete',
+        onPress: async () => {
+          try {
+            await api.deleteWorkout(workoutId);
+            navigation.goBack();
+          } catch (err) {
+            console.error('Failed to delete workout:', err);
+            Alert.alert('Error', 'Failed to delete workout');
+          }
         },
-      ]
-    );
+        style: 'destructive',
+      },
+    ]);
   };
 
   if (loading) {
@@ -255,7 +248,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
         </View>
 
         <ScrollView style={styles.list}>
-          {exercises.length > 0 && (
+          {exercises.length > 0 &&
             exercises.map((exercise, index) => (
               <View key={exercise.id} style={styles.exerciseCard}>
                 <View style={styles.exerciseHeader}>
@@ -299,10 +292,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                       <TouchableOpacity
                         onPress={() => handleMoveExercise(index, 'up')}
                         disabled={index === 0}
-                        style={[
-                          styles.btnReorder,
-                          index === 0 && styles.btnDisabled,
-                        ]}
+                        style={[styles.btnReorder, index === 0 && styles.btnDisabled]}
                       >
                         <Text style={styles.btnReorderText}>▲</Text>
                       </TouchableOpacity>
@@ -321,11 +311,16 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                   </View>
                 </View>
               </View>
-            ))
-          )}
+            ))}
 
           <TouchableOpacity
-            onPress={() => navigation.navigate('ExercisesCatalog', { programId, workoutId, workoutName })}
+            onPress={() =>
+              navigation.navigate('ExercisesCatalog', {
+                programId,
+                workoutId,
+                workoutName,
+              })
+            }
             style={[styles.btnPrimary, styles.catalogButton]}
           >
             <Text style={styles.btnText}>Add exercises from the catalog</Text>
@@ -334,10 +329,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
       </View>
 
       <View style={styles.bottomActions}>
-        <TouchableOpacity
-          onPress={handleDeleteWorkout}
-          style={styles.deleteButton}
-        >
+        <TouchableOpacity onPress={handleDeleteWorkout} style={styles.deleteButton}>
           <Text style={styles.deleteButtonText}>Delete Workout</Text>
         </TouchableOpacity>
       </View>
@@ -347,186 +339,186 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
 
 const createStyles = (themeColors: typeof colors) =>
   StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: themeColors.background,
-  },
-  header: {
-    backgroundColor: themeColors.surface,
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: themeColors.border,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: themeColors.textStrong,
-    textTransform: 'uppercase',
-  },
-  titleInput: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: themeColors.textStrong,
-    borderBottomWidth: 2,
-    borderBottomColor: themeColors.accent,
-    paddingBottom: 8,
-    textTransform: 'uppercase',
-  },
-  startWorkoutButton: {
-    marginTop: 10,
-    backgroundColor: themeColors.accent,
-    borderRadius: radius.sm,
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  startWorkoutButtonText: {
-    color: themeColors.surface,
-    fontWeight: '700',
-    fontSize: 12,
-    textTransform: 'uppercase',
-  },
-  section: {
-    flex: 1,
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: themeColors.textStrong,
-    marginBottom: 16,
-    textTransform: 'uppercase',
-  },
-  addExercise: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
-  },
-  input: {
-    flex: 1,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    borderRadius: radius.sm,
-    color: themeColors.textStrong,
-    backgroundColor: themeColors.surface,
-  },
-  btnPrimary: {
-    backgroundColor: themeColors.success,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: radius.sm,
-    justifyContent: 'center',
-  },
-  catalogButton: {
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  btnText: {
-    color: themeColors.textStrong,
-    fontWeight: '600',
-    fontSize: 12,
-    textTransform: 'uppercase',
-  },
-  list: {
-    flex: 1,
-  },
-  noData: {
-    padding: 16,
-    backgroundColor: themeColors.accentSoft,
-    borderRadius: radius.sm,
-    color: themeColors.textStrong,
-    textAlign: 'center',
-  },
-  exerciseCard: {
-    backgroundColor: themeColors.surface,
-    borderRadius: radius.md,
-    borderLeftWidth: 4,
-    borderLeftColor: themeColors.accent,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    padding: 16,
-    marginBottom: 12,
-    ...shadow.card,
-  },
-  exerciseHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  exerciseName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: themeColors.textStrong,
-    flex: 1,
-    textTransform: 'uppercase',
-  },
-  btnSmallDelete: {
-    backgroundColor: themeColors.danger,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: radius.sm,
-  },
-  btnSmallText: {
-    color: themeColors.textStrong,
-    fontWeight: '600',
-    fontSize: 14,
-    textTransform: 'uppercase',
-  },
-  exerciseControls: {
-    gap: 12,
-  },
-  reorderGroup: {
-    marginTop: 8,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: themeColors.textStrong,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  reorderButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  btnReorder: {
-    flex: 1,
-    backgroundColor: themeColors.accentSoft,
-    padding: 8,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-  },
-  btnReorderText: {
-    color: themeColors.textStrong,
-    fontWeight: '600',
-    fontSize: 12,
-    textTransform: 'uppercase',
-  },
-  btnDisabled: {
-    opacity: 0.5,
-  },
-  bottomActions: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: themeColors.border,
-    backgroundColor: themeColors.surface,
-  },
-  deleteButton: {
-    backgroundColor: themeColors.danger,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 12,
-    textTransform: 'uppercase',
-  },
-});
+    container: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+    },
+    header: {
+      backgroundColor: themeColors.surface,
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: themeColors.textStrong,
+      textTransform: 'uppercase',
+    },
+    titleInput: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: themeColors.textStrong,
+      borderBottomWidth: 2,
+      borderBottomColor: themeColors.accent,
+      paddingBottom: 8,
+      textTransform: 'uppercase',
+    },
+    startWorkoutButton: {
+      marginTop: 10,
+      backgroundColor: themeColors.accent,
+      borderRadius: radius.sm,
+      alignSelf: 'flex-start',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    startWorkoutButtonText: {
+      color: themeColors.surface,
+      fontWeight: '700',
+      fontSize: 12,
+      textTransform: 'uppercase',
+    },
+    section: {
+      flex: 1,
+      padding: 16,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: themeColors.textStrong,
+      marginBottom: 16,
+      textTransform: 'uppercase',
+    },
+    addExercise: {
+      flexDirection: 'row',
+      gap: 10,
+      marginBottom: 16,
+    },
+    input: {
+      flex: 1,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: radius.sm,
+      color: themeColors.textStrong,
+      backgroundColor: themeColors.surface,
+    },
+    btnPrimary: {
+      backgroundColor: themeColors.success,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: radius.sm,
+      justifyContent: 'center',
+    },
+    catalogButton: {
+      marginTop: 8,
+      marginBottom: 16,
+    },
+    btnText: {
+      color: themeColors.textStrong,
+      fontWeight: '600',
+      fontSize: 12,
+      textTransform: 'uppercase',
+    },
+    list: {
+      flex: 1,
+    },
+    noData: {
+      padding: 16,
+      backgroundColor: themeColors.accentSoft,
+      borderRadius: radius.sm,
+      color: themeColors.textStrong,
+      textAlign: 'center',
+    },
+    exerciseCard: {
+      backgroundColor: themeColors.surface,
+      borderRadius: radius.md,
+      borderLeftWidth: 4,
+      borderLeftColor: themeColors.accent,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      padding: 16,
+      marginBottom: 12,
+      ...shadow.card,
+    },
+    exerciseHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    exerciseName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: themeColors.textStrong,
+      flex: 1,
+      textTransform: 'uppercase',
+    },
+    btnSmallDelete: {
+      backgroundColor: themeColors.danger,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: radius.sm,
+    },
+    btnSmallText: {
+      color: themeColors.textStrong,
+      fontWeight: '600',
+      fontSize: 14,
+      textTransform: 'uppercase',
+    },
+    exerciseControls: {
+      gap: 12,
+    },
+    reorderGroup: {
+      marginTop: 8,
+    },
+    label: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: themeColors.textStrong,
+      marginBottom: 8,
+      textTransform: 'uppercase',
+    },
+    reorderButtons: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    btnReorder: {
+      flex: 1,
+      backgroundColor: themeColors.accentSoft,
+      padding: 8,
+      borderRadius: radius.sm,
+      alignItems: 'center',
+    },
+    btnReorderText: {
+      color: themeColors.textStrong,
+      fontWeight: '600',
+      fontSize: 12,
+      textTransform: 'uppercase',
+    },
+    btnDisabled: {
+      opacity: 0.5,
+    },
+    bottomActions: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderTopWidth: 1,
+      borderTopColor: themeColors.border,
+      backgroundColor: themeColors.surface,
+    },
+    deleteButton: {
+      backgroundColor: themeColors.danger,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      borderRadius: radius.sm,
+      alignItems: 'center',
+    },
+    deleteButtonText: {
+      color: '#fff',
+      fontWeight: '700',
+      fontSize: 12,
+      textTransform: 'uppercase',
+    },
+  });
 
 export default WorkoutDetailScreen;

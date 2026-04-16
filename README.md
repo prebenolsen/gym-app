@@ -33,6 +33,7 @@ This installs all workspaces: `/web`, `/mobile`, `/backend`, `/shared`
 This is the critical step. You'll need to manually create a Supabase project and schema:
 
 #### A. Create a Supabase Project
+
 1. Go to [supabase.com](https://supabase.com)
 2. Sign up or log in
 3. Create a new project (choose any region)
@@ -143,6 +144,7 @@ npm run mobile:dev
 ```
 
 This starts Expo. You can:
+
 - Press `w` for web
 - Press `a` for Android
 - Press `i` for iOS
@@ -211,12 +213,14 @@ npm run shared:build       # Compile shared types
 ## API Endpoints
 
 ### Programs
+
 - `GET /programs` — List all programs
 - `POST /programs` — Create new program (default name: "Program 01")
 - `PUT /programs/:id` — Update program name
 - `DELETE /programs/:id` — Delete program and all workouts
 
 ### Workouts
+
 - `GET /programs/:programId/workouts` — List workouts in program
 - `POST /programs/:programId/workouts` — Create new workout (default name: "Workout 01")
 - `PUT /workouts/:id` — Update workout name
@@ -224,6 +228,7 @@ npm run shared:build       # Compile shared types
 - `PATCH /programs/:programId/workouts/reorder` — Reorder workouts
 
 ### Exercises
+
 - `GET /workouts/:workoutId/exercises` — List exercises in workout
 - `POST /workouts/:workoutId/exercises` — Create new exercise
 - `PUT /exercises/:id` — Update exercise (sets, rest, name)
@@ -231,11 +236,13 @@ npm run shared:build       # Compile shared types
 - `PATCH /workouts/:workoutId/exercises/reorder` — Reorder exercises
 
 ### Stats
+
 - `GET /stats` — Get total counts (programs, workouts, exercises)
 
 ## Data Model
 
 ### Program
+
 ```typescript
 {
   id: string (UUID)
@@ -247,18 +254,20 @@ npm run shared:build       # Compile shared types
 ```
 
 ### Workout
+
 ```typescript
 {
-  id: string (UUID)
-  program_id: string (UUID)
-  name: string
-  user_id: string
-  order: number
-  created_at: string
+  id: string(UUID);
+  program_id: string(UUID);
+  name: string;
+  user_id: string;
+  order: number;
+  created_at: string;
 }
 ```
 
 ### Exercise
+
 ```typescript
 {
   id: string (UUID)
@@ -304,17 +313,20 @@ npm run shared:build       # Compile shared types
 ## Troubleshooting
 
 ### Backend port already in use
+
 ```bash
 # Change PORT in .env
 PORT=3001
 ```
 
 ### Supabase connection error
+
 - Verify `VITE_SUPABASE_URL` and `SUPABASE_SERVICE_KEY` in `.env`
 - Ensure Supabase project is active
 - Check network connectivity
 
 ### React/React Native import errors
+
 ```bash
 # Rebuild workspace
 npm install
@@ -322,6 +334,7 @@ npm run shared:build
 ```
 
 ### TypeScript errors
+
 ```bash
 npm run backend:build  # Check backend compilation
 npm run web:build      # Check web compilation
@@ -352,18 +365,15 @@ npm run web:dev
 3️⃣Start phone
 npx expo start --lan -c
 
-
-4️⃣ If Expo Go shows “Something went wrong”, clear caches # POWERSHELL # 
+4️⃣ If Expo Go shows “Something went wrong”, clear caches # POWERSHELL #
 Stop-Process -Name node -Force
 
 npx expo start --lan -c
-
 
 På telefon er cmd viktig:
 adb reverse --remove-all
 adb reverse tcp:8081 tcp:8081
 adb reverse tcp:3000 tcp:3000
-
 
 Riktig kommando:
 npx expo start -c --localhost

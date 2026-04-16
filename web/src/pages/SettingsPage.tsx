@@ -8,7 +8,12 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useApi } from '../hooks/useApi';
 
-const ACCENT_OPTIONS: { value: AccentColor; label: string; swatch: string; ring: string }[] = [
+const ACCENT_OPTIONS: {
+  value: AccentColor;
+  label: string;
+  swatch: string;
+  ring: string;
+}[] = [
   { value: 'emerald', label: 'Emerald', swatch: '#10b981', ring: 'ring-emerald-500' },
   { value: 'auburn', label: 'Burned Auburn', swatch: '#c65a1e', ring: 'ring-orange-700' },
 ];
@@ -66,7 +71,7 @@ const SettingsPage = () => {
     setAccountError(null);
     setAccountMessage(null);
     const confirmed = window.confirm(
-      'Delete your account and all data permanently? This cannot be undone.'
+      'Delete your account and all data permanently? This cannot be undone.',
     );
     if (!confirmed) return;
 
@@ -98,7 +103,10 @@ const SettingsPage = () => {
         <CardContent className="flex flex-col gap-4">
           <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
             <span className="font-medium text-foreground">Dark Mode</span>
-            <Switch checked={theme === 'dark'} onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')} />
+            <Switch
+              checked={theme === 'dark'}
+              onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+            />
           </div>
 
           <div className="rounded-lg border border-border bg-muted/30 p-4">
@@ -115,7 +123,7 @@ const SettingsPage = () => {
                       selected
                         ? 'border-transparent ring-2 ring-offset-2 ring-offset-background text-foreground'
                         : 'border-border bg-card text-muted-foreground hover:border-border/80 hover:text-foreground',
-                      selected && option.ring
+                      selected && option.ring,
                     )}
                   >
                     <span
@@ -133,7 +141,9 @@ const SettingsPage = () => {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="font-medium text-foreground">Sounds</p>
-                <p className="text-sm text-muted-foreground">Enable countdown and completion beeps.</p>
+                <p className="text-sm text-muted-foreground">
+                  Enable countdown and completion beeps.
+                </p>
               </div>
               <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
             </div>
@@ -141,7 +151,9 @@ const SettingsPage = () => {
             <div className="mt-4 flex items-center justify-between gap-3">
               <div>
                 <p className="font-medium text-foreground">Prepare Cue</p>
-                <p className="text-sm text-muted-foreground">Play a pre-countdown alert before the final beeps.</p>
+                <p className="text-sm text-muted-foreground">
+                  Play a pre-countdown alert before the final beeps.
+                </p>
               </div>
               <Switch
                 checked={soundEnabled && prepareSoundEnabled}
@@ -152,7 +164,10 @@ const SettingsPage = () => {
 
             {soundEnabled && prepareSoundEnabled ? (
               <div className="mt-4 flex max-w-xs flex-col gap-2">
-                <label htmlFor="prepare-seconds" className="text-sm font-medium text-foreground">
+                <label
+                  htmlFor="prepare-seconds"
+                  className="text-sm font-medium text-foreground"
+                >
                   Prepare At (seconds)
                 </label>
                 <input
@@ -179,7 +194,11 @@ const SettingsPage = () => {
           <CardTitle className="text-xl">Weight Unit</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Weight unit">
+          <div
+            className="grid gap-3 sm:grid-cols-2"
+            role="radiogroup"
+            aria-label="Weight unit"
+          >
             {[
               { value: 'kg' as WeightUnit, label: 'Kilograms (kg)' },
               { value: 'lb' as WeightUnit, label: 'Pounds (lb)' },
@@ -190,7 +209,9 @@ const SettingsPage = () => {
                   key={option.value}
                   className={cn(
                     'flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors',
-                    selected ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-card text-muted-foreground hover:border-primary/60'
+                    selected
+                      ? 'border-primary bg-primary/10 text-foreground'
+                      : 'border-border bg-card text-muted-foreground hover:border-primary/60',
                   )}
                 >
                   <input
@@ -256,8 +277,12 @@ const SettingsPage = () => {
               >
                 Update Password
               </button>
-              {passwordError && <span className="text-sm text-destructive">{passwordError}</span>}
-              {passwordMessage && <span className="text-sm text-primary">{passwordMessage}</span>}
+              {passwordError && (
+                <span className="text-sm text-destructive">{passwordError}</span>
+              )}
+              {passwordMessage && (
+                <span className="text-sm text-primary">{passwordMessage}</span>
+              )}
             </div>
           </form>
 
@@ -273,8 +298,12 @@ const SettingsPage = () => {
               >
                 Delete Account
               </button>
-              {accountError && <span className="text-sm text-destructive">{accountError}</span>}
-              {accountMessage && <span className="text-sm text-primary">{accountMessage}</span>}
+              {accountError && (
+                <span className="text-sm text-destructive">{accountError}</span>
+              )}
+              {accountMessage && (
+                <span className="text-sm text-primary">{accountMessage}</span>
+              )}
             </div>
           </div>
         </CardContent>

@@ -40,12 +40,14 @@ const HomePage = () => {
           programs.map(async (program) => {
             const workouts = await api.getWorkouts(program.id);
             const exerciseResults = await Promise.all(
-              workouts.map((w) => api.getExercises(w.id))
+              workouts.map((w) => api.getExercises(w.id)),
             );
             const exerciseCounts: Record<string, number> = {};
-            workouts.forEach((w, i) => { exerciseCounts[w.id] = exerciseResults[i].length; });
+            workouts.forEach((w, i) => {
+              exerciseCounts[w.id] = exerciseResults[i].length;
+            });
             return { program, workouts, exerciseCounts };
-          })
+          }),
         );
 
         setStats(statsData);
@@ -87,7 +89,9 @@ const HomePage = () => {
       <div className="home-page">
         <div className="onboarding-container">
           <div className="onboarding-content">
-            <p className="onboarding-helper">Track your workouts, build your programs, crush your goals.</p>
+            <p className="onboarding-helper">
+              Track your workouts, build your programs, crush your goals.
+            </p>
             <button className="btn-get-started" onClick={() => navigate('/programs')}>
               Get started! 💪
             </button>
@@ -102,7 +106,10 @@ const HomePage = () => {
       {activeSession && (
         <div className="active-session-card">
           <p>You have an active workout session.</p>
-          <button onClick={() => navigate('/active-workout')} className="btn-resume-session">
+          <button
+            onClick={() => navigate('/active-workout')}
+            className="btn-resume-session"
+          >
             Resume Active Workout
           </button>
         </div>
@@ -145,11 +152,14 @@ const HomePage = () => {
       <div className="start-workout-section">
         <h2>Favorite workouts</h2>
         {(() => {
-          const favorites = programTree.filter(({ program }) => program.is_favorite_program);
+          const favorites = programTree.filter(
+            ({ program }) => program.is_favorite_program,
+          );
           if (favorites.length === 0) {
             return (
               <p className="no-data">
-                No favorites yet. Open a program and click the star icon to add it to your favorites.
+                No favorites yet. Open a program and click the star icon to add it to your
+                favorites.
               </p>
             );
           }
@@ -173,8 +183,10 @@ const HomePage = () => {
                         >
                           <span className="workout-row-tile-name">{workout.name}</span>
                           <span className="workout-row-tile-count">
-                          {exerciseCounts[workout.id] ?? 0}{' '}
-                            {(exerciseCounts[workout.id] ?? 0) === 1 ? 'exercise' : 'exercises'}
+                            {exerciseCounts[workout.id] ?? 0}{' '}
+                            {(exerciseCounts[workout.id] ?? 0) === 1
+                              ? 'exercise'
+                              : 'exercises'}
                           </span>
                         </button>
                       ))

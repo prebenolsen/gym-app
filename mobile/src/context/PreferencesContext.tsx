@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { type AccentColor, getThemeColors, type ThemeMode } from '../theme';
 
@@ -124,28 +131,34 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!ready) return;
-    AsyncStorage.setItem(PREPARE_SOUND_ENABLED_KEY, String(prepareSoundEnabled)).catch((err) => {
-      console.error('Failed to persist prepare sound enabled setting:', err);
-    });
+    AsyncStorage.setItem(PREPARE_SOUND_ENABLED_KEY, String(prepareSoundEnabled)).catch(
+      (err) => {
+        console.error('Failed to persist prepare sound enabled setting:', err);
+      },
+    );
   }, [prepareSoundEnabled, ready]);
 
   useEffect(() => {
     if (!ready) return;
-    AsyncStorage.setItem(PREPARE_SOUND_SECONDS_KEY, String(prepareSoundSeconds)).catch((err) => {
-      console.error('Failed to persist prepare sound seconds setting:', err);
-    });
+    AsyncStorage.setItem(PREPARE_SOUND_SECONDS_KEY, String(prepareSoundSeconds)).catch(
+      (err) => {
+        console.error('Failed to persist prepare sound seconds setting:', err);
+      },
+    );
   }, [prepareSoundSeconds, ready]);
 
   const value = useMemo<PreferencesContextValue>(() => {
     const convertFromKg = (kg: number) => (unit === 'lb' ? kg * 2.2 : kg);
     const convertToKg = (input: number) => (unit === 'lb' ? input / 2.2 : input);
-    const formatWeight = (kg: number, digits = 1) => `${convertFromKg(kg).toFixed(digits)} ${unit}`;
+    const formatWeight = (kg: number, digits = 1) =>
+      `${convertFromKg(kg).toFixed(digits)} ${unit}`;
 
     return {
       ready,
       theme,
       setTheme: setThemeState,
-      toggleTheme: () => setThemeState((previous) => (previous === 'dark' ? 'light' : 'dark')),
+      toggleTheme: () =>
+        setThemeState((previous) => (previous === 'dark' ? 'light' : 'dark')),
       accent,
       setAccent: setAccentState,
       unit,
@@ -161,9 +174,19 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
       prepareSoundSeconds,
       setPrepareSoundSeconds: setPrepareSoundSecondsState,
     };
-  }, [ready, theme, accent, unit, soundEnabled, prepareSoundEnabled, prepareSoundSeconds]);
+  }, [
+    ready,
+    theme,
+    accent,
+    unit,
+    soundEnabled,
+    prepareSoundEnabled,
+    prepareSoundSeconds,
+  ]);
 
-  return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;
+  return (
+    <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>
+  );
 };
 
 export const usePreferences = () => {

@@ -1,9 +1,4 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, radius } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
 
@@ -55,44 +50,44 @@ const NumberSpinner = ({
 
 const createStyles = (themeColors: typeof colors) =>
   StyleSheet.create({
-  container: {
-    flexDirection: 'column',
-    gap: 8,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    color: themeColors.textMuted,
-  },
-  controls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    borderRadius: radius.sm,
-    backgroundColor: themeColors.surface,
-    overflow: 'hidden',
-  },
-  btn: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: themeColors.accentSoft,
-  },
-  btnText: {
-    fontSize: 12,
-    color: themeColors.textMuted,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-  value: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 16,
-    fontWeight: '600',
-    color: themeColors.textStrong,
-    textTransform: 'uppercase',
-  },
-});
+    container: {
+      flexDirection: 'column',
+      gap: 8,
+    },
+    label: {
+      fontSize: 12,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      color: themeColors.textMuted,
+    },
+    controls: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: radius.sm,
+      backgroundColor: themeColors.surface,
+      overflow: 'hidden',
+    },
+    btn: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: themeColors.accentSoft,
+    },
+    btnText: {
+      fontSize: 12,
+      color: themeColors.textMuted,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+    },
+    value: {
+      flex: 1,
+      textAlign: 'center',
+      fontSize: 16,
+      fontWeight: '600',
+      color: themeColors.textStrong,
+      textTransform: 'uppercase',
+    },
+  });
 
 export default NumberSpinner;

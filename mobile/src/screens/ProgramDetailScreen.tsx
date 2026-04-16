@@ -20,7 +20,9 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
   const styles = createStyles(themeColors);
   const [program, setProgram] = useState<Program | null>(null);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
-  const [exercisesByWorkout, setExercisesByWorkout] = useState<Record<string, Exercise[]>>({});
+  const [exercisesByWorkout, setExercisesByWorkout] = useState<
+    Record<string, Exercise[]>
+  >({});
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(programName);
@@ -46,7 +48,9 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
 
       const exercisesResults = await Promise.all(data.map((w) => api.getExercises(w.id)));
       const ebw: Record<string, Exercise[]> = {};
-      data.forEach((w, i) => { ebw[w.id] = exercisesResults[i]; });
+      data.forEach((w, i) => {
+        ebw[w.id] = exercisesResults[i];
+      });
       setExercisesByWorkout(ebw);
     } catch (err) {
       console.error('Failed to fetch workouts:', err);
@@ -90,7 +94,10 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
     if (!program) return;
 
     try {
-      const updated = await api.favoriteProgramId(program.id, !program.is_favorite_program);
+      const updated = await api.favoriteProgramId(
+        program.id,
+        !program.is_favorite_program,
+      );
       setProgram(updated);
     } catch (err) {
       console.error('Failed to toggle favorite program:', err);
@@ -166,10 +173,7 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
             >
               <Text style={styles.btnSecondaryText}>Browse Templates</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleCreateWorkout}
-              style={styles.btnPrimary}
-            >
+            <TouchableOpacity onPress={handleCreateWorkout} style={styles.btnPrimary}>
               <Text style={styles.btnText}>+ Add</Text>
             </TouchableOpacity>
           </View>
@@ -177,9 +181,7 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
 
         <ScrollView style={styles.list}>
           {workouts.length === 0 ? (
-            <Text style={styles.noData}>
-              No workouts yet. Add one to get started!
-            </Text>
+            <Text style={styles.noData}>No workouts yet. Add one to get started!</Text>
           ) : (
             workouts.map((workout) => (
               <TouchableOpacity
@@ -198,7 +200,9 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
                   <Text style={styles.exerciseEmpty}>No exercises yet</Text>
                 ) : (
                   (exercisesByWorkout[workout.id] ?? []).map((ex) => (
-                    <Text key={ex.id} style={styles.exerciseItem}>• {ex.name}</Text>
+                    <Text key={ex.id} style={styles.exerciseItem}>
+                      • {ex.name}
+                    </Text>
                   ))
                 )}
               </TouchableOpacity>
@@ -210,154 +214,155 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
   );
 };
 
-const createStyles = (themeColors: typeof colors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: themeColors.background,
-  },
-  header: {
-    backgroundColor: themeColors.surface,
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: themeColors.border,
-    gap: 8,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: themeColors.textStrong,
-    textTransform: 'uppercase',
-  },
-  titleInput: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: themeColors.textStrong,
-    borderBottomWidth: 2,
-    borderBottomColor: themeColors.accent,
-    paddingBottom: 8,
-    textTransform: 'uppercase',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  favoriteButton: {
-    backgroundColor: themeColors.accentSoft,
-    borderWidth: 1,
-    borderColor: themeColors.accent,
-    borderRadius: radius.sm,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  favoriteButtonText: {
-    color: themeColors.accent,
-    fontWeight: '700',
-    fontSize: 11,
-    textTransform: 'uppercase',
-  },
-  deleteButton: {
-    backgroundColor: themeColors.danger,
-    borderRadius: radius.sm,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 11,
-    textTransform: 'uppercase',
-  },
-  section: {
-    flex: 1,
-    padding: 16,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  sectionActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  btnSecondary: {
-    backgroundColor: themeColors.accentSoft,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: themeColors.accent,
-  },
-  btnSecondaryText: {
-    color: themeColors.accent,
-    fontWeight: '600',
-    fontSize: 11,
-    textTransform: 'uppercase',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: themeColors.textStrong,
-    textTransform: 'uppercase',
-  },
-  btnPrimary: {
-    backgroundColor: themeColors.accent,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: radius.sm,
-  },
-  btnText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 12,
-    textTransform: 'uppercase',
-  },
-  list: {
-    flex: 1,
-  },
-  noData: {
-    padding: 16,
-    backgroundColor: themeColors.accentSoft,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    color: themeColors.textStrong,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-  },
-  workoutCard: {
-    backgroundColor: themeColors.surface,
-    borderRadius: radius.md,
-    padding: 16,
-    marginBottom: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: themeColors.accent,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    ...shadow.card,
-  },
-  workoutName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: themeColors.textStrong,
-    marginBottom: 6,
-    textTransform: 'uppercase',
-  },
-  exerciseItem: {
-    fontSize: 13,
-    color: themeColors.textMuted,
-    lineHeight: 20,
-    textTransform: 'uppercase',
-  },
-  exerciseEmpty: {
-    fontSize: 13,
-    color: themeColors.textMuted,
-    fontStyle: 'italic',
-    textTransform: 'uppercase',
-  },
-});
+const createStyles = (themeColors: typeof colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+    },
+    header: {
+      backgroundColor: themeColors.surface,
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+      gap: 8,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: themeColors.textStrong,
+      textTransform: 'uppercase',
+    },
+    titleInput: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: themeColors.textStrong,
+      borderBottomWidth: 2,
+      borderBottomColor: themeColors.accent,
+      paddingBottom: 8,
+      textTransform: 'uppercase',
+    },
+    headerActions: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    favoriteButton: {
+      backgroundColor: themeColors.accentSoft,
+      borderWidth: 1,
+      borderColor: themeColors.accent,
+      borderRadius: radius.sm,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+    },
+    favoriteButtonText: {
+      color: themeColors.accent,
+      fontWeight: '700',
+      fontSize: 11,
+      textTransform: 'uppercase',
+    },
+    deleteButton: {
+      backgroundColor: themeColors.danger,
+      borderRadius: radius.sm,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+    },
+    deleteButtonText: {
+      color: '#fff',
+      fontWeight: '700',
+      fontSize: 11,
+      textTransform: 'uppercase',
+    },
+    section: {
+      flex: 1,
+      padding: 16,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    sectionActions: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    btnSecondary: {
+      backgroundColor: themeColors.accentSoft,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      borderRadius: radius.sm,
+      borderWidth: 1,
+      borderColor: themeColors.accent,
+    },
+    btnSecondaryText: {
+      color: themeColors.accent,
+      fontWeight: '600',
+      fontSize: 11,
+      textTransform: 'uppercase',
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: themeColors.textStrong,
+      textTransform: 'uppercase',
+    },
+    btnPrimary: {
+      backgroundColor: themeColors.accent,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: radius.sm,
+    },
+    btnText: {
+      color: '#fff',
+      fontWeight: '600',
+      fontSize: 12,
+      textTransform: 'uppercase',
+    },
+    list: {
+      flex: 1,
+    },
+    noData: {
+      padding: 16,
+      backgroundColor: themeColors.accentSoft,
+      borderRadius: radius.sm,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      color: themeColors.textStrong,
+      textAlign: 'center',
+      textTransform: 'uppercase',
+    },
+    workoutCard: {
+      backgroundColor: themeColors.surface,
+      borderRadius: radius.md,
+      padding: 16,
+      marginBottom: 12,
+      borderLeftWidth: 4,
+      borderLeftColor: themeColors.accent,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      ...shadow.card,
+    },
+    workoutName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: themeColors.textStrong,
+      marginBottom: 6,
+      textTransform: 'uppercase',
+    },
+    exerciseItem: {
+      fontSize: 13,
+      color: themeColors.textMuted,
+      lineHeight: 20,
+      textTransform: 'uppercase',
+    },
+    exerciseEmpty: {
+      fontSize: 13,
+      color: themeColors.textMuted,
+      fontStyle: 'italic',
+      textTransform: 'uppercase',
+    },
+  });
 
 export default ProgramDetailScreen;

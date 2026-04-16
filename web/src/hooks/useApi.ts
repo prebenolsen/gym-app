@@ -9,6 +9,6 @@ export const useApi = () => {
 
   return useMemo(
     () => new ApiClient(API_BASE_URL, () => session?.access_token ?? null),
-    [session?.access_token]
+    [session?.access_token],
   );
 };

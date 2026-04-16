@@ -46,9 +46,15 @@ function AppContent() {
             <Route path="/" element={<HomePage />} />
             <Route path="/programs" element={<ProgramsPage />} />
             <Route path="/programs-catalog" element={<ProgramsCatalogPage />} />
-            <Route path="/programs-catalog/:templateId" element={<ProgramTemplatePage />} />
+            <Route
+              path="/programs-catalog/:templateId"
+              element={<ProgramTemplatePage />}
+            />
             <Route path="/programs/:programId" element={<ProgramDetailPage />} />
-            <Route path="/programs/:programId/workouts-catalog" element={<WorkoutsCatalogPage />} />
+            <Route
+              path="/programs/:programId/workouts-catalog"
+              element={<WorkoutsCatalogPage />}
+            />
             <Route
               path="/programs/:programId/workouts/:workoutId"
               element={<WorkoutDetailPage />}
@@ -56,8 +62,14 @@ function AppContent() {
             <Route path="/exercises" element={<ExercisesPage />} />
             <Route path="/active-workout" element={<ActiveWorkoutPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
-            <Route path="/workout-history/:sessionId" element={<WorkoutHistoryDetail />} />
-            <Route path="/exercise-progress/:exerciseId" element={<ExerciseProgressPage />} />
+            <Route
+              path="/workout-history/:sessionId"
+              element={<WorkoutHistoryDetail />}
+            />
+            <Route
+              path="/exercise-progress/:exerciseId"
+              element={<ExerciseProgressPage />}
+            />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
           </Routes>
@@ -82,4 +94,3 @@ function App() {
 }
 
 export default App;
-

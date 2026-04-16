@@ -64,26 +64,23 @@ const SettingsScreen = () => {
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      'Delete account',
-      'Delete your account and all data permanently?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.deleteAccount();
-              await signOut();
-            } catch (err) {
-              const message = err instanceof Error ? err.message : 'Failed to delete account';
-              Alert.alert('Error', message);
-            }
-          },
+    Alert.alert('Delete account', 'Delete your account and all data permanently?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await api.deleteAccount();
+            await signOut();
+          } catch (err) {
+            const message =
+              err instanceof Error ? err.message : 'Failed to delete account';
+            Alert.alert('Error', message);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleOpenFeedback = () => {
@@ -129,13 +126,19 @@ const SettingsScreen = () => {
             style={[styles.chip, accent === 'auburn' && styles.chipActive]}
             onPress={() => setAccent('auburn')}
           >
-            <Text style={[styles.chipText, accent === 'auburn' && styles.chipTextActive]}>Auburn</Text>
+            <Text style={[styles.chipText, accent === 'auburn' && styles.chipTextActive]}>
+              Auburn
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.chip, accent === 'emerald' && styles.chipActive]}
             onPress={() => setAccent('emerald')}
           >
-            <Text style={[styles.chipText, accent === 'emerald' && styles.chipTextActive]}>Emerald</Text>
+            <Text
+              style={[styles.chipText, accent === 'emerald' && styles.chipTextActive]}
+            >
+              Emerald
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -145,13 +148,17 @@ const SettingsScreen = () => {
             style={[styles.chip, unit === 'kg' && styles.chipActive]}
             onPress={() => setUnit('kg')}
           >
-            <Text style={[styles.chipText, unit === 'kg' && styles.chipTextActive]}>kg</Text>
+            <Text style={[styles.chipText, unit === 'kg' && styles.chipTextActive]}>
+              kg
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.chip, unit === 'lb' && styles.chipActive]}
             onPress={() => setUnit('lb')}
           >
-            <Text style={[styles.chipText, unit === 'lb' && styles.chipTextActive]}>lb</Text>
+            <Text style={[styles.chipText, unit === 'lb' && styles.chipTextActive]}>
+              lb
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -161,7 +168,9 @@ const SettingsScreen = () => {
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
             <Text style={styles.settingLabel}>Enable Sounds</Text>
-            <Text style={styles.settingHelp}>Countdown cues at 3, 2, 1 and completion.</Text>
+            <Text style={styles.settingHelp}>
+              Countdown cues at 3, 2, 1 and completion.
+            </Text>
           </View>
           <Switch
             value={soundEnabled}
@@ -174,7 +183,9 @@ const SettingsScreen = () => {
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
             <Text style={styles.settingLabel}>Prepare Cue</Text>
-            <Text style={styles.settingHelp}>Play an early warning sound before completion.</Text>
+            <Text style={styles.settingHelp}>
+              Play an early warning sound before completion.
+            </Text>
           </View>
           <Switch
             value={soundEnabled && prepareSoundEnabled}
@@ -248,7 +259,9 @@ const SettingsScreen = () => {
           <BrandLogo width={170} color={themeColors.textStrong} />
         </View>
 
-        <Text style={styles.aboutLine}>Version {APP_INFO.version} (Build {APP_INFO.build})</Text>
+        <Text style={styles.aboutLine}>
+          Version {APP_INFO.version} (Build {APP_INFO.build})
+        </Text>
         <Text style={styles.aboutLineMuted}>This release is in {APP_INFO.stage}.</Text>
         <Text style={styles.aboutLine}>Developed by {APP_INFO.author}</Text>
 
@@ -263,7 +276,9 @@ const SettingsScreen = () => {
               feedbackSubmitted && styles.successButtonText,
             ]}
           >
-            {feedbackSubmitted ? 'Thanks for your feedback!' : 'Send Feedback or Report a Bug'}
+            {feedbackSubmitted
+              ? 'Thanks for your feedback!'
+              : 'Send Feedback or Report a Bug'}
           </Text>
         </TouchableOpacity>
 
@@ -292,7 +307,10 @@ const SettingsScreen = () => {
                 <Text style={styles.feedbackCancelText}>Cancel</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.primaryButton} onPress={handleSubmitFeedback}>
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={handleSubmitFeedback}
+              >
                 <Text style={styles.primaryButtonText}>Submit</Text>
               </TouchableOpacity>
             </View>

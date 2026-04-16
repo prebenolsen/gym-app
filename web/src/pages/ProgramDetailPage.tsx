@@ -13,7 +13,9 @@ const ProgramDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [showNewWorkout, setShowNewWorkout] = useState(false);
   const [newWorkoutName, setNewWorkoutName] = useState('');
-  const [exercisesByWorkout, setExercisesByWorkout] = useState<Record<string, Exercise[]>>({});
+  const [exercisesByWorkout, setExercisesByWorkout] = useState<
+    Record<string, Exercise[]>
+  >({});
 
   const api = useApi();
 
@@ -33,9 +35,13 @@ const ProgramDetailPage = () => {
         const wks = await api.getWorkouts(prog.id);
         setWorkouts(wks);
 
-        const exercisesResults = await Promise.all(wks.map((w) => api.getExercises(w.id)));
+        const exercisesResults = await Promise.all(
+          wks.map((w) => api.getExercises(w.id)),
+        );
         const ebw: Record<string, Exercise[]> = {};
-        wks.forEach((w, i) => { ebw[w.id] = exercisesResults[i]; });
+        wks.forEach((w, i) => {
+          ebw[w.id] = exercisesResults[i];
+        });
         setExercisesByWorkout(ebw);
       }
     } catch (err) {
@@ -141,11 +147,20 @@ const ProgramDetailPage = () => {
         <div className="section-header">
           <h2>Workouts</h2>
           <div className="section-buttons">
-            <button onClick={() => navigate(`/programs/${programId}/workouts-catalog`)} className="btn-primary">
+            <button
+              onClick={() => navigate(`/programs/${programId}/workouts-catalog`)}
+              className="btn-primary"
+            >
               + Import Template
             </button>
             {!showNewWorkout && (
-              <button onClick={() => { setShowNewWorkout(true); setNewWorkoutName(''); }} className="btn-primary">
+              <button
+                onClick={() => {
+                  setShowNewWorkout(true);
+                  setNewWorkoutName('');
+                }}
+                className="btn-primary"
+              >
                 + Add Workout
               </button>
             )}
@@ -167,10 +182,14 @@ const ProgramDetailPage = () => {
                 <h3>{workout.name}</h3>
                 <ul className="workout-exercises-list">
                   {(exercisesByWorkout[workout.id] ?? []).length === 0 ? (
-                    <li className="workout-exercise-item workout-exercise-empty">No exercises yet</li>
+                    <li className="workout-exercise-item workout-exercise-empty">
+                      No exercises yet
+                    </li>
                   ) : (
                     (exercisesByWorkout[workout.id] ?? []).map((ex) => (
-                      <li key={ex.id} className="workout-exercise-item">{ex.name}</li>
+                      <li key={ex.id} className="workout-exercise-item">
+                        {ex.name}
+                      </li>
                     ))
                   )}
                 </ul>
@@ -212,7 +231,9 @@ const ProgramDetailPage = () => {
             onClick={handleToggleFavorite}
             className={`btn-favorite-program${program.is_favorite_program ? ' active' : ''}`}
           >
-            {program.is_favorite_program ? '★ Remove from Favorites' : '☆ Add to Favorites'}
+            {program.is_favorite_program
+              ? '★ Remove from Favorites'
+              : '☆ Add to Favorites'}
           </button>
         </div>
       </div>

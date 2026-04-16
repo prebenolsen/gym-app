@@ -7,29 +7,23 @@ const TIME_PER_SET_SECONDS = {
   high: 45,
 };
 
-const roundDownToNearestFive = (value: number): number =>
-  Math.floor(value / 5) * 5;
+const roundDownToNearestFive = (value: number): number => Math.floor(value / 5) * 5;
 
-const roundUpToNearestFive = (value: number): number =>
-  Math.ceil(value / 5) * 5;
+const roundUpToNearestFive = (value: number): number => Math.ceil(value / 5) * 5;
 
 const getExerciseTimeSecondsRange = (
   sets: number,
   restSeconds: number,
-  timePerSetSecondsRange = TIME_PER_SET_SECONDS
+  timePerSetSecondsRange = TIME_PER_SET_SECONDS,
 ): { low: number; high: number } => {
-  const low =
-    sets * timePerSetSecondsRange.low +
-    Math.max(sets - 1, 0) * restSeconds;
-  const high =
-    sets * timePerSetSecondsRange.high +
-    Math.max(sets - 1, 0) * restSeconds;
+  const low = sets * timePerSetSecondsRange.low + Math.max(sets - 1, 0) * restSeconds;
+  const high = sets * timePerSetSecondsRange.high + Math.max(sets - 1, 0) * restSeconds;
 
   return { low, high };
 };
 
 const getProgramAverageWorkoutEstimateMinutes = (
-  template: ProgramTemplate
+  template: ProgramTemplate,
 ): { low: number; high: number } => {
   if (template.workouts.length === 0) {
     return { low: 0, high: 0 };
@@ -41,7 +35,7 @@ const getProgramAverageWorkoutEstimateMinutes = (
         (workoutTotal, exercise) => {
           const exerciseRange = getExerciseTimeSecondsRange(
             exercise.sets,
-            exercise.rest_seconds
+            exercise.rest_seconds,
           );
 
           return {
@@ -49,7 +43,7 @@ const getProgramAverageWorkoutEstimateMinutes = (
             high: workoutTotal.high + exerciseRange.high,
           };
         },
-        { low: 0, high: 0 }
+        { low: 0, high: 0 },
       );
 
       return {
@@ -57,7 +51,7 @@ const getProgramAverageWorkoutEstimateMinutes = (
         high: programTotal.high + workoutRangeSeconds.high,
       };
     },
-    { low: 0, high: 0 }
+    { low: 0, high: 0 },
   );
 
   const avgLowMinutes = totalRangeSeconds.low / template.workoutCount / 60;
@@ -92,47 +86,47 @@ const ProgramsCatalogPage = () => {
 
           return (
             <div key={template.id} className="template-card">
-            <div className="template-header">
-              <h2 className="template-name">{template.name}</h2>
-            </div>
-
-            <p className="template-description">{template.description}</p>
-
-            <div className="template-stats">
-              <div className="stat-item">
-                <span className="stat-label">Exercises</span>
-                <span className="stat-value">
-                  {template.workouts.reduce((sum, w) => sum + w.exercises.length, 0)}
-                </span>
+              <div className="template-header">
+                <h2 className="template-name">{template.name}</h2>
               </div>
-              <div className="stat-item">
-                <span className="stat-label">Estimated Time</span>
-                <span className="stat-value stat-value-time">
-                  {estimatedTime.low}-{estimatedTime.high} minutes
-                </span>
+
+              <p className="template-description">{template.description}</p>
+
+              <div className="template-stats">
+                <div className="stat-item">
+                  <span className="stat-label">Exercises</span>
+                  <span className="stat-value">
+                    {template.workouts.reduce((sum, w) => sum + w.exercises.length, 0)}
+                  </span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">Estimated Time</span>
+                  <span className="stat-value stat-value-time">
+                    {estimatedTime.low}-{estimatedTime.high} minutes
+                  </span>
+                </div>
               </div>
-            </div>
 
-            <div className="template-workouts">
-              <h3 className="workouts-title">Workouts in this Program</h3>
-              <ul className="workouts-list">
-                {template.workouts.map((workout, idx) => (
-                  <li key={idx} className="workout-item">
-                    <div className="workout-name">{workout.name}</div>
-                    <div className="exercise-count">
-                      {workout.exercises.length} exercises
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+              <div className="template-workouts">
+                <h3 className="workouts-title">Workouts in this Program</h3>
+                <ul className="workouts-list">
+                  {template.workouts.map((workout, idx) => (
+                    <li key={idx} className="workout-item">
+                      <div className="workout-name">{workout.name}</div>
+                      <div className="exercise-count">
+                        {workout.exercises.length} exercises
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-            <button
-              className="btn-import"
-              onClick={() => navigate(`/programs-catalog/${template.id}`)}
-            >
-              View &amp; Edit Program
-            </button>
+              <button
+                className="btn-import"
+                onClick={() => navigate(`/programs-catalog/${template.id}`)}
+              >
+                View &amp; Edit Program
+              </button>
             </div>
           );
         })}

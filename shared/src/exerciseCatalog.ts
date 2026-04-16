@@ -14,12 +14,7 @@ export type MuscleGroup =
   | 'Calves'
   | 'Core / Abs';
 
-export type Equipment =
-  | 'Barbell'
-  | 'Dumbbell'
-  | 'Cable'
-  | 'Machine'
-  | 'Bodyweight';
+export type Equipment = 'Barbell' | 'Dumbbell' | 'Cable' | 'Machine' | 'Bodyweight';
 
 export type MovementType = 'compound' | 'isolation' | 'isometric';
 
@@ -485,7 +480,7 @@ export const getMovementTypes = (): MovementType[] => {
 export const filterExercises = (
   muscleGroup?: MuscleGroup | null,
   equipment?: Equipment | null,
-  movementType?: MovementType | null
+  movementType?: MovementType | null,
 ): CatalogExercise[] => {
   return exercises.filter((ex) => {
     if (muscleGroup && ex.muscleGroup !== muscleGroup) return false;

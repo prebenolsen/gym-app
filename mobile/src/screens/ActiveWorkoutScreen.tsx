@@ -12,12 +12,22 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { type Exercise, type Workout, type WorkoutSession, type WorkoutSessionSet, type ExerciseLastPerformance } from '@gym-app/shared';
+import {
+  type Exercise,
+  type Workout,
+  type WorkoutSession,
+  type WorkoutSessionSet,
+  type ExerciseLastPerformance,
+} from '@gym-app/shared';
 import { useFocusEffect } from '@react-navigation/native';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
-import { playCompletionBeep, playCountdownBeep, playPrepareBeep } from '../lib/restTimerSounds';
+import {
+  playCompletionBeep,
+  playCountdownBeep,
+  playPrepareBeep,
+} from '../lib/restTimerSounds';
 
 type SetDraft = {
   weight: string;
@@ -88,28 +98,46 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [setDraftsByExercise, setSetDraftsByExercise] = useState<Record<string, SetDraft[]>>({});
-  const [savedSetsByExercise, setSavedSetsByExercise] = useState<Record<string, SavedSetTracking>>({});
-  const [savedDraftBaselinesByExercise, setSavedDraftBaselinesByExercise] = useState<Record<string, SetDraft[]>>({});
-  const [dirtySavedSetsByExercise, setDirtySavedSetsByExercise] = useState<Record<string, SavedSetTracking>>({});
-  const [lastEditedSetIndexByExercise, setLastEditedSetIndexByExercise] = useState<Record<string, number | null>>({});
+  const [setDraftsByExercise, setSetDraftsByExercise] = useState<
+    Record<string, SetDraft[]>
+  >({});
+  const [savedSetsByExercise, setSavedSetsByExercise] = useState<
+    Record<string, SavedSetTracking>
+  >({});
+  const [savedDraftBaselinesByExercise, setSavedDraftBaselinesByExercise] = useState<
+    Record<string, SetDraft[]>
+  >({});
+  const [dirtySavedSetsByExercise, setDirtySavedSetsByExercise] = useState<
+    Record<string, SavedSetTracking>
+  >({});
+  const [lastEditedSetIndexByExercise, setLastEditedSetIndexByExercise] = useState<
+    Record<string, number | null>
+  >({});
   const [savingSet, setSavingSet] = useState<number | null>(null);
   const [restSecondsLeft, setRestSecondsLeft] = useState(0);
-  const [pendingDefaultRestSeconds, setPendingDefaultRestSeconds] = useState<number | null>(null);
+  const [pendingDefaultRestSeconds, setPendingDefaultRestSeconds] = useState<
+    number | null
+  >(null);
   const [previousPerformance, setPreviousPerformance] = useState<PreviousPerformance>({});
   const lastRestSoundSecondRef = useRef<number | null>(null);
 
   const currentExercise = exercises[currentIndex] ?? null;
-  const currentDrafts = currentExercise ? setDraftsByExercise[currentExercise.id] ?? [] : [];
-  const currentSavedSets = currentExercise ? savedSetsByExercise[currentExercise.id] ?? {} : {};
+  const currentDrafts = currentExercise
+    ? (setDraftsByExercise[currentExercise.id] ?? [])
+    : [];
+  const currentSavedSets = currentExercise
+    ? (savedSetsByExercise[currentExercise.id] ?? {})
+    : {};
   const currentDirtySavedSets = currentExercise
-    ? dirtySavedSetsByExercise[currentExercise.id] ?? {}
+    ? (dirtySavedSetsByExercise[currentExercise.id] ?? {})
     : {};
   const activeSaveIndex = currentExercise
     ? (lastEditedSetIndexByExercise[currentExercise.id] ?? null)
     : null;
 
-  const firstUnsavedSetIndex = currentDrafts.findIndex((_, idx) => !currentSavedSets[idx + 1]);
+  const firstUnsavedSetIndex = currentDrafts.findIndex(
+    (_, idx) => !currentSavedSets[idx + 1],
+  );
   const activeSaveSetNumber = activeSaveIndex !== null ? activeSaveIndex + 1 : null;
   const activeSaveIsSaved =
     activeSaveSetNumber !== null && currentSavedSets[activeSaveSetNumber] === true;
@@ -160,7 +188,12 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     const firstUnsavedIndex = drafts.findIndex((_, idx) => !tracking[idx + 1]);
     setLastEditedSetIndexByExercise((prev) => ({
       ...prev,
-      [exercise.id]: firstUnsavedIndex >= 0 ? firstUnsavedIndex : drafts.length > 0 ? drafts.length - 1 : null,
+      [exercise.id]:
+        firstUnsavedIndex >= 0
+          ? firstUnsavedIndex
+          : drafts.length > 0
+            ? drafts.length - 1
+            : null,
     }));
   };
 
@@ -211,12 +244,15 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
 
       const index = Math.min(
         activeSession.current_exercise_index || 0,
-        Math.max(workoutExercises.length - 1, 0)
+        Math.max(workoutExercises.length - 1, 0),
       );
       setCurrentIndex(index);
 
       if (workoutExercises[index]) {
-        const savedSets = await api.getSessionSets(activeSession.id, workoutExercises[index].id);
+        const savedSets = await api.getSessionSets(
+          activeSession.id,
+          workoutExercises[index].id,
+        );
         hydrateDrafts(workoutExercises[index], savedSets);
       }
 
@@ -317,7 +353,7 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     exerciseId: string,
     index: number,
     field: keyof SetDraft,
-    value: string
+    value: string,
   ) => {
     setLastEditedSetIndexByExercise((prev) => ({
       ...prev,
@@ -327,7 +363,7 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     setSetDraftsByExercise((prev) => {
       const current = prev[exerciseId] ?? [];
       const next = current.map((row, rowIndex) =>
-        rowIndex === index ? { ...row, [field]: value } : row
+        rowIndex === index ? { ...row, [field]: value } : row,
       );
 
       const setNumber = index + 1;
@@ -357,7 +393,13 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     const reps = Number(draft.reps);
     const weightInput = Number(draft.weight.replace(',', '.'));
 
-    if (!draft.weight.trim() || Number.isNaN(weightInput) || weightInput <= 0 || Number.isNaN(reps) || reps <= 0) {
+    if (
+      !draft.weight.trim() ||
+      Number.isNaN(weightInput) ||
+      weightInput <= 0 ||
+      Number.isNaN(reps) ||
+      reps <= 0
+    ) {
       Alert.alert('Invalid set', 'Please provide valid weight and reps.');
       return;
     }
@@ -382,7 +424,7 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
       setSavedDraftBaselinesByExercise((prev) => ({
         ...prev,
         [currentExercise.id]: (prev[currentExercise.id] ?? drafts).map((row, rowIndex) =>
-          rowIndex === index ? { ...draft } : row
+          rowIndex === index ? { ...draft } : row,
         ),
       }));
 
@@ -413,8 +455,8 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
         prev.map((exercise) =>
           exercise.id === currentExercise.id
             ? { ...exercise, rest_seconds: nextRestSeconds }
-            : exercise
-        )
+            : exercise,
+        ),
       );
       setPendingDefaultRestSeconds(null);
     } catch (err) {
@@ -434,7 +476,9 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     const defaultBaseline = pendingDefaultRestSeconds ?? currentExercise.rest_seconds;
     const nextDefaultRestSeconds = Math.max(0, defaultBaseline + deltaSeconds);
     setPendingDefaultRestSeconds(
-      nextDefaultRestSeconds === currentExercise.rest_seconds ? null : nextDefaultRestSeconds
+      nextDefaultRestSeconds === currentExercise.rest_seconds
+        ? null
+        : nextDefaultRestSeconds,
     );
   };
 
@@ -516,22 +560,38 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
       onPanResponderMove: (_, { dx }) => {
         const atLeft = !canSwipePrevRef.current && dx > 0;
         const atRight = !canSwipeNextRef.current && dx < 0;
-        swipeX.setValue((atLeft || atRight) ? dx * 0.25 : dx);
+        swipeX.setValue(atLeft || atRight ? dx * 0.25 : dx);
       },
       onPanResponderRelease: (_, { dx, vx }) => {
         const goNext = (dx < -SWIPE_THRESHOLD || vx < -0.8) && canSwipeNextRef.current;
         const goPrev = (dx > SWIPE_THRESHOLD || vx > 0.8) && canSwipePrevRef.current;
         if (goNext) {
-          Animated.timing(swipeX, { toValue: -SCREEN_WIDTH, duration: 100, useNativeDriver: true }).start(() => {
+          Animated.timing(swipeX, {
+            toValue: -SCREEN_WIDTH,
+            duration: 100,
+            useNativeDriver: true,
+          }).start(() => {
             handleNavigateRef.current('next');
             swipeX.setValue(SCREEN_WIDTH);
-            Animated.timing(swipeX, { toValue: 0, duration: 100, useNativeDriver: true }).start();
+            Animated.timing(swipeX, {
+              toValue: 0,
+              duration: 100,
+              useNativeDriver: true,
+            }).start();
           });
         } else if (goPrev) {
-          Animated.timing(swipeX, { toValue: SCREEN_WIDTH, duration: 100, useNativeDriver: true }).start(() => {
+          Animated.timing(swipeX, {
+            toValue: SCREEN_WIDTH,
+            duration: 100,
+            useNativeDriver: true,
+          }).start(() => {
             handleNavigateRef.current('prev');
             swipeX.setValue(-SCREEN_WIDTH);
-            Animated.timing(swipeX, { toValue: 0, duration: 100, useNativeDriver: true }).start();
+            Animated.timing(swipeX, {
+              toValue: 0,
+              duration: 100,
+              useNativeDriver: true,
+            }).start();
           });
         } else {
           Animated.spring(swipeX, {
@@ -545,7 +605,7 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
       onPanResponderTerminate: () => {
         Animated.spring(swipeX, { toValue: 0, useNativeDriver: true }).start();
       },
-    })
+    }),
   ).current;
 
   const title = useMemo(() => {
@@ -583,7 +643,10 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
               <TouchableOpacity
                 style={styles.secondaryButton}
                 onPress={() =>
-                  navigation.navigate('ExerciseHistory', { exerciseId: currentExercise.id, exerciseName: currentExercise.name })
+                  navigation.navigate('ExerciseHistory', {
+                    exerciseId: currentExercise.id,
+                    exerciseName: currentExercise.name,
+                  })
                 }
               >
                 <Text style={styles.secondaryButtonText}>History</Text>
@@ -591,7 +654,10 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
               <TouchableOpacity
                 style={styles.secondaryButton}
                 onPress={() =>
-                  navigation.navigate('ExerciseNotes', { exerciseId: currentExercise.id, exerciseName: currentExercise.name })
+                  navigation.navigate('ExerciseNotes', {
+                    exerciseId: currentExercise.id,
+                    exerciseName: currentExercise.name,
+                  })
                 }
               >
                 <Text style={styles.secondaryButtonText}>Notes</Text>
@@ -610,89 +676,93 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
             {!currentExercise ? (
               <Text style={styles.emptyText}>No exercises found for this workout.</Text>
             ) : (
-          <View style={styles.exerciseCard}>
-            <Text style={styles.exerciseName}>{currentExercise.name}</Text>
-            <View style={styles.setsHeaderRow}>
-              <Text style={styles.setsHeaderCell}>Set</Text>
-              <Text style={styles.setsHeaderCell}>Weight ({unit})</Text>
-              <Text style={styles.setsHeaderCell}>Reps</Text>
-              <Text style={styles.setsStatusHeaderCell}></Text>
-            </View>
+              <View style={styles.exerciseCard}>
+                <Text style={styles.exerciseName}>{currentExercise.name}</Text>
+                <View style={styles.setsHeaderRow}>
+                  <Text style={styles.setsHeaderCell}>Set</Text>
+                  <Text style={styles.setsHeaderCell}>Weight ({unit})</Text>
+                  <Text style={styles.setsHeaderCell}>Reps</Text>
+                  <Text style={styles.setsStatusHeaderCell}></Text>
+                </View>
 
-            {currentDrafts.map((draft, setIndex) => {
-              const setNumber = setIndex + 1;
-              const isSaved = currentSavedSets[setNumber] === true;
-              const canEdit = firstUnsavedSetIndex === setIndex || isSaved;
-              const isLocked = !canEdit && !isSaved;
-              const prevPerf = previousPerformance[currentExercise.id];
-              // Get the LAST set matching this set_number (in case multiple attempts exist)
-              const prevForThisSet = prevPerf ? prevPerf.findLast((p) => p.set_number === setNumber) : undefined;
+                {currentDrafts.map((draft, setIndex) => {
+                  const setNumber = setIndex + 1;
+                  const isSaved = currentSavedSets[setNumber] === true;
+                  const canEdit = firstUnsavedSetIndex === setIndex || isSaved;
+                  const isLocked = !canEdit && !isSaved;
+                  const prevPerf = previousPerformance[currentExercise.id];
+                  // Get the LAST set matching this set_number (in case multiple attempts exist)
+                  const prevForThisSet = prevPerf
+                    ? prevPerf.findLast((p) => p.set_number === setNumber)
+                    : undefined;
 
-              return (
-              <View
-                key={`${currentExercise.id}-${setIndex}`}
-                style={[
-                  styles.setRow,
-                  isLocked && styles.setRowLocked,
-                ]}
-              >
-                <Text style={styles.setCellLabel}>{setIndex + 1}</Text>
-                <View style={styles.setInputContainer}>
-                  <TextInput
-                    style={[
-                      styles.setInput,
-                      isLocked && styles.setInputLocked,
-                    ]}
-                    value={draft.weight}
-                    onFocus={() =>
-                      setLastEditedSetIndexByExercise((prev) => ({
-                        ...prev,
-                        [currentExercise.id]: setIndex,
-                      }))
-                    }
-                    keyboardType="decimal-pad"
-                    onChangeText={(value) =>
-                      handleSetFieldChange(currentExercise.id, setIndex, 'weight', value)
-                    }
-                    editable={canEdit}
-                  />
-                  {prevForThisSet ? (
-                    <Text style={styles.previousValueOverlay} numberOfLines={1}>
-                      ({formatWeightInput(prevForThisSet.weight)})
-                    </Text>
-                  ) : null}
-                </View>
-                <View style={styles.setInputContainer}>
-                  <TextInput
-                    style={[
-                      styles.setInput,
-                      isLocked && styles.setInputLocked,
-                    ]}
-                    value={draft.reps}
-                    onFocus={() =>
-                      setLastEditedSetIndexByExercise((prev) => ({
-                        ...prev,
-                        [currentExercise.id]: setIndex,
-                      }))
-                    }
-                    keyboardType="number-pad"
-                    onChangeText={(value) =>
-                      handleSetFieldChange(currentExercise.id, setIndex, 'reps', value)
-                    }
-                    editable={canEdit}
-                  />
-                  {prevForThisSet ? (
-                    <Text style={styles.previousValueOverlay} numberOfLines={1}>({prevForThisSet.reps})</Text>
-                  ) : null}
-                </View>
-                <View style={styles.setStatusCell}>
-                  <Text style={styles.setStatusText}>{isSaved ? '✓' : ''}</Text>
-                </View>
+                  return (
+                    <View
+                      key={`${currentExercise.id}-${setIndex}`}
+                      style={[styles.setRow, isLocked && styles.setRowLocked]}
+                    >
+                      <Text style={styles.setCellLabel}>{setIndex + 1}</Text>
+                      <View style={styles.setInputContainer}>
+                        <TextInput
+                          style={[styles.setInput, isLocked && styles.setInputLocked]}
+                          value={draft.weight}
+                          onFocus={() =>
+                            setLastEditedSetIndexByExercise((prev) => ({
+                              ...prev,
+                              [currentExercise.id]: setIndex,
+                            }))
+                          }
+                          keyboardType="decimal-pad"
+                          onChangeText={(value) =>
+                            handleSetFieldChange(
+                              currentExercise.id,
+                              setIndex,
+                              'weight',
+                              value,
+                            )
+                          }
+                          editable={canEdit}
+                        />
+                        {prevForThisSet ? (
+                          <Text style={styles.previousValueOverlay} numberOfLines={1}>
+                            ({formatWeightInput(prevForThisSet.weight)})
+                          </Text>
+                        ) : null}
+                      </View>
+                      <View style={styles.setInputContainer}>
+                        <TextInput
+                          style={[styles.setInput, isLocked && styles.setInputLocked]}
+                          value={draft.reps}
+                          onFocus={() =>
+                            setLastEditedSetIndexByExercise((prev) => ({
+                              ...prev,
+                              [currentExercise.id]: setIndex,
+                            }))
+                          }
+                          keyboardType="number-pad"
+                          onChangeText={(value) =>
+                            handleSetFieldChange(
+                              currentExercise.id,
+                              setIndex,
+                              'reps',
+                              value,
+                            )
+                          }
+                          editable={canEdit}
+                        />
+                        {prevForThisSet ? (
+                          <Text style={styles.previousValueOverlay} numberOfLines={1}>
+                            ({prevForThisSet.reps})
+                          </Text>
+                        ) : null}
+                      </View>
+                      <View style={styles.setStatusCell}>
+                        <Text style={styles.setStatusText}>{isSaved ? '✓' : ''}</Text>
+                      </View>
+                    </View>
+                  );
+                })}
               </View>
-              );
-            })}
-
-          </View>
             )}
           </ScrollView>
         </Animated.View>
@@ -704,7 +774,10 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
             <View style={styles.restTimerBox}>
               <View style={styles.restTimerRow}>
                 <TouchableOpacity
-                  style={[styles.restAdjustButton, restSecondsLeft <= 0 && styles.restAdjustButtonDisabled]}
+                  style={[
+                    styles.restAdjustButton,
+                    restSecondsLeft <= 0 && styles.restAdjustButtonDisabled,
+                  ]}
                   onPress={() => adjustRestTimer(-5)}
                   disabled={restSecondsLeft <= 0}
                 >
@@ -713,7 +786,10 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
 
                 <Text style={styles.restTimerValue}>{restSecondsLeft}s</Text>
 
-                <TouchableOpacity style={styles.restAdjustButton} onPress={() => adjustRestTimer(5)}>
+                <TouchableOpacity
+                  style={styles.restAdjustButton}
+                  onPress={() => adjustRestTimer(5)}
+                >
                   <Text style={styles.restAdjustButtonText}>+5</Text>
                 </TouchableOpacity>
               </View>
@@ -733,43 +809,43 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
 
           <View style={styles.bottomActionsWrap}>
             <View style={styles.bottomActionsBar}>
-            <TouchableOpacity
-              style={[styles.navButton, currentIndex === 0 && styles.navButtonDisabled]}
-              onPress={() => handleNavigateExercise('prev')}
-              disabled={currentIndex === 0}
-            >
-              <Text style={styles.navButtonText}>Previous</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.navButton, currentIndex === 0 && styles.navButtonDisabled]}
+                onPress={() => handleNavigateExercise('prev')}
+                disabled={currentIndex === 0}
+              >
+                <Text style={styles.navButtonText}>Previous</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[
-                styles.saveSetButton,
-                activeSaveShouldOverwrite && styles.saveSetButtonOverwrite,
-              ]}
-              onPress={() => activeSaveIndex !== null && handleSaveSet(activeSaveIndex)}
-              disabled={activeSaveIndex === null || savingSet === activeSaveIndex}
-            >
-              <Text style={styles.saveSetButtonText}>
-                {activeSaveSetNumber === null
-                  ? 'Save'
-                  : savingSet === activeSaveIndex
-                    ? `Saving #${activeSaveSetNumber}...`
-                    : activeSaveShouldOverwrite
-                      ? `Overwrite #${activeSaveSetNumber}`
-                      : `Save #${activeSaveSetNumber}`}
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.saveSetButton,
+                  activeSaveShouldOverwrite && styles.saveSetButtonOverwrite,
+                ]}
+                onPress={() => activeSaveIndex !== null && handleSaveSet(activeSaveIndex)}
+                disabled={activeSaveIndex === null || savingSet === activeSaveIndex}
+              >
+                <Text style={styles.saveSetButtonText}>
+                  {activeSaveSetNumber === null
+                    ? 'Save'
+                    : savingSet === activeSaveIndex
+                      ? `Saving #${activeSaveSetNumber}...`
+                      : activeSaveShouldOverwrite
+                        ? `Overwrite #${activeSaveSetNumber}`
+                        : `Save #${activeSaveSetNumber}`}
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[
-                styles.navButton,
-                currentIndex >= exercises.length - 1 && styles.navButtonDisabled,
-              ]}
-              onPress={() => handleNavigateExercise('next')}
-              disabled={currentIndex >= exercises.length - 1}
-            >
-              <Text style={styles.navButtonText}>Next</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.navButton,
+                  currentIndex >= exercises.length - 1 && styles.navButtonDisabled,
+                ]}
+                onPress={() => handleNavigateExercise('next')}
+                disabled={currentIndex >= exercises.length - 1}
+              >
+                <Text style={styles.navButtonText}>Next</Text>
+              </TouchableOpacity>
             </View>
 
             <View style={styles.exerciseProgressRow}>
@@ -790,328 +866,329 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
   );
 };
 
-const createStyles = (themeColors: typeof colors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: themeColors.background,
-  },
-  centered: {
-    flex: 1,
-    backgroundColor: themeColors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  header: {
-    backgroundColor: themeColors.surface,
-    borderBottomColor: themeColors.border,
-    borderBottomWidth: 1,
-    padding: 16,
-  },
-  headerActionsRow: {
-    marginTop: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 4,
-    flexWrap: 'wrap',
-  },
-  title: {
-    color: themeColors.textStrong,
-    fontSize: 22,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  list: {
-    flex: 1,
-    padding: 16,
-  },
-  swipeRegion: {
-    flex: 1,
-    overflow: 'hidden',
-  },
-  exerciseCard: {
-    backgroundColor: themeColors.surface,
-    borderColor: themeColors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    padding: 14,
-    marginBottom: 6,
-    ...shadow.card,
-  },
-  exerciseName: {
-    color: themeColors.textStrong,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  exerciseMeta: {
-    color: themeColors.textMuted,
-    marginTop: 4,
-    textTransform: 'uppercase',
-    marginBottom: 10,
-  },
-  setsHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: themeColors.border,
-    paddingTop: 8,
-    marginBottom: 6,
-    gap: 6,
-  },
-  setsHeaderCell: {
-    flex: 1,
-    color: themeColors.textMuted,
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  setsStatusHeaderCell: {
-    width: 24,
-  },
-  setInputContainer: {
-    flex: 1,
-    position: 'relative',
-  },
-  previousValueOverlay: {
-    position: 'absolute',
-    right: 8,
-    fontSize: 11,
-    color: themeColors.textMuted,
-    fontStyle: 'italic',
-    top: '50%',
-    marginTop: -5,
-  },
-  setRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    borderRadius: radius.sm,
-    paddingHorizontal: 4,
-    paddingVertical: 3,
-  },
-  setRowLocked: {
-    opacity: 0.45,
-  },
-  setCellLabel: {
-    width: 30,
-    color: themeColors.textStrong,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  setInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    borderRadius: radius.sm,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    color: themeColors.textStrong,
-    backgroundColor: themeColors.background,
-  },
-  setInputLocked: {
-    backgroundColor: themeColors.accentSoft,
-  },
-  setStatusCell: {
-    width: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  setStatusText: {
-    color: themeColors.accent,
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  saveSetButton: {
-    backgroundColor: themeColors.accent,
-    borderRadius: radius.sm,
-    paddingHorizontal: 8,
-    paddingVertical: 10,
-    flex: 1.1,
-    alignItems: 'center',
-  },
-  saveSetButtonOverwrite: {
-    backgroundColor: themeColors.danger,
-  },
-  saveSetButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 11,
-    textTransform: 'uppercase',
-  },
-  navButton: {
-    flex: 1,
-    backgroundColor: themeColors.accentSoft,
-    borderWidth: 1,
-    borderColor: themeColors.accent,
-    borderRadius: radius.sm,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  navButtonDisabled: {
-    opacity: 0.45,
-  },
-  navButtonText: {
-    color: themeColors.accent,
-    fontWeight: '700',
-    fontSize: 11,
-    textTransform: 'uppercase',
-  },
-  bottomActionsWrap: {
-    backgroundColor: themeColors.surface,
-    borderColor: themeColors.border,
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: 10,
-  },
-  bottomArea: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 10,
-    gap: 6,
-  },
-  restTimerBox: {
-    width: '100%',
-    backgroundColor: themeColors.surface,
-    borderColor: themeColors.border,
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-  },
-  restTimerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  restTimerValue: {
-    color: themeColors.textStrong,
-    fontSize: 18,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  restAdjustButton: {
-    minWidth: 68,
-    backgroundColor: themeColors.accentSoft,
-    borderWidth: 1,
-    borderColor: themeColors.accent,
-    borderRadius: radius.sm,
-    paddingVertical: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  restAdjustButtonDisabled: {
-    opacity: 0.45,
-  },
-  restAdjustButtonText: {
-    color: themeColors.accent,
-    fontWeight: '700',
-    fontSize: 12,
-    textTransform: 'uppercase',
-  },
-  saveDefaultRestButton: {
-    marginTop: 10,
-    backgroundColor: themeColors.accent,
-    borderRadius: radius.sm,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    alignItems: 'center',
-  },
-  saveDefaultRestButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 11,
-    textTransform: 'uppercase',
-    textAlign: 'center',
-  },
-  bottomActionsBar: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  exerciseProgressRow: {
-    marginTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  exerciseProgressMark: {
-    width: 18,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: themeColors.border,
-  },
-  exerciseProgressMarkActive: {
-    height: 5,
-    backgroundColor: themeColors.accent,
-  },
-  cancelButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: themeColors.danger,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    minWidth: 80,
-  },
-  cancelButtonText: {
-    color: themeColors.danger,
-    fontWeight: '700',
-    fontSize: 11,
-    textTransform: 'uppercase',
-  },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: themeColors.textStrong,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    minWidth: 80,
-  },
-  secondaryButtonText: {
-    color: themeColors.textStrong,
-    fontWeight: '700',
-    fontSize: 10,
-    textTransform: 'uppercase',
-  },
-  finishButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: themeColors.success,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    minWidth: 80,
-  },
-  finishButtonText: {
-    color: themeColors.success,
-    fontWeight: '700',
-    fontSize: 11,
-    textTransform: 'uppercase',
-  },
-  emptyTitle: {
-    color: themeColors.textStrong,
-    fontSize: 22,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  emptyText: {
-    color: themeColors.textMuted,
-    marginTop: 10,
-    textTransform: 'uppercase',
-    textAlign: 'center',
-  },
-});
+const createStyles = (themeColors: typeof colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+    },
+    centered: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 20,
+    },
+    header: {
+      backgroundColor: themeColors.surface,
+      borderBottomColor: themeColors.border,
+      borderBottomWidth: 1,
+      padding: 16,
+    },
+    headerActionsRow: {
+      marginTop: 8,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: 4,
+      flexWrap: 'wrap',
+    },
+    title: {
+      color: themeColors.textStrong,
+      fontSize: 22,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    list: {
+      flex: 1,
+      padding: 16,
+    },
+    swipeRegion: {
+      flex: 1,
+      overflow: 'hidden',
+    },
+    exerciseCard: {
+      backgroundColor: themeColors.surface,
+      borderColor: themeColors.border,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      padding: 14,
+      marginBottom: 6,
+      ...shadow.card,
+    },
+    exerciseName: {
+      color: themeColors.textStrong,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    exerciseMeta: {
+      color: themeColors.textMuted,
+      marginTop: 4,
+      textTransform: 'uppercase',
+      marginBottom: 10,
+    },
+    setsHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderTopWidth: 1,
+      borderTopColor: themeColors.border,
+      paddingTop: 8,
+      marginBottom: 6,
+      gap: 6,
+    },
+    setsHeaderCell: {
+      flex: 1,
+      color: themeColors.textMuted,
+      fontSize: 11,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    setsStatusHeaderCell: {
+      width: 24,
+    },
+    setInputContainer: {
+      flex: 1,
+      position: 'relative',
+    },
+    previousValueOverlay: {
+      position: 'absolute',
+      right: 8,
+      fontSize: 11,
+      color: themeColors.textMuted,
+      fontStyle: 'italic',
+      top: '50%',
+      marginTop: -5,
+    },
+    setRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: 'transparent',
+      borderRadius: radius.sm,
+      paddingHorizontal: 4,
+      paddingVertical: 3,
+    },
+    setRowLocked: {
+      opacity: 0.45,
+    },
+    setCellLabel: {
+      width: 30,
+      color: themeColors.textStrong,
+      fontWeight: '700',
+      textAlign: 'center',
+    },
+    setInput: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: radius.sm,
+      paddingHorizontal: 10,
+      paddingVertical: 10,
+      color: themeColors.textStrong,
+      backgroundColor: themeColors.background,
+    },
+    setInputLocked: {
+      backgroundColor: themeColors.accentSoft,
+    },
+    setStatusCell: {
+      width: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    setStatusText: {
+      color: themeColors.accent,
+      fontWeight: '700',
+      fontSize: 16,
+    },
+    saveSetButton: {
+      backgroundColor: themeColors.accent,
+      borderRadius: radius.sm,
+      paddingHorizontal: 8,
+      paddingVertical: 10,
+      flex: 1.1,
+      alignItems: 'center',
+    },
+    saveSetButtonOverwrite: {
+      backgroundColor: themeColors.danger,
+    },
+    saveSetButtonText: {
+      color: '#fff',
+      fontWeight: '700',
+      fontSize: 11,
+      textTransform: 'uppercase',
+    },
+    navButton: {
+      flex: 1,
+      backgroundColor: themeColors.accentSoft,
+      borderWidth: 1,
+      borderColor: themeColors.accent,
+      borderRadius: radius.sm,
+      paddingVertical: 10,
+      alignItems: 'center',
+    },
+    navButtonDisabled: {
+      opacity: 0.45,
+    },
+    navButtonText: {
+      color: themeColors.accent,
+      fontWeight: '700',
+      fontSize: 11,
+      textTransform: 'uppercase',
+    },
+    bottomActionsWrap: {
+      backgroundColor: themeColors.surface,
+      borderColor: themeColors.border,
+      borderWidth: 1,
+      borderRadius: radius.md,
+      paddingHorizontal: 12,
+      paddingTop: 10,
+      paddingBottom: 10,
+    },
+    bottomArea: {
+      paddingHorizontal: 16,
+      paddingTop: 8,
+      paddingBottom: 10,
+      gap: 6,
+    },
+    restTimerBox: {
+      width: '100%',
+      backgroundColor: themeColors.surface,
+      borderColor: themeColors.border,
+      borderWidth: 1,
+      borderRadius: radius.md,
+      paddingVertical: 10,
+      paddingHorizontal: 10,
+    },
+    restTimerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    restTimerValue: {
+      color: themeColors.textStrong,
+      fontSize: 18,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    restAdjustButton: {
+      minWidth: 68,
+      backgroundColor: themeColors.accentSoft,
+      borderWidth: 1,
+      borderColor: themeColors.accent,
+      borderRadius: radius.sm,
+      paddingVertical: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    restAdjustButtonDisabled: {
+      opacity: 0.45,
+    },
+    restAdjustButtonText: {
+      color: themeColors.accent,
+      fontWeight: '700',
+      fontSize: 12,
+      textTransform: 'uppercase',
+    },
+    saveDefaultRestButton: {
+      marginTop: 10,
+      backgroundColor: themeColors.accent,
+      borderRadius: radius.sm,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      alignItems: 'center',
+    },
+    saveDefaultRestButtonText: {
+      color: '#fff',
+      fontWeight: '700',
+      fontSize: 11,
+      textTransform: 'uppercase',
+      textAlign: 'center',
+    },
+    bottomActionsBar: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    exerciseProgressRow: {
+      marginTop: 10,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: 8,
+    },
+    exerciseProgressMark: {
+      width: 18,
+      height: 3,
+      borderRadius: 2,
+      backgroundColor: themeColors.border,
+    },
+    exerciseProgressMarkActive: {
+      height: 5,
+      backgroundColor: themeColors.accent,
+    },
+    cancelButton: {
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: themeColors.danger,
+      borderRadius: radius.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 8,
+      minWidth: 80,
+    },
+    cancelButtonText: {
+      color: themeColors.danger,
+      fontWeight: '700',
+      fontSize: 11,
+      textTransform: 'uppercase',
+    },
+    secondaryButton: {
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: themeColors.textStrong,
+      borderRadius: radius.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 8,
+      minWidth: 80,
+    },
+    secondaryButtonText: {
+      color: themeColors.textStrong,
+      fontWeight: '700',
+      fontSize: 10,
+      textTransform: 'uppercase',
+    },
+    finishButton: {
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: themeColors.success,
+      borderRadius: radius.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 8,
+      minWidth: 80,
+    },
+    finishButtonText: {
+      color: themeColors.success,
+      fontWeight: '700',
+      fontSize: 11,
+      textTransform: 'uppercase',
+    },
+    emptyTitle: {
+      color: themeColors.textStrong,
+      fontSize: 22,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    emptyText: {
+      color: themeColors.textMuted,
+      marginTop: 10,
+      textTransform: 'uppercase',
+      textAlign: 'center',
+    },
+  });
 
 export default ActiveWorkoutScreen;

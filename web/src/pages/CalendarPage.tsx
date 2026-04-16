@@ -13,9 +13,7 @@ const CalendarPage = () => {
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
-  const [datesWithWorkouts, setDatesWithWorkouts] = useState<Set<string>>(
-    new Set()
-  );
+  const [datesWithWorkouts, setDatesWithWorkouts] = useState<Set<string>>(new Set());
   const [workoutsInMonth, setWorkoutsInMonth] = useState<WorkoutHistoryByDate[]>([]);
   const [loadingDates, setLoadingDates] = useState(true);
   const [loadingWorkouts, setLoadingWorkouts] = useState(false);
@@ -31,18 +29,22 @@ const CalendarPage = () => {
     try {
       setLoadingDates(true);
       // Load dates for current month and surrounding months
-      const startOfMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
+      const startOfMonth = new Date(
+        calendarMonth.getFullYear(),
+        calendarMonth.getMonth(),
+        1,
+      );
       const endOfMonth = new Date(
         calendarMonth.getFullYear(),
         calendarMonth.getMonth() + 1,
-        0
+        0,
       );
 
       const startDate = formatDateToString(
-        new Date(startOfMonth.getTime() - 7 * 24 * 60 * 60 * 1000)
+        new Date(startOfMonth.getTime() - 7 * 24 * 60 * 60 * 1000),
       );
       const endDate = formatDateToString(
-        new Date(endOfMonth.getTime() + 7 * 24 * 60 * 60 * 1000)
+        new Date(endOfMonth.getTime() + 7 * 24 * 60 * 60 * 1000),
       );
 
       try {
@@ -110,8 +112,7 @@ const CalendarPage = () => {
   const tileClassName = ({ date }: { date: Date }): string => {
     const dateStr = formatDateToString(date);
     const hasWorkout = datesWithWorkouts.has(dateStr);
-    const isSelected =
-      date.toDateString() === selectedDate.toDateString();
+    const isSelected = date.toDateString() === selectedDate.toDateString();
 
     let classes = '';
     if (hasWorkout) classes += 'calendar-tile-with-workout ';
@@ -189,20 +190,18 @@ const CalendarPage = () => {
               <div
                 key={workout.id}
                 className="workout-history-item"
-                onClick={() =>
-                  navigate(`/workout-history/${workout.id}`)
-                }
+                onClick={() => navigate(`/workout-history/${workout.id}`)}
               >
                 <div className="workout-header">
                   <h3>{workout.workout_name}</h3>
                 </div>
                 <div className="workout-times">
                   <span>Start: {formatTime(workout.started_at)}</span>
+                  {workout.ended_at && <span>Ended: {formatTime(workout.ended_at)}</span>}
                   {workout.ended_at && (
-                    <span>Ended: {formatTime(workout.ended_at)}</span>
-                  )}
-                  {workout.ended_at && (
-                    <span>Duration: {formatDuration(workout.started_at, workout.ended_at)}</span>
+                    <span>
+                      Duration: {formatDuration(workout.started_at, workout.ended_at)}
+                    </span>
                   )}
                 </div>
                 <div className="workout-click-hint">

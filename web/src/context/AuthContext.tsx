@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
@@ -68,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
       clearPasswordRecovery: () => setIsPasswordRecovery(false),
     }),
-    [session, loading, isPasswordRecovery]
+    [session, loading, isPasswordRecovery],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

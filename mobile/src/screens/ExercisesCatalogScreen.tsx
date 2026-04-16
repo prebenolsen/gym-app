@@ -24,18 +24,14 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
   const { programId, workoutId, workoutName } = route.params;
   const { colors: themeColors } = usePreferences();
   const styles = createStyles(themeColors);
-  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<
-    MuscleGroup | null
-  >(null);
-  const [selectedEquipment, setSelectedEquipment] = useState<Set<Equipment>>(
-    new Set()
+  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<MuscleGroup | null>(
+    null,
   );
-  const [selectedMovementType, setSelectedMovementType] = useState<
-    Set<string>
-  >(new Set());
-  const [selectedExercises, setSelectedExercises] = useState<Set<string>>(
-    new Set()
+  const [selectedEquipment, setSelectedEquipment] = useState<Set<Equipment>>(new Set());
+  const [selectedMovementType, setSelectedMovementType] = useState<Set<string>>(
+    new Set(),
   );
+  const [selectedExercises, setSelectedExercises] = useState<Set<string>>(new Set());
   const [isAdding, setIsAdding] = useState(false);
 
   const api = useApi();
@@ -44,12 +40,12 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
   let filteredExercises = exercises;
   if (selectedMuscleGroup) {
     filteredExercises = filteredExercises.filter(
-      (e) => e.muscleGroup === selectedMuscleGroup
+      (e) => e.muscleGroup === selectedMuscleGroup,
     );
   }
   if (selectedEquipment.size > 0) {
     filteredExercises = filteredExercises.filter((e) =>
-      selectedEquipment.has(e.equipment)
+      selectedEquipment.has(e.equipment),
     );
   }
   if (selectedMovementType.size > 0) {
@@ -99,7 +95,7 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
     try {
       const selectedExerciseIds = Array.from(selectedExercises);
       const selectedExerciseList = exercises.filter((e) =>
-        selectedExerciseIds.includes(e.id)
+        selectedExerciseIds.includes(e.id),
       );
 
       for (const ex of selectedExerciseList) {
@@ -138,17 +134,11 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
             style={styles.chipsRow}
           >
             <TouchableOpacity
-              style={[
-                styles.chip,
-                !selectedMuscleGroup && styles.chipActive,
-              ]}
+              style={[styles.chip, !selectedMuscleGroup && styles.chipActive]}
               onPress={() => setSelectedMuscleGroup(null)}
             >
               <Text
-                style={[
-                  styles.chipText,
-                  !selectedMuscleGroup && styles.chipTextActive,
-                ]}
+                style={[styles.chipText, !selectedMuscleGroup && styles.chipTextActive]}
               >
                 All
               </Text>
@@ -156,10 +146,7 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
             {getMuscleGroups().map((group) => (
               <TouchableOpacity
                 key={group}
-                style={[
-                  styles.chip,
-                  selectedMuscleGroup === group && styles.chipActive,
-                ]}
+                style={[styles.chip, selectedMuscleGroup === group && styles.chipActive]}
                 onPress={() => setSelectedMuscleGroup(group)}
               >
                 <Text
@@ -184,10 +171,7 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
             style={styles.chipsRow}
           >
             <TouchableOpacity
-              style={[
-                styles.chip,
-                selectedEquipment.size === 0 && styles.chipActive,
-              ]}
+              style={[styles.chip, selectedEquipment.size === 0 && styles.chipActive]}
               onPress={() => setSelectedEquipment(new Set())}
             >
               <Text
@@ -202,10 +186,7 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
             {getEquipment().map((equip) => (
               <TouchableOpacity
                 key={equip}
-                style={[
-                  styles.chip,
-                  selectedEquipment.has(equip) && styles.chipActive,
-                ]}
+                style={[styles.chip, selectedEquipment.has(equip) && styles.chipActive]}
                 onPress={() => toggleEquipment(equip)}
               >
                 <Text
@@ -230,10 +211,7 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
             style={styles.chipsRow}
           >
             <TouchableOpacity
-              style={[
-                styles.chip,
-                selectedMovementType.size === 0 && styles.chipActive,
-              ]}
+              style={[styles.chip, selectedMovementType.size === 0 && styles.chipActive]}
               onPress={() => setSelectedMovementType(new Set())}
             >
               <Text
@@ -248,10 +226,7 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
             {['compound', 'isolation'].map((type) => (
               <TouchableOpacity
                 key={type}
-                style={[
-                  styles.chip,
-                  selectedMovementType.has(type) && styles.chipActive,
-                ]}
+                style={[styles.chip, selectedMovementType.has(type) && styles.chipActive]}
                 onPress={() => toggleMovementType(type)}
               >
                 <Text
@@ -276,7 +251,6 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
         </View>
 
         <View style={styles.exercisesSection}>
-
           {filteredExercises.length === 0 ? (
             <Text style={styles.noData}>No exercises match your filters.</Text>
           ) : (
@@ -285,8 +259,7 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
                 key={exercise.id}
                 style={[
                   styles.exerciseItem,
-                  selectedExercises.has(exercise.id) &&
-                    styles.exerciseItemSelected,
+                  selectedExercises.has(exercise.id) && styles.exerciseItemSelected,
                 ]}
                 onPress={() => toggleExerciseSelection(exercise.id)}
               >
@@ -321,19 +294,14 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
       {selectedExercises.size > 0 && (
         <View style={styles.footer}>
           <TouchableOpacity
-            style={[
-              styles.btnAddSelected,
-              isAdding && styles.btnDisabled,
-            ]}
+            style={[styles.btnAddSelected, isAdding && styles.btnDisabled]}
             onPress={handleAddSelected}
             disabled={isAdding}
           >
             {isAdding ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text style={styles.btnText}>
-                Add Selected ({selectedExercises.size})
-              </Text>
+              <Text style={styles.btnText}>Add Selected ({selectedExercises.size})</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -342,180 +310,181 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
   );
 };
 
-const createStyles = (themeColors: typeof colors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: themeColors.background,
-  },
-  banner: {
-    backgroundColor: themeColors.accent,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  bannerText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '500',
-    textTransform: 'uppercase',
-  },
-  bannerWorkout: {
-    fontWeight: '700',
-  },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
-  filterSection: {
-    marginBottom: 24,
-  },
-  filterTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: themeColors.textStrong,
-    marginBottom: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  chip: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    marginRight: 8,
-    borderWidth: 1.5,
-    borderColor: themeColors.border,
-    backgroundColor: themeColors.surface,
-    borderRadius: 16,
-  },
-  chipActive: {
-    backgroundColor: themeColors.accentSoft,
-    borderColor: themeColors.accent,
-  },
-  chipText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: themeColors.textMuted,
-    textTransform: 'uppercase',
-  },
-  chipTextActive: {
-    color: themeColors.accent,
-    textTransform: 'uppercase',
-  },
-  exercisesSection: {
-    backgroundColor: themeColors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    padding: 0,
-    overflow: 'hidden',
-    marginBottom: 20,
-    ...shadow.card,
-  },
-  resultsBox: {
-    backgroundColor: themeColors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    marginBottom: 10,
-    ...shadow.card,
-  },
-  resultsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: themeColors.textStrong,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    textTransform: 'uppercase',
-  },
-  noData: {
-    padding: 16,
-    backgroundColor: themeColors.accentSoft,
-    borderRadius: 6,
-    color: themeColors.textMuted,
-    textAlign: 'center',
-    fontStyle: 'italic',
-    textTransform: 'uppercase',
-  },
-  exerciseItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: themeColors.border,
-  },
-  exerciseItemSelected: {
-    backgroundColor: themeColors.accentSoft,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderWidth: 1.5,
-    borderColor: themeColors.border,
-    borderRadius: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    marginTop: 2,
-  },
-  checkmark: {
-    color: themeColors.accent,
-    fontSize: 14,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-  exerciseInfo: {
-    flex: 1,
-    marginRight: 14,
-  },
-  exerciseName: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: themeColors.textStrong,
-    marginBottom: 4,
-    textTransform: 'uppercase',
-  },
-  exerciseMeta: {
-    fontSize: 12,
-    color: themeColors.textMuted,
-    textTransform: 'uppercase',
-  },
-  thumbWrap: {
-    width: 92,
-    alignSelf: 'stretch',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  spacer: {
-    height: 20,
-  },
-  footer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: themeColors.border,
-    backgroundColor: themeColors.surface,
-  },
-  btnAddSelected: {
-    backgroundColor: themeColors.accent,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  btnDisabled: {
-    opacity: 0.6,
-  },
-  btnText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
-    textTransform: 'uppercase',
-  },
-});
+const createStyles = (themeColors: typeof colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+    },
+    banner: {
+      backgroundColor: themeColors.accent,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+    },
+    bannerText: {
+      color: '#fff',
+      fontSize: 14,
+      fontWeight: '500',
+      textTransform: 'uppercase',
+    },
+    bannerWorkout: {
+      fontWeight: '700',
+    },
+    content: {
+      flex: 1,
+      padding: 16,
+    },
+    filterSection: {
+      marginBottom: 24,
+    },
+    filterTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: themeColors.textStrong,
+      marginBottom: 12,
+      textTransform: 'uppercase',
+      letterSpacing: 0.3,
+    },
+    chipsRow: {
+      flexDirection: 'row',
+      marginBottom: 8,
+    },
+    chip: {
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      marginRight: 8,
+      borderWidth: 1.5,
+      borderColor: themeColors.border,
+      backgroundColor: themeColors.surface,
+      borderRadius: 16,
+    },
+    chipActive: {
+      backgroundColor: themeColors.accentSoft,
+      borderColor: themeColors.accent,
+    },
+    chipText: {
+      fontSize: 12,
+      fontWeight: '500',
+      color: themeColors.textMuted,
+      textTransform: 'uppercase',
+    },
+    chipTextActive: {
+      color: themeColors.accent,
+      textTransform: 'uppercase',
+    },
+    exercisesSection: {
+      backgroundColor: themeColors.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      padding: 0,
+      overflow: 'hidden',
+      marginBottom: 20,
+      ...shadow.card,
+    },
+    resultsBox: {
+      backgroundColor: themeColors.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      marginBottom: 10,
+      ...shadow.card,
+    },
+    resultsTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: themeColors.textStrong,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      textTransform: 'uppercase',
+    },
+    noData: {
+      padding: 16,
+      backgroundColor: themeColors.accentSoft,
+      borderRadius: 6,
+      color: themeColors.textMuted,
+      textAlign: 'center',
+      fontStyle: 'italic',
+      textTransform: 'uppercase',
+    },
+    exerciseItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+    },
+    exerciseItemSelected: {
+      backgroundColor: themeColors.accentSoft,
+    },
+    checkbox: {
+      width: 20,
+      height: 20,
+      borderWidth: 1.5,
+      borderColor: themeColors.border,
+      borderRadius: 4,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+      marginTop: 2,
+    },
+    checkmark: {
+      color: themeColors.accent,
+      fontSize: 14,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+    },
+    exerciseInfo: {
+      flex: 1,
+      marginRight: 14,
+    },
+    exerciseName: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: themeColors.textStrong,
+      marginBottom: 4,
+      textTransform: 'uppercase',
+    },
+    exerciseMeta: {
+      fontSize: 12,
+      color: themeColors.textMuted,
+      textTransform: 'uppercase',
+    },
+    thumbWrap: {
+      width: 92,
+      alignSelf: 'stretch',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    spacer: {
+      height: 20,
+    },
+    footer: {
+      paddingHorizontal: 16,
+      paddingBottom: 16,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: themeColors.border,
+      backgroundColor: themeColors.surface,
+    },
+    btnAddSelected: {
+      backgroundColor: themeColors.accent,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 6,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    btnDisabled: {
+      opacity: 0.6,
+    },
+    btnText: {
+      color: '#fff',
+      fontWeight: '600',
+      fontSize: 14,
+      textTransform: 'uppercase',
+    },
+  });
 
 export default ExercisesCatalogScreen;

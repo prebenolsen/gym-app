@@ -14,6 +14,7 @@
 ## Step 1: Supabase Setup (3 min)
 
 ### Create Project
+
 1. Go to supabase.com → **New Project**
 2. Enter name & password
 3. Wait for provisioning
@@ -94,24 +95,24 @@ Go to: **http://localhost:5173**
 
 ## What You Built
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| API Server | `backend/src/index.ts` | REST API (12+ endpoints) |
-| Web App | `web/src/` | React UI (4 pages) |
-| Mobile App | `mobile/src/` | React Native UI (mirrors web) |
-| Shared Types | `shared/src/` | TypeScript interfaces + API client |
-| Database | Supabase PostgreSQL | 3 tables: programs, workouts, exercises |
+| Component    | Location               | Purpose                                 |
+| ------------ | ---------------------- | --------------------------------------- |
+| API Server   | `backend/src/index.ts` | REST API (12+ endpoints)                |
+| Web App      | `web/src/`             | React UI (4 pages)                      |
+| Mobile App   | `mobile/src/`          | React Native UI (mirrors web)           |
+| Shared Types | `shared/src/`          | TypeScript interfaces + API client      |
+| Database     | Supabase PostgreSQL    | 3 tables: programs, workouts, exercises |
 
 ---
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| "Connection refused" | Is backend running? `npm run backend:dev` |
-| "SUPABASE_URL undefined" | Create `.env` file (see Step 2) |
-| "Cannot find module @gym-app/shared" | Run `npm run shared:build` |
-| "Module not found" | Run `npm install` again |
+| Problem                              | Solution                                  |
+| ------------------------------------ | ----------------------------------------- |
+| "Connection refused"                 | Is backend running? `npm run backend:dev` |
+| "SUPABASE_URL undefined"             | Create `.env` file (see Step 2)           |
+| "Cannot find module @gym-app/shared" | Run `npm run shared:build`                |
+| "Module not found"                   | Run `npm install` again                   |
 
 ---
 
@@ -142,7 +143,7 @@ npm run mobile:dev
 ✅ Edit rest (0-600s) with spinners  
 ✅ Stats dashboard  
 ✅ Cloud storage (Supabase)  
-✅ Both web & mobile apps  
+✅ Both web & mobile apps
 
 ---
 
@@ -151,7 +152,7 @@ npm run mobile:dev
 ❌ Real user login (uses mock user now)  
 ❌ Workout history/logging  
 ❌ Offline mode  
-❌ Production deployment  
+❌ Production deployment
 
 ---
 

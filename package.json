@@ -25,5 +25,8 @@
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "typescript": "~5.9.2"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.3"
   }
 }

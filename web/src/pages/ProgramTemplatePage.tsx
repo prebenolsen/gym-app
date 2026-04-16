@@ -20,9 +20,7 @@ interface EditableWorkout {
   exercises: EditableExercise[];
 }
 
-const deepCopyWorkouts = (
-  workouts: ProgramTemplateWorkout[]
-): EditableWorkout[] =>
+const deepCopyWorkouts = (workouts: ProgramTemplateWorkout[]): EditableWorkout[] =>
   workouts.map((w) => ({
     name: w.name,
     exercises: w.exercises.map((e: ProgramTemplateExercise) => ({
@@ -40,11 +38,9 @@ const ProgramTemplatePage = () => {
   const template = PROGRAM_TEMPLATES.find((t) => t.id === templateId);
 
   const [workouts, setWorkouts] = useState<EditableWorkout[]>(
-    template ? deepCopyWorkouts(template.workouts) : []
+    template ? deepCopyWorkouts(template.workouts) : [],
   );
-  const [newExerciseNames, setNewExerciseNames] = useState<
-    Record<number, string>
-  >({});
+  const [newExerciseNames, setNewExerciseNames] = useState<Record<number, string>>({});
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,7 +58,7 @@ const ProgramTemplatePage = () => {
   const updateExercise = (
     workoutIndex: number,
     exerciseIndex: number,
-    updates: Partial<EditableExercise>
+    updates: Partial<EditableExercise>,
   ) => {
     setWorkouts((prev) =>
       prev.map((w, wi) =>
@@ -71,10 +67,10 @@ const ProgramTemplatePage = () => {
           : {
               ...w,
               exercises: w.exercises.map((e, ei) =>
-                ei !== exerciseIndex ? e : { ...e, ...updates }
+                ei !== exerciseIndex ? e : { ...e, ...updates },
               ),
-            }
-      )
+            },
+      ),
     );
   };
 
@@ -86,8 +82,8 @@ const ProgramTemplatePage = () => {
           : {
               ...w,
               exercises: w.exercises.filter((_, ei) => ei !== exerciseIndex),
-            }
-      )
+            },
+      ),
     );
   };
 
@@ -101,12 +97,9 @@ const ProgramTemplatePage = () => {
           ? w
           : {
               ...w,
-              exercises: [
-                ...w.exercises,
-                { name, sets: 4, rest_seconds: 120 },
-              ],
-            }
-      )
+              exercises: [...w.exercises, { name, sets: 4, rest_seconds: 120 }],
+            },
+      ),
     );
     setNewExerciseNames((prev) => ({ ...prev, [workoutIndex]: '' }));
   };
@@ -137,21 +130,14 @@ const ProgramTemplatePage = () => {
   return (
     <div className="template-edit-page">
       <div className="template-edit-header">
-        <button
-          className="btn-back"
-          onClick={() => navigate('/programs-catalog')}
-        >
+        <button className="btn-back" onClick={() => navigate('/programs-catalog')}>
           ← Back to Templates
         </button>
         <div className="template-edit-title">
           <h1>{template.name}</h1>
           <p className="template-edit-subtitle">{template.description}</p>
         </div>
-        <button
-          className="btn-import-final"
-          onClick={handleImport}
-          disabled={importing}
-        >
+        <button className="btn-import-final" onClick={handleImport} disabled={importing}>
           {importing ? 'Importing...' : 'Import Program'}
         </button>
       </div>
@@ -174,9 +160,7 @@ const ProgramTemplatePage = () => {
                   <div className="template-exercise-controls">
                     <NumberSpinner
                       value={exercise.sets}
-                      onChange={(v) =>
-                        updateExercise(wi, ei, { sets: v })
-                      }
+                      onChange={(v) => updateExercise(wi, ei, { sets: v })}
                       min={1}
                       max={100}
                       step={1}
@@ -184,9 +168,7 @@ const ProgramTemplatePage = () => {
                     />
                     <NumberSpinner
                       value={exercise.rest_seconds}
-                      onChange={(v) =>
-                        updateExercise(wi, ei, { rest_seconds: v })
-                      }
+                      onChange={(v) => updateExercise(wi, ei, { rest_seconds: v })}
                       min={0}
                       max={600}
                       step={5}
@@ -219,10 +201,7 @@ const ProgramTemplatePage = () => {
                   if (e.key === 'Enter') addExercise(wi);
                 }}
               />
-              <button
-                className="btn-add-exercise"
-                onClick={() => addExercise(wi)}
-              >
+              <button className="btn-add-exercise" onClick={() => addExercise(wi)}>
                 + Add
               </button>
             </div>
@@ -231,11 +210,7 @@ const ProgramTemplatePage = () => {
       </div>
 
       <div className="template-edit-footer">
-        <button
-          className="btn-import-final"
-          onClick={handleImport}
-          disabled={importing}
-        >
+        <button className="btn-import-final" onClick={handleImport} disabled={importing}>
           {importing ? 'Importing...' : 'Import Program'}
         </button>
       </div>

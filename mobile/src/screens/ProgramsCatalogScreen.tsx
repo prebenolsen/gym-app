@@ -1,14 +1,5 @@
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
-import {
-  PROGRAM_TEMPLATES,
-  type ProgramTemplate,
-} from '@gym-app/shared';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { PROGRAM_TEMPLATES, type ProgramTemplate } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
 
@@ -33,11 +24,14 @@ const getProgramAverageWorkoutEstimateMinutes = (template: ProgramTemplate) => {
           const r = getExerciseTimeSecondsRange(exercise.sets, exercise.rest_seconds);
           return { low: workoutTotal.low + r.low, high: workoutTotal.high + r.high };
         },
-        { low: 0, high: 0 }
+        { low: 0, high: 0 },
       );
-      return { low: programTotal.low + workoutRange.low, high: programTotal.high + workoutRange.high };
+      return {
+        low: programTotal.low + workoutRange.low,
+        high: programTotal.high + workoutRange.high,
+      };
     },
-    { low: 0, high: 0 }
+    { low: 0, high: 0 },
   );
 
   const avgLowMinutes = total.low / template.workoutCount / 60;
@@ -70,7 +64,7 @@ const ProgramsCatalogScreen = ({ navigation }: any) => {
           const estimatedTime = getProgramAverageWorkoutEstimateMinutes(template);
           const totalExercises = template.workouts.reduce(
             (sum, w) => sum + w.exercises.length,
-            0
+            0,
           );
 
           return (

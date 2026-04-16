@@ -39,7 +39,9 @@ const ExerciseHistoryScreen = ({ route, navigation }: any) => {
 
       // Collect all sets for this exercise, grouped by date
       for (const session of sessions) {
-        const date = new Date(session.finished_at || session.started_at).toLocaleDateString('en-CA');
+        const date = new Date(
+          session.finished_at || session.started_at,
+        ).toLocaleDateString('en-CA');
         const sets = await api.getSessionSets(session.id, exerciseId);
 
         if (sets.length > 0) {
@@ -71,10 +73,7 @@ const ExerciseHistoryScreen = ({ route, navigation }: any) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
         </TouchableOpacity>
         <Text style={styles.title}>{exerciseName} History</Text>
@@ -101,9 +100,16 @@ const ExerciseHistoryScreen = ({ route, navigation }: any) => {
                   <Text style={[styles.tableCell, styles.reps]}>Reps</Text>
                 </View>
                 {group.sets.map((set, idx) => (
-                  <View key={`${group.date}-${set.set_number}-${idx}`} style={styles.tableRow}>
-                    <Text style={[styles.tableCell, styles.setNumber]}>{set.set_number}</Text>
-                    <Text style={[styles.tableCell, styles.weight]}>{formatWeight(set.weight)}</Text>
+                  <View
+                    key={`${group.date}-${set.set_number}-${idx}`}
+                    style={styles.tableRow}
+                  >
+                    <Text style={[styles.tableCell, styles.setNumber]}>
+                      {set.set_number}
+                    </Text>
+                    <Text style={[styles.tableCell, styles.weight]}>
+                      {formatWeight(set.weight)}
+                    </Text>
                     <Text style={[styles.tableCell, styles.reps]}>{set.reps}</Text>
                   </View>
                 ))}

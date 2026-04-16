@@ -6,8 +6,12 @@ import './ProgramsPage.css';
 
 const ProgramsPage = () => {
   const [programs, setPrograms] = useState<Program[]>([]);
-  const [workoutsByProgram, setWorkoutsByProgram] = useState<Record<string, Workout[]>>({});
-  const [exerciseCountByWorkout, setExerciseCountByWorkout] = useState<Record<string, number>>({});
+  const [workoutsByProgram, setWorkoutsByProgram] = useState<Record<string, Workout[]>>(
+    {},
+  );
+  const [exerciseCountByWorkout, setExerciseCountByWorkout] = useState<
+    Record<string, number>
+  >({});
   const [loading, setLoading] = useState(false);
   const [firstProgramName, setFirstProgramName] = useState('Program 01');
   const [showNewProgram, setShowNewProgram] = useState(false);
@@ -28,13 +32,19 @@ const ProgramsPage = () => {
 
       const workoutsResults = await Promise.all(data.map((p) => api.getWorkouts(p.id)));
       const wbp: Record<string, Workout[]> = {};
-      data.forEach((p, i) => { wbp[p.id] = workoutsResults[i]; });
+      data.forEach((p, i) => {
+        wbp[p.id] = workoutsResults[i];
+      });
       setWorkoutsByProgram(wbp);
 
       const allWorkouts = workoutsResults.flat();
-      const exercisesResults = await Promise.all(allWorkouts.map((w) => api.getExercises(w.id)));
+      const exercisesResults = await Promise.all(
+        allWorkouts.map((w) => api.getExercises(w.id)),
+      );
       const ecbw: Record<string, number> = {};
-      allWorkouts.forEach((w, i) => { ecbw[w.id] = exercisesResults[i].length; });
+      allWorkouts.forEach((w, i) => {
+        ecbw[w.id] = exercisesResults[i].length;
+      });
       setExerciseCountByWorkout(ecbw);
     } catch (err) {
       console.error('Failed to fetch programs:', err);
@@ -115,15 +125,15 @@ const ProgramsPage = () => {
       <div className="programs-header">
         <h1>Programs</h1>
         <div className="header-buttons">
-          <button
-            onClick={() => navigate('/programs-catalog')}
-            className="btn-primary"
-          >
+          <button onClick={() => navigate('/programs-catalog')} className="btn-primary">
             + Import Template
           </button>
           {!showNewProgram && (
             <button
-              onClick={() => { setShowNewProgram(true); setNewProgramName(''); }}
+              onClick={() => {
+                setShowNewProgram(true);
+                setNewProgramName('');
+              }}
               className="btn-primary"
             >
               + Create Program

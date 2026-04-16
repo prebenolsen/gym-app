@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 
 export type ThemeMode = 'light' | 'dark';
 export type AccentColor = 'emerald' | 'auburn';
@@ -86,7 +93,8 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     () => ({
       theme,
       setTheme: setThemeState,
-      toggleTheme: () => setThemeState((previous) => (previous === 'dark' ? 'light' : 'dark')),
+      toggleTheme: () =>
+        setThemeState((previous) => (previous === 'dark' ? 'light' : 'dark')),
       accent,
       setAccent: setAccentState,
       soundEnabled,
@@ -96,7 +104,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       prepareSoundSeconds,
       setPrepareSoundSeconds: setPrepareSoundSecondsState,
     }),
-    [theme, accent, soundEnabled, prepareSoundEnabled, prepareSoundSeconds]
+    [theme, accent, soundEnabled, prepareSoundEnabled, prepareSoundSeconds],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

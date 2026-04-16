@@ -24,7 +24,9 @@ const WorkoutsCatalogScreen = ({ route, navigation }: any) => {
   if (!programId) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>Invalid program. Please go back and try again.</Text>
+        <Text style={styles.errorText}>
+          Invalid program. Please go back and try again.
+        </Text>
       </View>
     );
   }
@@ -54,7 +56,9 @@ const WorkoutsCatalogScreen = ({ route, navigation }: any) => {
           <Text style={styles.backBtnText}>← Back to Program</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Workout Templates</Text>
-        <Text style={styles.subtitle}>Choose a workout template to add to your program</Text>
+        <Text style={styles.subtitle}>
+          Choose a workout template to add to your program
+        </Text>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -86,10 +90,7 @@ const WorkoutsCatalogScreen = ({ route, navigation }: any) => {
             ))}
 
             <TouchableOpacity
-              style={[
-                styles.btnImport,
-                importing !== null && styles.btnImportDisabled,
-              ]}
+              style={[styles.btnImport, importing !== null && styles.btnImportDisabled]}
               onPress={() => handleImportTemplate(template)}
               disabled={importing !== null}
             >
@@ -106,137 +107,138 @@ const WorkoutsCatalogScreen = ({ route, navigation }: any) => {
   );
 };
 
-const createStyles = (themeColors: typeof colors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: themeColors.background,
-  },
-  header: {
-    backgroundColor: themeColors.surface,
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: themeColors.border,
-    gap: 4,
-  },
-  backBtn: {
-    marginBottom: 8,
-  },
-  backBtnText: {
-    color: themeColors.accent,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: themeColors.textStrong,
-    textTransform: 'uppercase',
-  },
-  subtitle: {
-    fontSize: 13,
-    color: themeColors.textMuted,
-  },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
-  card: {
-    backgroundColor: themeColors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    padding: 16,
-    marginBottom: 16,
-    ...shadow.card,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 6,
-    gap: 8,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: themeColors.textStrong,
-    textTransform: 'uppercase',
-    flex: 1,
-  },
-  categoryBadge: {
-    fontSize: 11,
-    color: themeColors.accent,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    borderWidth: 1,
-    borderColor: themeColors.accent,
-    borderRadius: radius.sm,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  cardDescription: {
-    fontSize: 13,
-    color: themeColors.textMuted,
-    marginBottom: 12,
-    lineHeight: 18,
-  },
-  exercisesTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: themeColors.textStrong,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-  },
-  exerciseRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: themeColors.border,
-    gap: 8,
-  },
-  exerciseName: {
-    flex: 1,
-    fontSize: 13,
-    color: themeColors.textStrong,
-  },
-  exerciseMeta: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  badge: {
-    backgroundColor: themeColors.accentSoft,
-    borderRadius: radius.sm,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-  },
-  badgeText: {
-    fontSize: 11,
-    color: themeColors.accent,
-    fontWeight: '600',
-  },
-  btnImport: {
-    backgroundColor: themeColors.accent,
-    borderRadius: radius.sm,
-    padding: 12,
-    alignItems: 'center',
-    marginTop: 14,
-  },
-  btnImportDisabled: {
-    opacity: 0.6,
-  },
-  btnImportText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 14,
-    textTransform: 'uppercase',
-  },
-  errorText: {
-    color: themeColors.textStrong,
-    fontSize: 16,
-    padding: 16,
-  },
-});
+const createStyles = (themeColors: typeof colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+    },
+    header: {
+      backgroundColor: themeColors.surface,
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+      gap: 4,
+    },
+    backBtn: {
+      marginBottom: 8,
+    },
+    backBtnText: {
+      color: themeColors.accent,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    title: {
+      fontSize: 22,
+      fontWeight: 'bold',
+      color: themeColors.textStrong,
+      textTransform: 'uppercase',
+    },
+    subtitle: {
+      fontSize: 13,
+      color: themeColors.textMuted,
+    },
+    content: {
+      flex: 1,
+      padding: 16,
+    },
+    card: {
+      backgroundColor: themeColors.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      padding: 16,
+      marginBottom: 16,
+      ...shadow.card,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 6,
+      gap: 8,
+    },
+    cardTitle: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: themeColors.textStrong,
+      textTransform: 'uppercase',
+      flex: 1,
+    },
+    categoryBadge: {
+      fontSize: 11,
+      color: themeColors.accent,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      borderWidth: 1,
+      borderColor: themeColors.accent,
+      borderRadius: radius.sm,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+    },
+    cardDescription: {
+      fontSize: 13,
+      color: themeColors.textMuted,
+      marginBottom: 12,
+      lineHeight: 18,
+    },
+    exercisesTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: themeColors.textStrong,
+      textTransform: 'uppercase',
+      marginBottom: 8,
+    },
+    exerciseRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 6,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+      gap: 8,
+    },
+    exerciseName: {
+      flex: 1,
+      fontSize: 13,
+      color: themeColors.textStrong,
+    },
+    exerciseMeta: {
+      flexDirection: 'row',
+      gap: 6,
+    },
+    badge: {
+      backgroundColor: themeColors.accentSoft,
+      borderRadius: radius.sm,
+      paddingHorizontal: 6,
+      paddingVertical: 3,
+    },
+    badgeText: {
+      fontSize: 11,
+      color: themeColors.accent,
+      fontWeight: '600',
+    },
+    btnImport: {
+      backgroundColor: themeColors.accent,
+      borderRadius: radius.sm,
+      padding: 12,
+      alignItems: 'center',
+      marginTop: 14,
+    },
+    btnImportDisabled: {
+      opacity: 0.6,
+    },
+    btnImportText: {
+      color: '#fff',
+      fontWeight: '700',
+      fontSize: 14,
+      textTransform: 'uppercase',
+    },
+    errorText: {
+      color: themeColors.textStrong,
+      fontSize: 16,
+      padding: 16,
+    },
+  });
 
 export default WorkoutsCatalogScreen;

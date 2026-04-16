@@ -70,13 +70,16 @@ const WorkoutHistoryDetailScreen = ({ route, navigation }: any) => {
 
   const groupedByExercise = useMemo(() => {
     if (!detail) return {} as Record<string, WorkoutSessionSet[]>;
-    return detail.sets.reduce((acc, set) => {
-      if (!acc[set.exercise_name]) {
-        acc[set.exercise_name] = [];
-      }
-      acc[set.exercise_name].push(set);
-      return acc;
-    }, {} as Record<string, WorkoutSessionSet[]>);
+    return detail.sets.reduce(
+      (acc, set) => {
+        if (!acc[set.exercise_name]) {
+          acc[set.exercise_name] = [];
+        }
+        acc[set.exercise_name].push(set);
+        return acc;
+      },
+      {} as Record<string, WorkoutSessionSet[]>,
+    );
   }, [detail]);
 
   if (loading) {
@@ -103,8 +106,12 @@ const WorkoutHistoryDetailScreen = ({ route, navigation }: any) => {
         </TouchableOpacity>
         <Text style={styles.title}>Workout Details</Text>
         <Text style={styles.metaText}>{formatDate(detail.session.started_at)}</Text>
-        <Text style={styles.metaText}>Start: {formatTime(detail.session.started_at)}</Text>
-        {detail.session.ended_at ? <Text style={styles.metaText}>End: {formatTime(detail.session.ended_at)}</Text> : null}
+        <Text style={styles.metaText}>
+          Start: {formatTime(detail.session.started_at)}
+        </Text>
+        {detail.session.ended_at ? (
+          <Text style={styles.metaText}>End: {formatTime(detail.session.ended_at)}</Text>
+        ) : null}
         <Text style={styles.metaText}>
           Duration: {formatDuration(detail.session.started_at, detail.session.ended_at)}
         </Text>
@@ -117,7 +124,9 @@ const WorkoutHistoryDetailScreen = ({ route, navigation }: any) => {
             {sets.map((set) => (
               <View key={set.id} style={styles.setRow}>
                 <Text style={styles.setCell}>Set #{set.set_number}</Text>
-                <Text style={styles.setCell}>{convertFromKg(set.weight).toFixed(1)} {unit}</Text>
+                <Text style={styles.setCell}>
+                  {convertFromKg(set.weight).toFixed(1)} {unit}
+                </Text>
                 <Text style={styles.setCell}>{set.reps} reps</Text>
               </View>
             ))}
@@ -132,78 +141,79 @@ const WorkoutHistoryDetailScreen = ({ route, navigation }: any) => {
   );
 };
 
-const createStyles = (themeColors: typeof colors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: themeColors.background,
-  },
-  centered: {
-    flex: 1,
-    backgroundColor: themeColors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  header: {
-    backgroundColor: themeColors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: themeColors.border,
-    padding: 16,
-    gap: 6,
-  },
-  backText: {
-    color: themeColors.accent,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: themeColors.textStrong,
-    fontSize: 22,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  metaText: {
-    color: themeColors.textMuted,
-    textTransform: 'uppercase',
-    fontSize: 12,
-  },
-  list: {
-    flex: 1,
-    padding: 16,
-  },
-  exerciseCard: {
-    backgroundColor: themeColors.surface,
-    borderColor: themeColors.border,
-    borderWidth: 1,
-    borderRadius: radius.md,
-    padding: 14,
-    marginBottom: 10,
-    ...shadow.card,
-  },
-  exerciseName: {
-    color: themeColors.textStrong,
-    fontWeight: '700',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  setRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 6,
-    borderTopColor: themeColors.border,
-    borderTopWidth: 1,
-  },
-  setCell: {
-    color: themeColors.textMuted,
-    textTransform: 'uppercase',
-    fontSize: 12,
-  },
-  emptyText: {
-    color: themeColors.textMuted,
-    textTransform: 'uppercase',
-    textAlign: 'center',
-    marginTop: 16,
-  },
-});
+const createStyles = (themeColors: typeof colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+    },
+    centered: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+    },
+    header: {
+      backgroundColor: themeColors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+      padding: 16,
+      gap: 6,
+    },
+    backText: {
+      color: themeColors.accent,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    title: {
+      color: themeColors.textStrong,
+      fontSize: 22,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    metaText: {
+      color: themeColors.textMuted,
+      textTransform: 'uppercase',
+      fontSize: 12,
+    },
+    list: {
+      flex: 1,
+      padding: 16,
+    },
+    exerciseCard: {
+      backgroundColor: themeColors.surface,
+      borderColor: themeColors.border,
+      borderWidth: 1,
+      borderRadius: radius.md,
+      padding: 14,
+      marginBottom: 10,
+      ...shadow.card,
+    },
+    exerciseName: {
+      color: themeColors.textStrong,
+      fontWeight: '700',
+      marginBottom: 8,
+      textTransform: 'uppercase',
+    },
+    setRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingVertical: 6,
+      borderTopColor: themeColors.border,
+      borderTopWidth: 1,
+    },
+    setCell: {
+      color: themeColors.textMuted,
+      textTransform: 'uppercase',
+      fontSize: 12,
+    },
+    emptyText: {
+      color: themeColors.textMuted,
+      textTransform: 'uppercase',
+      textAlign: 'center',
+      marginTop: 16,
+    },
+  });
 
 export default WorkoutHistoryDetailScreen;

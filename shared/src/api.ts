@@ -42,11 +42,7 @@ class ApiClient {
     this.getToken = getToken;
   }
 
-  private async request<T>(
-    method: string,
-    path: string,
-    data?: unknown
-  ): Promise<T> {
+  private async request<T>(method: string, path: string, data?: unknown): Promise<T> {
     const url = `${this.baseURL}${path}`;
     const options: RequestInit = {
       method,
@@ -72,7 +68,7 @@ class ApiClient {
     } catch (cause) {
       const networkError = new Error(
         `Network request failed for ${method} ${path}. ` +
-          'In Android USB debug mode, verify adb reverse is active for ports 3000 and 8081.'
+          'In Android USB debug mode, verify adb reverse is active for ports 3000 and 8081.',
       ) as ApiRequestError;
       networkError.kind = 'network';
       networkError.url = url;
@@ -98,7 +94,7 @@ class ApiClient {
         ? `Authentication failed: ${response.status} ${response.statusText}`
         : `API Error: ${response.status} ${response.statusText}`;
       const error = new Error(
-        (parsedBody as { error?: string } | null)?.error || fallbackMessage
+        (parsedBody as { error?: string } | null)?.error || fallbackMessage,
       ) as ApiRequestError;
       error.kind = isAuthError ? 'auth' : 'api';
       error.status = response.status;
@@ -139,19 +135,22 @@ class ApiClient {
     return this.request('DELETE', '/account');
   }
 
-  async createProgramWithWorkouts(
-    template: {
+  async createProgramWithWorkouts(template: {
+    name: string;
+    workouts: {
       name: string;
-      workouts: { name: string; exercises: { name: string; sets: number; rest_seconds: number }[] }[];
-    }
-  ): Promise<void> {
+      exercises: { name: string; sets: number; rest_seconds: number }[];
+    }[];
+  }): Promise<void> {
     try {
       // Step 1: Create the program
       const newProgram = await this.createProgram({ name: template.name });
 
       // Step 2: For each workout in the template
       for (const workout of template.workouts) {
-        const newWorkout = await this.createWorkout(newProgram.id, { name: workout.name });
+        const newWorkout = await this.createWorkout(newProgram.id, {
+          name: workout.name,
+        });
 
         // Step 3: For each exercise in this workout
         for (const exercise of workout.exercises) {
@@ -174,10 +173,7 @@ class ApiClient {
     return this.request('GET', `/programs/${programId}/workouts`);
   }
 
-  async createWorkout(
-    programId: string,
-    req?: CreateWorkoutRequest
-  ): Promise<Workout> {
+  async createWorkout(programId: string, req?: CreateWorkoutRequest): Promise<Workout> {
     return this.request('POST', `/programs/${programId}/workouts`, {
       program_id: programId,
       name: req?.name || 'Workout 01',
@@ -188,15 +184,16 @@ class ApiClient {
     return this.request('PUT', `/workouts/${id}`, req);
   }
 
-
-
   async deleteWorkout(id: string): Promise<void> {
     return this.request('DELETE', `/workouts/${id}`);
   }
 
   async createWorkoutWithExercises(
     programId: string,
-    template: { name: string; exercises: { name: string; sets: number; rest_seconds: number }[] }
+    template: {
+      name: string;
+      exercises: { name: string; sets: number; rest_seconds: number }[];
+    },
   ): Promise<void> {
     try {
       // Step 1: Create the workout
@@ -218,7 +215,7 @@ class ApiClient {
 
   async reorderWorkouts(
     programId: string,
-    orderData: { id: string; order: number }[]
+    orderData: { id: string; order: number }[],
   ): Promise<void> {
     return this.request('PATCH', `/programs/${programId}/workouts/reorder`, {
       items: orderData,
@@ -231,10 +228,7 @@ class ApiClient {
     return this.request('GET', `/workouts/${workoutId}/exercises`);
   }
 
-  async createExercise(
-    workoutId: string,
-    req: CreateExerciseRequest
-  ): Promise<Exercise> {
+  async createExercise(workoutId: string, req: CreateExerciseRequest): Promise<Exercise> {
     return this.request('POST', `/workouts/${workoutId}/exercises`, {
       workout_id: workoutId,
       name: req.name,
@@ -243,10 +237,7 @@ class ApiClient {
     });
   }
 
-  async updateExercise(
-    id: string,
-    req: UpdateExerciseRequest
-  ): Promise<Exercise> {
+  async updateExercise(id: string, req: UpdateExerciseRequest): Promise<Exercise> {
     return this.request('PUT', `/exercises/${id}`, req);
   }
 
@@ -256,15 +247,11 @@ class ApiClient {
 
   async reorderExercises(
     workoutId: string,
-    orderData: { id: string; order: number }[]
+    orderData: { id: string; order: number }[],
   ): Promise<void> {
-    return this.request(
-      'PATCH',
-      `/workouts/${workoutId}/exercises/reorder`,
-      {
-        items: orderData,
-      }
-    );
+    return this.request('PATCH', `/workouts/${workoutId}/exercises/reorder`, {
+      items: orderData,
+    });
   }
 
   /* === WORKOUT SESSIONS === */
@@ -289,7 +276,7 @@ class ApiClient {
 
   async updateCurrentExerciseIndex(
     sessionId: string,
-    currentExerciseIndex: number
+    currentExerciseIndex: number,
   ): Promise<WorkoutSession> {
     return this.request('PATCH', `/workout-sessions/${sessionId}/current-exercise`, {
       current_exercise_index: currentExerciseIndex,
@@ -298,35 +285,32 @@ class ApiClient {
 
   async getSessionSets(
     sessionId: string,
-    exerciseId: string
+    exerciseId: string,
   ): Promise<WorkoutSessionSet[]> {
     const encodedExerciseId = encodeURIComponent(exerciseId);
     return this.request(
       'GET',
-      `/workout-sessions/${sessionId}/sets?exerciseId=${encodedExerciseId}`
+      `/workout-sessions/${sessionId}/sets?exerciseId=${encodedExerciseId}`,
     );
   }
 
   async saveWorkoutSet(
     sessionId: string,
-    payload: SaveWorkoutSetRequest
+    payload: SaveWorkoutSetRequest,
   ): Promise<WorkoutSessionSet> {
     return this.request('POST', `/workout-sessions/${sessionId}/sets`, payload);
   }
 
   /* === HISTORY === */
 
-  async getDatesWithWorkouts(
-    startDate?: string,
-    endDate?: string
-  ): Promise<string[]> {
+  async getDatesWithWorkouts(startDate?: string, endDate?: string): Promise<string[]> {
     const params = new URLSearchParams();
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
 
     return this.request(
       'GET',
-      `/workouts/history/dates-with-workouts${params.size > 0 ? `?${params}` : ''}`
+      `/workouts/history/dates-with-workouts${params.size > 0 ? `?${params}` : ''}`,
     );
   }
 
@@ -343,7 +327,7 @@ class ApiClient {
   }
 
   async getLastWorkoutPerformance(
-    workoutId: string
+    workoutId: string,
   ): Promise<{ session_id: string | null; sets: ExerciseLastPerformance[] }> {
     return this.request('GET', `/workouts/${workoutId}/last-performance`);
   }
@@ -362,8 +346,13 @@ class ApiClient {
     return this.request('GET', '/exercises/history');
   }
 
-  async getExerciseProgress(exerciseId: string, days?: number): Promise<ExerciseProgressHistory> {
-    const path = days ? `/exercises/${exerciseId}/progress?days=${days}` : `/exercises/${exerciseId}/progress`;
+  async getExerciseProgress(
+    exerciseId: string,
+    days?: number,
+  ): Promise<ExerciseProgressHistory> {
+    const path = days
+      ? `/exercises/${exerciseId}/progress?days=${days}`
+      : `/exercises/${exerciseId}/progress`;
     return this.request('GET', path);
   }
 

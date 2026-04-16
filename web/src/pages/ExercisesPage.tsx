@@ -14,7 +14,12 @@ import './ExercisesPage.css';
 import { useTheme } from '../context/ThemeContext';
 import { useApi } from '../hooks/useApi';
 import {
-  FrontTorso, BackTorso, ArmsView, FrontLegs, BackLegs, AbsView,
+  FrontTorso,
+  BackTorso,
+  ArmsView,
+  FrontLegs,
+  BackLegs,
+  AbsView,
   type MuscleGroup as MapMuscle,
 } from '../components/MuscleMap';
 
@@ -27,27 +32,27 @@ type MapComponent = React.ComponentType<{
 }>;
 
 const MUSCLE_VIEW: Record<string, MapComponent> = {
-  'Chest':               FrontTorso,
-  'Back':                BackTorso,
-  'Shoulders':           FrontTorso,
-  'Biceps':              ArmsView,
-  'Triceps':             ArmsView,
-  'Legs (Quads focus)':  FrontLegs,
+  Chest: FrontTorso,
+  Back: BackTorso,
+  Shoulders: FrontTorso,
+  Biceps: ArmsView,
+  Triceps: ArmsView,
+  'Legs (Quads focus)': FrontLegs,
   'Hamstrings / Glutes': BackLegs,
-  'Calves':              BackLegs,
-  'Core / Abs':          AbsView,
+  Calves: BackLegs,
+  'Core / Abs': AbsView,
 };
 
 const MUSCLE_ACTIVE: Record<string, MapMuscle[]> = {
-  'Chest':               ['chest'],
-  'Back':                ['lats', 'rhomboids', 'traps', 'lower_back'],
-  'Shoulders':           ['shoulders'],
-  'Biceps':              ['biceps'],
-  'Triceps':             ['triceps'],
-  'Legs (Quads focus)':  ['quads', 'hip_flexors'],
+  Chest: ['chest'],
+  Back: ['lats', 'rhomboids', 'traps', 'lower_back'],
+  Shoulders: ['shoulders'],
+  Biceps: ['biceps'],
+  Triceps: ['triceps'],
+  'Legs (Quads focus)': ['quads', 'hip_flexors'],
   'Hamstrings / Glutes': ['hamstrings', 'glutes'],
-  'Calves':              ['calves'],
-  'Core / Abs':          ['upper_abs', 'lower_abs', 'obliques'],
+  Calves: ['calves'],
+  'Core / Abs': ['upper_abs', 'lower_abs', 'obliques'],
 };
 
 const ExercisesPage = () => {
@@ -55,18 +60,14 @@ const ExercisesPage = () => {
   const { accent } = useTheme();
   const highlightColor = accent === 'auburn' ? '#c65a1e' : '#10b981';
   const [searchParams] = useSearchParams();
-  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<
-    MuscleGroup | null
-  >(null);
-  const [selectedEquipment, setSelectedEquipment] = useState<Set<Equipment>>(
-    new Set()
+  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<MuscleGroup | null>(
+    null,
   );
-  const [selectedMovementType, setSelectedMovementType] = useState<
-    Set<string>
-  >(new Set());
-  const [selectedExercises, setSelectedExercises] = useState<Set<string>>(
-    new Set()
+  const [selectedEquipment, setSelectedEquipment] = useState<Set<Equipment>>(new Set());
+  const [selectedMovementType, setSelectedMovementType] = useState<Set<string>>(
+    new Set(),
   );
+  const [selectedExercises, setSelectedExercises] = useState<Set<string>>(new Set());
   const [isAdding, setIsAdding] = useState(false);
 
   // Data for program/workout selection
@@ -79,10 +80,11 @@ const ExercisesPage = () => {
   const paramProgramId = searchParams.get('programId');
   const paramWorkoutId = searchParams.get('workoutId');
   const paramWorkoutName = searchParams.get('workoutName');
-  
+
   // Use selected from dropdowns if available, otherwise use query params
   const activeWorkoutId = selectedWorkout || paramWorkoutId;
-  const activeWorkoutName = workouts.find(w => w.id === selectedWorkout)?.name || paramWorkoutName;
+  const activeWorkoutName =
+    workouts.find((w) => w.id === selectedWorkout)?.name || paramWorkoutName;
   const activeProgramId = selectedProgram || paramProgramId;
   const isActiveWorkout = !!activeWorkoutId;
 
@@ -94,7 +96,7 @@ const ExercisesPage = () => {
       try {
         const data = await api.getPrograms();
         setPrograms(data);
-        
+
         // Auto-select if only 1 program, unless param was provided
         if (data.length === 1 && !paramProgramId) {
           setSelectedProgram(data[0].id);
@@ -120,11 +122,11 @@ const ExercisesPage = () => {
       try {
         const data = await api.getWorkouts(selectedProgram);
         setWorkouts(data);
-        
+
         // Auto-select if only 1 workout, unless param was provided
         if (data.length === 1 && !paramWorkoutId) {
           setSelectedWorkout(data[0].id);
-        } else if (paramWorkoutId && data.some(w => w.id === paramWorkoutId)) {
+        } else if (paramWorkoutId && data.some((w) => w.id === paramWorkoutId)) {
           setSelectedWorkout(paramWorkoutId);
         } else {
           setSelectedWorkout('');
@@ -140,12 +142,12 @@ const ExercisesPage = () => {
   let filteredExercises = exercises;
   if (selectedMuscleGroup) {
     filteredExercises = filteredExercises.filter(
-      (e) => e.muscleGroup === selectedMuscleGroup
+      (e) => e.muscleGroup === selectedMuscleGroup,
     );
   }
   if (selectedEquipment.size > 0) {
     filteredExercises = filteredExercises.filter((e) =>
-      selectedEquipment.has(e.equipment)
+      selectedEquipment.has(e.equipment),
     );
   }
   if (selectedMovementType.size > 0) {
@@ -193,7 +195,7 @@ const ExercisesPage = () => {
     try {
       const selectedExerciseIds = Array.from(selectedExercises);
       const selectedExerciseList = exercises.filter((e) =>
-        selectedExerciseIds.includes(e.id)
+        selectedExerciseIds.includes(e.id),
       );
 
       for (const ex of selectedExerciseList) {
@@ -216,7 +218,9 @@ const ExercisesPage = () => {
     <div className="exercises-page">
       {isActiveWorkout && (
         <div className="active-workout-banner">
-          <p>Active workout: <strong>{activeWorkoutName}</strong></p>
+          <p>
+            Active workout: <strong>{activeWorkoutName}</strong>
+          </p>
         </div>
       )}
 

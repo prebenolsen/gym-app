@@ -86,7 +86,10 @@ const ExerciseProgressPage = () => {
     }
   });
 
-  const personalBest = data.history.reduce((max, entry) => Math.max(max, entry.max_weight), 0);
+  const personalBest = data.history.reduce(
+    (max, entry) => Math.max(max, entry.max_weight),
+    0,
+  );
   const totalTimesExercised = data.history.length;
   const totalRepetitions = data.history.reduce((sum, entry) => sum + entry.total_reps, 0);
   const totalSets = data.history.reduce((sum, entry) => sum + entry.sets, 0);

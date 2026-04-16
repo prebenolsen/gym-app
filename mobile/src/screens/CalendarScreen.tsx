@@ -56,7 +56,11 @@ type CalendarDayCell = {
 const getCalendarCells = (monthDate: Date): CalendarDayCell[] => {
   const firstOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
   const startOffset = firstOfMonth.getDay();
-  const gridStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1 - startOffset);
+  const gridStart = new Date(
+    monthDate.getFullYear(),
+    monthDate.getMonth(),
+    1 - startOffset,
+  );
 
   return Array.from({ length: 42 }).map((_, idx) => {
     const date = new Date(gridStart);
@@ -85,7 +89,7 @@ const CalendarScreen = ({ navigation }: any) => {
 
   const workoutsForSelectedDay = useMemo(
     () => workouts.filter((entry) => entry.started_at.slice(0, 10) === selectedDayKey),
-    [workouts, selectedDayKey]
+    [workouts, selectedDayKey],
   );
 
   const loadWorkouts = async (date: Date) => {
@@ -114,7 +118,10 @@ const CalendarScreen = ({ navigation }: any) => {
       const endDate = new Date(endOfMonth);
       endDate.setDate(endDate.getDate() + 7);
 
-      const dates = await api.getDatesWithWorkouts(toDateKey(startDate), toDateKey(endDate));
+      const dates = await api.getDatesWithWorkouts(
+        toDateKey(startDate),
+        toDateKey(endDate),
+      );
       setDatesWithWorkouts(new Set(dates));
     } catch (err) {
       console.error('Failed to load dates with workouts:', err);
@@ -221,11 +228,15 @@ const CalendarScreen = ({ navigation }: any) => {
               <TouchableOpacity
                 key={item.id}
                 style={styles.historyItem}
-                onPress={() => navigation.navigate('WorkoutHistoryDetail', { sessionId: item.id })}
+                onPress={() =>
+                  navigation.navigate('WorkoutHistoryDetail', { sessionId: item.id })
+                }
               >
                 <Text style={styles.workoutName}>{item.workout_name}</Text>
                 <Text style={styles.metaText}>Start: {formatTime(item.started_at)}</Text>
-                {item.ended_at ? <Text style={styles.metaText}>End: {formatTime(item.ended_at)}</Text> : null}
+                {item.ended_at ? (
+                  <Text style={styles.metaText}>End: {formatTime(item.ended_at)}</Text>
+                ) : null}
                 <Text style={styles.metaText}>
                   Duration: {formatDuration(item.started_at, item.ended_at)}
                 </Text>
@@ -238,163 +249,164 @@ const CalendarScreen = ({ navigation }: any) => {
   );
 };
 
-const createStyles = (themeColors: typeof colors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: themeColors.background,
-  },
-  header: {
-    backgroundColor: themeColors.surface,
-    borderBottomColor: themeColors.border,
-    borderBottomWidth: 1,
-    padding: 16,
-  },
-  title: {
-    color: themeColors.textStrong,
-    fontSize: 22,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  monthRow: {
-    marginTop: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  monthLabel: {
-    color: themeColors.textStrong,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  monthButton: {
-    borderColor: themeColors.border,
-    borderWidth: 1,
-    borderRadius: radius.sm,
-    backgroundColor: themeColors.background,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  monthButtonText: {
-    color: themeColors.textStrong,
-    fontWeight: '700',
-  },
-  calendarCard: {
-    backgroundColor: themeColors.surface,
-    borderColor: themeColors.border,
-    borderWidth: 1,
-    borderRadius: radius.md,
-    padding: 10,
-    marginBottom: 14,
-    ...shadow.card,
-  },
-  weekdaysRow: {
-    flexDirection: 'row',
-    marginBottom: 6,
-  },
-  weekdayText: {
-    flex: 1,
-    textAlign: 'center',
-    color: themeColors.textMuted,
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  daysGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    rowGap: 6,
-  },
-  dayCell: {
-    width: '14.2857%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    borderRadius: radius.sm,
-    minHeight: 42,
-  },
-  dayCellOutside: {
-    opacity: 0.5,
-  },
-  dayCellSelected: {
-    backgroundColor: themeColors.accentSoft,
-    borderColor: themeColors.accent,
-    borderWidth: 1,
-  },
-  dayCellText: {
-    color: themeColors.textStrong,
-    fontWeight: '600',
-    fontSize: 12,
-  },
-  dayCellTextOutside: {
-    color: themeColors.textMuted,
-  },
-  dayCellTextSelected: {
-    color: themeColors.accent,
-    fontWeight: '700',
-  },
-  workoutDot: {
-    marginTop: 3,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: themeColors.accent,
-  },
-  list: {
-    flex: 1,
-    padding: 16,
-  },
-  listHeaderBlock: {
-    marginBottom: 10,
-    gap: 3,
-  },
-  listTitle: {
-    color: themeColors.textStrong,
-    fontSize: 16,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  listSubtitle: {
-    color: themeColors.textMuted,
-    fontSize: 12,
-    textTransform: 'uppercase',
-  },
-  historyItem: {
-    backgroundColor: themeColors.surface,
-    borderColor: themeColors.border,
-    borderWidth: 1,
-    borderRadius: radius.md,
-    padding: 14,
-    marginBottom: 10,
-    ...shadow.card,
-  },
-  workoutName: {
-    color: themeColors.textStrong,
-    fontWeight: '700',
-    marginBottom: 6,
-    textTransform: 'uppercase',
-  },
-  metaText: {
-    color: themeColors.textMuted,
-    textTransform: 'uppercase',
-    fontSize: 12,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  emptyBlock: {
-    backgroundColor: themeColors.surface,
-    borderColor: themeColors.border,
-    borderWidth: 1,
-    borderRadius: radius.md,
-    padding: 14,
-  },
-  emptyText: {
-    color: themeColors.textMuted,
-    textTransform: 'uppercase',
-  },
-});
+const createStyles = (themeColors: typeof colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+    },
+    header: {
+      backgroundColor: themeColors.surface,
+      borderBottomColor: themeColors.border,
+      borderBottomWidth: 1,
+      padding: 16,
+    },
+    title: {
+      color: themeColors.textStrong,
+      fontSize: 22,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    monthRow: {
+      marginTop: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    monthLabel: {
+      color: themeColors.textStrong,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    monthButton: {
+      borderColor: themeColors.border,
+      borderWidth: 1,
+      borderRadius: radius.sm,
+      backgroundColor: themeColors.background,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    monthButtonText: {
+      color: themeColors.textStrong,
+      fontWeight: '700',
+    },
+    calendarCard: {
+      backgroundColor: themeColors.surface,
+      borderColor: themeColors.border,
+      borderWidth: 1,
+      borderRadius: radius.md,
+      padding: 10,
+      marginBottom: 14,
+      ...shadow.card,
+    },
+    weekdaysRow: {
+      flexDirection: 'row',
+      marginBottom: 6,
+    },
+    weekdayText: {
+      flex: 1,
+      textAlign: 'center',
+      color: themeColors.textMuted,
+      fontSize: 11,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    daysGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      rowGap: 6,
+    },
+    dayCell: {
+      width: '14.2857%',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+      borderRadius: radius.sm,
+      minHeight: 42,
+    },
+    dayCellOutside: {
+      opacity: 0.5,
+    },
+    dayCellSelected: {
+      backgroundColor: themeColors.accentSoft,
+      borderColor: themeColors.accent,
+      borderWidth: 1,
+    },
+    dayCellText: {
+      color: themeColors.textStrong,
+      fontWeight: '600',
+      fontSize: 12,
+    },
+    dayCellTextOutside: {
+      color: themeColors.textMuted,
+    },
+    dayCellTextSelected: {
+      color: themeColors.accent,
+      fontWeight: '700',
+    },
+    workoutDot: {
+      marginTop: 3,
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: themeColors.accent,
+    },
+    list: {
+      flex: 1,
+      padding: 16,
+    },
+    listHeaderBlock: {
+      marginBottom: 10,
+      gap: 3,
+    },
+    listTitle: {
+      color: themeColors.textStrong,
+      fontSize: 16,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    listSubtitle: {
+      color: themeColors.textMuted,
+      fontSize: 12,
+      textTransform: 'uppercase',
+    },
+    historyItem: {
+      backgroundColor: themeColors.surface,
+      borderColor: themeColors.border,
+      borderWidth: 1,
+      borderRadius: radius.md,
+      padding: 14,
+      marginBottom: 10,
+      ...shadow.card,
+    },
+    workoutName: {
+      color: themeColors.textStrong,
+      fontWeight: '700',
+      marginBottom: 6,
+      textTransform: 'uppercase',
+    },
+    metaText: {
+      color: themeColors.textMuted,
+      textTransform: 'uppercase',
+      fontSize: 12,
+    },
+    centered: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 20,
+    },
+    emptyBlock: {
+      backgroundColor: themeColors.surface,
+      borderColor: themeColors.border,
+      borderWidth: 1,
+      borderRadius: radius.md,
+      padding: 14,
+    },
+    emptyText: {
+      color: themeColors.textMuted,
+      textTransform: 'uppercase',
+    },
+  });
 
 export default CalendarScreen;

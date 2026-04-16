@@ -43,7 +43,9 @@
   padding: 11px 14px;
   color: var(--color-text-muted);
   border-radius: var(--radius-sm);
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
   text-decoration: none;
   font-size: 14px;
   font-weight: 600;

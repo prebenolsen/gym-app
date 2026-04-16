@@ -1,6 +1,9 @@
 type ToneKind = 'countdown' | 'complete' | 'prepare';
 
-const toneConfig: Record<ToneKind, { frequency: number; durationMs: number; gain: number }> = {
+const toneConfig: Record<
+  ToneKind,
+  { frequency: number; durationMs: number; gain: number }
+> = {
   countdown: { frequency: 720, durationMs: 110, gain: 0.05 },
   complete: { frequency: 980, durationMs: 150, gain: 0.06 },
   prepare: { frequency: 560, durationMs: 130, gain: 0.05 },

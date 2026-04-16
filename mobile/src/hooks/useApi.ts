@@ -10,9 +10,7 @@ const FALLBACK_API_BASE_URL =
 const LOCALHOST_URL_PATTERN = /^https?:\/\/(localhost|127\.0\.0\.1)(?::\d+)?/i;
 
 const getMetroHost = (): string | null => {
-  const scriptURL = (NativeModules as any)?.SourceCode?.scriptURL as
-    | string
-    | undefined;
+  const scriptURL = (NativeModules as any)?.SourceCode?.scriptURL as string | undefined;
   if (!scriptURL) {
     return null;
   }
@@ -49,7 +47,7 @@ export const useApi = () => {
     if (Platform.OS === 'android' && isLocalhostUrl(API_BASE_URL)) {
       console.info(
         'Android USB debugging mode detected. Ensure adb reverse is active: ' +
-          '`adb reverse tcp:3000 tcp:3000` and `adb reverse tcp:8081 tcp:8081`.'
+          '`adb reverse tcp:3000 tcp:3000` and `adb reverse tcp:8081 tcp:8081`.',
       );
     }
   }, []);
@@ -73,6 +71,6 @@ export const useApi = () => {
 
         return data.session?.access_token ?? null;
       }),
-    [session?.access_token]
+    [session?.access_token],
   );
 };

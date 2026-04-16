@@ -44,7 +44,9 @@ const LoginPage = () => {
           return;
         }
 
-        setMessage('Account created. If email confirmation is required, check your inbox.');
+        setMessage(
+          'Account created. If email confirmation is required, check your inbox.',
+        );
         setMode('login');
       } else {
         await signIn(email.trim(), password);
@@ -65,9 +67,12 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email.trim(),
+        {
+          redirectTo: `${window.location.origin}/reset-password`,
+        },
+      );
 
       if (resetError) {
         throw resetError;
@@ -93,7 +98,10 @@ const LoginPage = () => {
           />
         </div>
 
-        <form onSubmit={mode === 'forgot' ? handleForgotPassword : handleAuth} className="auth-form">
+        <form
+          onSubmit={mode === 'forgot' ? handleForgotPassword : handleAuth}
+          className="auth-form"
+        >
           <label>
             Email
             <input
@@ -138,10 +146,10 @@ const LoginPage = () => {
             {loading
               ? 'Please wait...'
               : mode === 'login'
-              ? 'Sign In'
-              : mode === 'signup'
-              ? 'Create Account'
-              : 'Send Reset Email'}
+                ? 'Sign In'
+                : mode === 'signup'
+                  ? 'Create Account'
+                  : 'Send Reset Email'}
           </button>
         </form>
 

@@ -85,12 +85,14 @@ gym/
 ### 🌐 Web App (`/web` → http://localhost:5173)
 
 **Pages:**
+
 1. **HomePage** — Shows stats (total programs/workouts/exercises)
 2. **ProgramsPage** — List of all programs with create button
 3. **ProgramDetailPage** — View specific program, manage workouts
 4. **WorkoutDetailPage** ⭐ — Core feature: Add/manage exercises with sets & rest timer
 
 **Features:**
+
 - Responsive design (desktop + tablet)
 - Click program name to edit
 - Click workout name to edit
@@ -100,12 +102,14 @@ gym/
 ### 📱 Mobile App (`/mobile` → via Expo)
 
 **Screens:**
+
 - HomeScreen (stats)
 - ProgramsScreen (program list)
 - ProgramDetailScreen (workouts)
 - WorkoutDetailScreen (exercises) ⭐
 
 **Features:**
+
 - Touch-friendly UI
 - Tab navigator (Home + Programs)
 - Stack navigation for detail views
@@ -115,6 +119,7 @@ gym/
 ### ⚙️ Backend API (`/backend` → http://localhost:3000)
 
 **Endpoints:**
+
 ```
 GET    /programs                    # List all programs
 POST   /programs                    # Create program (default name: "Program 01")
@@ -142,6 +147,7 @@ GET    /health                      # Health check
 ## Data Model
 
 ### Program (UUID stored, displayed as "Program 01")
+
 ```typescript
 {
   id: string (UUID)
@@ -153,6 +159,7 @@ GET    /health                      # Health check
 ```
 
 ### Workout (UUID, defaults to "Workout 01")
+
 ```typescript
 {
   id: string (UUID)
@@ -165,6 +172,7 @@ GET    /health                      # Health check
 ```
 
 ### Exercise (Fully customizable)
+
 ```typescript
 {
   id: string (UUID)
@@ -183,28 +191,33 @@ GET    /health                      # Health check
 ## Key Implementation Details
 
 ### 1. **Shared API Client** (`/shared/src/api.ts`)
+
 - Single source of truth for all HTTP calls
 - Used by both web and mobile
 - Handles error checking, JSON parsing
 - Methods: `getPrograms()`, `createProgram()`, `updateExercise()`, etc.
 
 ### 2. **Backend Error Handling**
+
 - All routes wrapped in try-catch
 - Returns 500 with error message on failure
 - Cascading deletes (delete program → delete workouts → delete exercises)
 - User isolation (all queries filtered by `user_id`)
 
 ### 3. **Ordering System**
+
 - Auto-increment `order` column when creating
 - Reorder PATCH endpoints update order values
 - Database constraints ensure unique (user_id, order) pairs
 
 ### 4. **Database Cascade**
+
 - Delete program → Deletes all associated workouts & exercises
 - Delete workout → Deletes all associated exercises
 - Prevents orphaned data
 
 ### 5. **Mock User (MVP)**
+
 - Hardcoded `user_id = "user_mock_mvp"` in backend
 - All queries filtered: `.eq('user_id', MOCK_USER_ID)`
 - Real auth coming in v2
@@ -214,6 +227,7 @@ GET    /health                      # Health check
 ## How It Works: End-to-End Flow
 
 ### User Creates a Program
+
 1. User clicks **"+ Create Program"** on ProgramsPage
 2. Web app calls: `API.createProgram()` (no name, uses default)
 3. ApiClient sends: `POST /programs { name: "Program 01" }`
@@ -223,6 +237,7 @@ GET    /health                      # Health check
 7. Card displays with name and "View"/"Delete" buttons
 
 ### User Adds an Exercise to a Workout
+
 1. User enters name "Bench Press" and clicks **"+ Add Exercise"**
 2. Web app calls: `API.createExercise(workoutId, { name: "Bench Press", sets: 1, rest_seconds: 120 })`
 3. Backend creates row in `exercises` table with defaults
@@ -233,6 +248,7 @@ GET    /health                      # Health check
    - Reorder buttons (▲/▼)
 
 ### User Reorders Exercises
+
 1. User clicks **▼** on first exercise
 2. Web app swaps order array: `[ex1, ex2, ex3]` → `[ex2, ex1, ex3]`
 3. Sends: `PATCH /workouts/123/exercises/reorder { items: [{id: ex2.id, order: 1}, {id: ex1.id, order: 2}, ...] }`
@@ -240,6 +256,7 @@ GET    /health                      # Health check
 5. UI re-renders with new order
 
 ### User Views Dashboard
+
 1. User clicks **"Home"**
 2. Web app calls: `API.getStats()`
 3. Backend counts:
@@ -253,17 +270,17 @@ GET    /health                      # Health check
 
 ## Technology Decisions
 
-| Layer | Tech | Why |
-|-------|------|-----|
-| Frontend (Web) | React + TypeScript | Industry standard, component reusability |
-| Frontend (Mobile) | React Native + Expo | Share code with web, faster development |
-| Backend | Node.js + Express | JavaScript everywhere, lightweight, perfect for MVP |
-| Database | Supabase (PostgreSQL) | Managed, built-in REST API, free tier generous |
-| Build (Web) | Vite | Fast dev server, instant HMR |
-| Build (Mobile) | Expo | Zero-config, web + iOS + Android |
-| State (Frontend) | React hooks | Simple, built-in, no extra dependencies |
-| API Calls | Fetch API | No dependencies, native browser/RN support |
-| Types | TypeScript | Shared types across web/mobile/backend |
+| Layer             | Tech                  | Why                                                 |
+| ----------------- | --------------------- | --------------------------------------------------- |
+| Frontend (Web)    | React + TypeScript    | Industry standard, component reusability            |
+| Frontend (Mobile) | React Native + Expo   | Share code with web, faster development             |
+| Backend           | Node.js + Express     | JavaScript everywhere, lightweight, perfect for MVP |
+| Database          | Supabase (PostgreSQL) | Managed, built-in REST API, free tier generous      |
+| Build (Web)       | Vite                  | Fast dev server, instant HMR                        |
+| Build (Mobile)    | Expo                  | Zero-config, web + iOS + Android                    |
+| State (Frontend)  | React hooks           | Simple, built-in, no extra dependencies             |
+| API Calls         | Fetch API             | No dependencies, native browser/RN support          |
+| Types             | TypeScript            | Shared types across web/mobile/backend              |
 
 ---
 
@@ -299,26 +316,26 @@ GET    /health                      # Health check
 
 ## Files to Modify for Customization
 
-| File | Change | Use Case |
-|------|--------|----------|
-| `/shared/src/types.ts` | Add new fields to Program/Workout/Exercise | New features (e.g., difficulty level) |
-| `/backend/src/index.ts` | Add new routes | New API endpoints |
-| `/web/src/pages/HomePage.tsx` | Modify stats display | Different dashboard layout |
-| `/mobile/src/App.tsx` | Change navigation type | Add drawer vs tabs navigation |
-| `/web/src/components/NumberSpinner.tsx` | Change button styles | Custom branding |
+| File                                    | Change                                     | Use Case                              |
+| --------------------------------------- | ------------------------------------------ | ------------------------------------- |
+| `/shared/src/types.ts`                  | Add new fields to Program/Workout/Exercise | New features (e.g., difficulty level) |
+| `/backend/src/index.ts`                 | Add new routes                             | New API endpoints                     |
+| `/web/src/pages/HomePage.tsx`           | Modify stats display                       | Different dashboard layout            |
+| `/mobile/src/App.tsx`                   | Change navigation type                     | Add drawer vs tabs navigation         |
+| `/web/src/components/NumberSpinner.tsx` | Change button styles                       | Custom branding                       |
 
 ---
 
 ## Troubleshooting Quick Reference
 
-| Error | Solution |
-|-------|----------|
+| Error                                | Solution                                 |
+| ------------------------------------ | ---------------------------------------- |
 | "Cannot find module @gym-app/shared" | `npm run shared:build` → Restart backend |
-| "Connection refused localhost:3000" | Start backend: `npm run backend:dev` |
-| "SUPABASE_URL is not defined" | Create `.env` in root with credentials |
-| "Table does not exist" | Re-run SQL schema in Supabase SQL Editor |
-| "Port 3000 in use" | Change `PORT=3001` in `.env` |
-| "Cannot connect to Supabase" | Verify URL and keys in `.env` |
+| "Connection refused localhost:3000"  | Start backend: `npm run backend:dev`     |
+| "SUPABASE_URL is not defined"        | Create `.env` in root with credentials   |
+| "Table does not exist"               | Re-run SQL schema in Supabase SQL Editor |
+| "Port 3000 in use"                   | Change `PORT=3001` in `.env`             |
+| "Cannot connect to Supabase"         | Verify URL and keys in `.env`            |
 
 ---
 

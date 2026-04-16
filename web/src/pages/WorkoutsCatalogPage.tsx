@@ -16,7 +16,9 @@ const WorkoutsCatalogPage = () => {
   if (!programId) {
     return (
       <div className="workouts-catalog-page">
-        <div className="error-message">Invalid program. Please go back and try again.</div>
+        <div className="error-message">
+          Invalid program. Please go back and try again.
+        </div>
       </div>
     );
   }
@@ -25,7 +27,9 @@ const WorkoutsCatalogPage = () => {
     setImporting(templateId);
     setError(null);
     try {
-      const template = WORKOUT_TEMPLATES.find((t: WorkoutTemplate) => t.id === templateId);
+      const template = WORKOUT_TEMPLATES.find(
+        (t: WorkoutTemplate) => t.id === templateId,
+      );
       if (!template) {
         throw new Error('Template not found');
       }
@@ -48,11 +52,17 @@ const WorkoutsCatalogPage = () => {
     <div className="workouts-catalog-page">
       <div className="catalog-header">
         <h1>Workout Templates</h1>
-        <p className="catalog-subtitle">Choose a workout template to add to your program</p>
+        <p className="catalog-subtitle">
+          Choose a workout template to add to your program
+        </p>
       </div>
 
       {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">Workout imported successfully! Redirecting...</div>}
+      {success && (
+        <div className="success-message">
+          Workout imported successfully! Redirecting...
+        </div>
+      )}
 
       <div className="templates-grid">
         {WORKOUT_TEMPLATES.map((template: WorkoutTemplate) => (
@@ -65,9 +75,7 @@ const WorkoutsCatalogPage = () => {
             <p className="template-description">{template.description}</p>
 
             <div className="template-exercises">
-              <h3 className="exercises-title">
-                {template.exercises.length} Exercises
-              </h3>
+              <h3 className="exercises-title">{template.exercises.length} Exercises</h3>
               <ul className="exercises-list">
                 {template.exercises.map((exercise, idx) => (
                   <li key={idx} className="exercise-item">

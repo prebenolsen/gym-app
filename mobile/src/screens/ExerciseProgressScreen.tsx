@@ -65,9 +65,10 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
 
     const stride = Math.max(1, Math.ceil(history.length / 6));
     return history.map((entry, idx) => {
-      const rawValue = viewMode === 'max-weight'
-        ? convertFromKg(entry.max_weight)
-        : convertFromKg(entry.total_volume);
+      const rawValue =
+        viewMode === 'max-weight'
+          ? convertFromKg(entry.max_weight)
+          : convertFromKg(entry.total_volume);
       const showLabel = idx % stride === 0 || idx === history.length - 1;
 
       return {
@@ -122,7 +123,8 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
         </TouchableOpacity>
         <Text style={styles.title}>{data.exercise_name}</Text>
         <Text style={styles.personalBest}>
-          Personal Best: <Text style={styles.personalBestValue}>{formatWeight(personalBest)}</Text>
+          Personal Best:{' '}
+          <Text style={styles.personalBestValue}>{formatWeight(personalBest)}</Text>
         </Text>
       </View>
 
@@ -130,21 +132,33 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
         {/* Toggle */}
         <View style={styles.toggle}>
           <TouchableOpacity
-            style={[styles.toggleBtn, viewMode === 'max-weight' && styles.toggleBtnActive]}
+            style={[
+              styles.toggleBtn,
+              viewMode === 'max-weight' && styles.toggleBtnActive,
+            ]}
             onPress={() => setViewMode('max-weight')}
           >
             <Text
-              style={[styles.toggleBtnText, viewMode === 'max-weight' && styles.toggleBtnTextActive]}
+              style={[
+                styles.toggleBtnText,
+                viewMode === 'max-weight' && styles.toggleBtnTextActive,
+              ]}
             >
               Max Weight
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.toggleBtn, viewMode === 'total-volume' && styles.toggleBtnActive]}
+            style={[
+              styles.toggleBtn,
+              viewMode === 'total-volume' && styles.toggleBtnActive,
+            ]}
             onPress={() => setViewMode('total-volume')}
           >
             <Text
-              style={[styles.toggleBtnText, viewMode === 'total-volume' && styles.toggleBtnTextActive]}
+              style={[
+                styles.toggleBtnText,
+                viewMode === 'total-volume' && styles.toggleBtnTextActive,
+              ]}
             >
               Total Volume
             </Text>
@@ -152,7 +166,11 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
         </View>
 
         <View style={styles.rangeSection}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rangeRow}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.rangeRow}
+          >
             {RANGE_OPTIONS.map((option) => {
               const active = range === option.key;
               return (
@@ -161,7 +179,11 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
                   style={[styles.rangeChip, active && styles.rangeChipActive]}
                   onPress={() => setRange(option.key)}
                 >
-                  <Text style={[styles.rangeChipText, active && styles.rangeChipTextActive]}>{option.label}</Text>
+                  <Text
+                    style={[styles.rangeChipText, active && styles.rangeChipTextActive]}
+                  >
+                    {option.label}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
@@ -184,17 +206,25 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
           </View>
           <View style={styles.metricCard}>
             <Text style={styles.metricLabel}>Total Volume</Text>
-            <Text style={styles.metricValue}>{Math.round(convertFromKg(totalVolume))} {unit}</Text>
+            <Text style={styles.metricValue}>
+              {Math.round(convertFromKg(totalVolume))} {unit}
+            </Text>
           </View>
         </View>
 
         {/* Graph visualization */}
         <View style={styles.chartSection}>
           <Text style={styles.sectionTitle}>
-            {viewMode === 'max-weight' ? 'Max Weight Over Time' : 'Total Volume Over Time'}
+            {viewMode === 'max-weight'
+              ? 'Max Weight Over Time'
+              : 'Total Volume Over Time'}
           </Text>
           {hasHistory ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chartScrollContent}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chartScrollContent}
+            >
               <LineChart
                 data={chartData}
                 width={Math.max(chartWidth, chartData.length * 38)}
@@ -237,17 +267,32 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
           {hasHistory ? (
             <>
               <View style={styles.tableHeader}>
-                <Text style={[styles.tableCell, styles.tableHeaderText, { flex: 1.5 }]}>Date</Text>
-                <Text style={[styles.tableCell, styles.tableHeaderText]}>Max ({unit})</Text>
-                <Text style={[styles.tableCell, styles.tableHeaderText]}>Vol ({unit})</Text>
+                <Text style={[styles.tableCell, styles.tableHeaderText, { flex: 1.5 }]}>
+                  Date
+                </Text>
+                <Text style={[styles.tableCell, styles.tableHeaderText]}>
+                  Max ({unit})
+                </Text>
+                <Text style={[styles.tableCell, styles.tableHeaderText]}>
+                  Vol ({unit})
+                </Text>
                 <Text style={[styles.tableCell, styles.tableHeaderText]}>Sets</Text>
                 <Text style={[styles.tableCell, styles.tableHeaderText]}>Reps</Text>
               </View>
               {data.history.map((entry, idx) => (
-                <View key={idx} style={[styles.tableRow, idx % 2 === 0 && styles.tableRowEven]}>
-                  <Text style={[styles.tableCell, { flex: 1.5 }]}>{entry.date.slice(5)}</Text>
-                  <Text style={styles.tableCell}>{convertFromKg(entry.max_weight).toFixed(1)}</Text>
-                  <Text style={styles.tableCell}>{Math.round(convertFromKg(entry.total_volume))}</Text>
+                <View
+                  key={idx}
+                  style={[styles.tableRow, idx % 2 === 0 && styles.tableRowEven]}
+                >
+                  <Text style={[styles.tableCell, { flex: 1.5 }]}>
+                    {entry.date.slice(5)}
+                  </Text>
+                  <Text style={styles.tableCell}>
+                    {convertFromKg(entry.max_weight).toFixed(1)}
+                  </Text>
+                  <Text style={styles.tableCell}>
+                    {Math.round(convertFromKg(entry.total_volume))}
+                  </Text>
                   <Text style={styles.tableCell}>{entry.sets}</Text>
                   <Text style={styles.tableCell}>{entry.total_reps}</Text>
                 </View>
@@ -262,201 +307,202 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
   );
 };
 
-const createStyles = (themeColors: typeof colors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: themeColors.background,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: themeColors.background,
-  },
-  header: {
-    backgroundColor: themeColors.surface,
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: themeColors.border,
-    gap: 4,
-  },
-  backBtn: {
-    marginBottom: 4,
-  },
-  backBtnText: {
-    color: themeColors.accent,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: themeColors.textStrong,
-    textTransform: 'uppercase',
-  },
-  personalBest: {
-    fontSize: 13,
-    color: themeColors.textMuted,
-    marginTop: 2,
-  },
-  personalBestValue: {
-    color: themeColors.accent,
-    fontWeight: 'bold',
-  },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
-  emptyState: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-  },
-  emptyText: {
-    fontSize: 15,
-    color: themeColors.textMuted,
-    textAlign: 'center',
-  },
-  toggle: {
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    borderRadius: radius.sm,
-    overflow: 'hidden',
-    marginBottom: 16,
-  },
-  toggleBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    backgroundColor: themeColors.surface,
-  },
-  toggleBtnActive: {
-    backgroundColor: themeColors.accent,
-  },
-  toggleBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: themeColors.textMuted,
-  },
-  toggleBtnTextActive: {
-    color: '#fff',
-  },
-  rangeSection: {
-    marginBottom: 16,
-  },
-  rangeRow: {
-    gap: 8,
-    paddingRight: 4,
-  },
-  rangeChip: {
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    backgroundColor: themeColors.surface,
-    borderRadius: radius.pill,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  rangeChipActive: {
-    borderColor: themeColors.accent,
-    backgroundColor: themeColors.accent,
-  },
-  rangeChipText: {
-    color: themeColors.textMuted,
-    fontWeight: '700',
-    fontSize: 12,
-    textTransform: 'uppercase',
-  },
-  rangeChipTextActive: {
-    color: '#fff',
-  },
-  metricsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 20,
-  },
-  metricCard: {
-    width: '47%',
-    backgroundColor: themeColors.surface,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    padding: 12,
-    alignItems: 'center',
-    ...shadow.card,
-  },
-  metricLabel: {
-    fontSize: 11,
-    color: themeColors.textMuted,
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  metricValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: themeColors.accent,
-  },
-  chartSection: {
-    backgroundColor: themeColors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    padding: 16,
-    marginBottom: 20,
-    ...shadow.card,
-  },
-  chartScrollContent: {
-    paddingRight: 8,
-  },
-  emptyGraphText: {
-    color: themeColors.textMuted,
-    fontSize: 13,
-    textAlign: 'center',
-    paddingVertical: 24,
-    textTransform: 'uppercase',
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: themeColors.textStrong,
-    textTransform: 'uppercase',
-    marginBottom: 12,
-  },
-  historySection: {
-    backgroundColor: themeColors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    padding: 16,
-    marginBottom: 32,
-    ...shadow.card,
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: themeColors.border,
-    paddingBottom: 8,
-    marginBottom: 4,
-  },
-  tableHeaderText: {
-    fontWeight: '700',
-    color: themeColors.textStrong,
-  },
-  tableRow: {
-    flexDirection: 'row',
-    paddingVertical: 6,
-  },
-  tableRowEven: {
-    backgroundColor: themeColors.accentSoft,
-  },
-  tableCell: {
-    flex: 1,
-    fontSize: 12,
-    color: themeColors.textMuted,
-    textAlign: 'center',
-  },
-});
+const createStyles = (themeColors: typeof colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+    },
+    centered: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: themeColors.background,
+    },
+    header: {
+      backgroundColor: themeColors.surface,
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+      gap: 4,
+    },
+    backBtn: {
+      marginBottom: 4,
+    },
+    backBtnText: {
+      color: themeColors.accent,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: themeColors.textStrong,
+      textTransform: 'uppercase',
+    },
+    personalBest: {
+      fontSize: 13,
+      color: themeColors.textMuted,
+      marginTop: 2,
+    },
+    personalBestValue: {
+      color: themeColors.accent,
+      fontWeight: 'bold',
+    },
+    content: {
+      flex: 1,
+      padding: 16,
+    },
+    emptyState: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 32,
+    },
+    emptyText: {
+      fontSize: 15,
+      color: themeColors.textMuted,
+      textAlign: 'center',
+    },
+    toggle: {
+      flexDirection: 'row',
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: radius.sm,
+      overflow: 'hidden',
+      marginBottom: 16,
+    },
+    toggleBtn: {
+      flex: 1,
+      paddingVertical: 10,
+      alignItems: 'center',
+      backgroundColor: themeColors.surface,
+    },
+    toggleBtnActive: {
+      backgroundColor: themeColors.accent,
+    },
+    toggleBtnText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: themeColors.textMuted,
+    },
+    toggleBtnTextActive: {
+      color: '#fff',
+    },
+    rangeSection: {
+      marginBottom: 16,
+    },
+    rangeRow: {
+      gap: 8,
+      paddingRight: 4,
+    },
+    rangeChip: {
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      backgroundColor: themeColors.surface,
+      borderRadius: radius.pill,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    rangeChipActive: {
+      borderColor: themeColors.accent,
+      backgroundColor: themeColors.accent,
+    },
+    rangeChipText: {
+      color: themeColors.textMuted,
+      fontWeight: '700',
+      fontSize: 12,
+      textTransform: 'uppercase',
+    },
+    rangeChipTextActive: {
+      color: '#fff',
+    },
+    metricsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+      marginBottom: 20,
+    },
+    metricCard: {
+      width: '47%',
+      backgroundColor: themeColors.surface,
+      borderRadius: radius.sm,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      padding: 12,
+      alignItems: 'center',
+      ...shadow.card,
+    },
+    metricLabel: {
+      fontSize: 11,
+      color: themeColors.textMuted,
+      textTransform: 'uppercase',
+      marginBottom: 4,
+    },
+    metricValue: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: themeColors.accent,
+    },
+    chartSection: {
+      backgroundColor: themeColors.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      padding: 16,
+      marginBottom: 20,
+      ...shadow.card,
+    },
+    chartScrollContent: {
+      paddingRight: 8,
+    },
+    emptyGraphText: {
+      color: themeColors.textMuted,
+      fontSize: 13,
+      textAlign: 'center',
+      paddingVertical: 24,
+      textTransform: 'uppercase',
+    },
+    sectionTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: themeColors.textStrong,
+      textTransform: 'uppercase',
+      marginBottom: 12,
+    },
+    historySection: {
+      backgroundColor: themeColors.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      padding: 16,
+      marginBottom: 32,
+      ...shadow.card,
+    },
+    tableHeader: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+      paddingBottom: 8,
+      marginBottom: 4,
+    },
+    tableHeaderText: {
+      fontWeight: '700',
+      color: themeColors.textStrong,
+    },
+    tableRow: {
+      flexDirection: 'row',
+      paddingVertical: 6,
+    },
+    tableRowEven: {
+      backgroundColor: themeColors.accentSoft,
+    },
+    tableCell: {
+      flex: 1,
+      fontSize: 12,
+      color: themeColors.textMuted,
+      textAlign: 'center',
+    },
+  });
 
 export default ExerciseProgressScreen;

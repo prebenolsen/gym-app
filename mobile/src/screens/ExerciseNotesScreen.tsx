@@ -89,10 +89,7 @@ const ExerciseNotesScreen = ({ route, navigation }: any) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
         </TouchableOpacity>
         <Text style={styles.title}>{exerciseName} Notes</Text>
@@ -100,10 +97,13 @@ const ExerciseNotesScreen = ({ route, navigation }: any) => {
         {!saving && <View style={{ width: 40 }} />}
       </View>
 
-      <TouchableOpacity style={[styles.insertDateButton, { marginTop: 12 }]} onPress={insertDate}>
-          <Ionicons name="calendar" size={16} color="#fff" />
-          <Text style={styles.insertDateButtonText}>Insert Date</Text>
-        </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.insertDateButton, { marginTop: 12 }]}
+        onPress={insertDate}
+      >
+        <Ionicons name="calendar" size={16} color="#fff" />
+        <Text style={styles.insertDateButtonText}>Insert Date</Text>
+      </TouchableOpacity>
 
       <View style={styles.content}>
         <TextInput
@@ -115,8 +115,6 @@ const ExerciseNotesScreen = ({ route, navigation }: any) => {
           multiline
           textAlignVertical="top"
         />
-
-        
       </View>
     </View>
   );

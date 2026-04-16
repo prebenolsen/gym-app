@@ -42,7 +42,10 @@ const AuthScreen = () => {
       try {
         const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail);
         if (error) throw error;
-        Alert.alert('Check your email', 'If this email exists, a reset link has been sent.');
+        Alert.alert(
+          'Check your email',
+          'If this email exists, a reset link has been sent.',
+        );
         setMode('login');
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to send reset email';
@@ -77,7 +80,7 @@ const AuthScreen = () => {
         await signUp(normalizedEmail, password);
         Alert.alert(
           'Account created',
-          'Your account was created. If email confirmation is enabled, please verify your email.'
+          'Your account was created. If email confirmation is enabled, please verify your email.',
         );
         setMode('login');
       }
@@ -102,7 +105,11 @@ const AuthScreen = () => {
           </View>
 
           <Text style={styles.title}>
-            {mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Forgot Password'}
+            {mode === 'login'
+              ? 'Sign In'
+              : mode === 'signup'
+                ? 'Create Account'
+                : 'Forgot Password'}
           </Text>
 
           <TextInput
@@ -151,7 +158,11 @@ const AuthScreen = () => {
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.primaryButtonText}>
-                {mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Email'}
+                {mode === 'login'
+                  ? 'Sign In'
+                  : mode === 'signup'
+                    ? 'Create Account'
+                    : 'Send Reset Email'}
               </Text>
             )}
           </TouchableOpacity>
@@ -179,74 +190,75 @@ const AuthScreen = () => {
   );
 };
 
-const createStyles = (themeColors: typeof colors) => StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  overlay: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(7, 14, 22, 0.45)',
-    padding: 20,
-  },
-  card: {
-    width: '100%',
-    maxWidth: 420,
-    backgroundColor: themeColors.surface,
-    borderColor: themeColors.border,
-    borderWidth: 1,
-    borderRadius: radius.md,
-    padding: 20,
-    ...shadow.card,
-  },
-  authHeader: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: themeColors.textStrong,
-    marginBottom: 14,
-    textTransform: 'uppercase',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    borderRadius: radius.sm,
-    backgroundColor: themeColors.background,
-    color: themeColors.textStrong,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 10,
-  },
-  primaryButton: {
-    backgroundColor: themeColors.accent,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    marginTop: 6,
-  },
-  disabledButton: {
-    opacity: 0.7,
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  links: {
-    marginTop: 22,
-    gap: 10,
-  },
-  link: {
-    color: themeColors.accent,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-});
+const createStyles = (themeColors: typeof colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    overlay: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(7, 14, 22, 0.45)',
+      padding: 20,
+    },
+    card: {
+      width: '100%',
+      maxWidth: 420,
+      backgroundColor: themeColors.surface,
+      borderColor: themeColors.border,
+      borderWidth: 1,
+      borderRadius: radius.md,
+      padding: 20,
+      ...shadow.card,
+    },
+    authHeader: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 16,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: themeColors.textStrong,
+      marginBottom: 14,
+      textTransform: 'uppercase',
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: radius.sm,
+      backgroundColor: themeColors.background,
+      color: themeColors.textStrong,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      marginBottom: 10,
+    },
+    primaryButton: {
+      backgroundColor: themeColors.accent,
+      borderRadius: radius.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      marginTop: 6,
+    },
+    disabledButton: {
+      opacity: 0.7,
+    },
+    primaryButtonText: {
+      color: '#fff',
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    links: {
+      marginTop: 22,
+      gap: 10,
+    },
+    link: {
+      color: themeColors.accent,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+    },
+  });
 
 export default AuthScreen;

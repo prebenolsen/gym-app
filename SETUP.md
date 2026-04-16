@@ -132,6 +132,7 @@ SUPABASE_SERVICE_KEY=<your_service_role_secret>
    - `<your_service_role_secret>` → Your Service Role Secret
 
 **Example:**
+
 ```
 VITE_SUPABASE_URL=https://abc123xyz.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -152,6 +153,7 @@ npm run backend:dev
 ```
 
 You should see:
+
 ```
 🏋️ GymApp backend running on port 3000
 ```
@@ -169,6 +171,7 @@ npm run web:dev
 ```
 
 You should see:
+
 ```
   VITE v5.0.0  ready in 123 ms
 
@@ -183,6 +186,7 @@ You should see:
 Go to **http://localhost:5173** in your browser.
 
 You should see:
+
 - **Navigation** on the left: "Home" and "Programs"
 - **Sidebar** with title "GymApp"
 - **Home page** with stats showing 0 programs/workouts/exercises
@@ -232,6 +236,7 @@ npm run mobile:dev
 ```
 
 You'll see options:
+
 ```
   w - open web
   a - open android

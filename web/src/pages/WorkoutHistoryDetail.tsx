@@ -11,9 +11,7 @@ const WorkoutHistoryDetail = () => {
   const api = useApi();
   const { formatWeight } = useUnit();
 
-  const [sessionDetail, setSessionDetail] = useState<WorkoutSessionDetail | null>(
-    null
-  );
+  const [sessionDetail, setSessionDetail] = useState<WorkoutSessionDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,7 +78,7 @@ const WorkoutHistoryDetail = () => {
       acc[set.exercise_name].push(set);
       return acc;
     },
-    {} as Record<string, typeof sessionDetail.sets>
+    {} as Record<string, typeof sessionDetail.sets>,
   );
 
   if (loading) {
@@ -111,25 +109,30 @@ const WorkoutHistoryDetail = () => {
       <div className="session-header">
         <div>
           <h1>Workout Details</h1>
-          <p className="session-date">
-            {formatDate(sessionDetail.session.started_at)}
-          </p>
+          <p className="session-date">{formatDate(sessionDetail.session.started_at)}</p>
         </div>
         <div className="session-stats">
           <div className="stat">
             <span className="stat-label">Started</span>
-            <span className="stat-value">{formatTime(sessionDetail.session.started_at)}</span>
+            <span className="stat-value">
+              {formatTime(sessionDetail.session.started_at)}
+            </span>
           </div>
           {sessionDetail.session.ended_at && (
             <>
               <div className="stat">
                 <span className="stat-label">Ended</span>
-                <span className="stat-value">{formatTime(sessionDetail.session.ended_at)}</span>
+                <span className="stat-value">
+                  {formatTime(sessionDetail.session.ended_at)}
+                </span>
               </div>
               <div className="stat">
                 <span className="stat-label">Duration</span>
                 <span className="stat-value">
-                  {calculateDuration(sessionDetail.session.started_at, sessionDetail.session.ended_at)}
+                  {calculateDuration(
+                    sessionDetail.session.started_at,
+                    sessionDetail.session.ended_at,
+                  )}
                 </span>
               </div>
             </>
@@ -154,9 +157,7 @@ const WorkoutHistoryDetail = () => {
                   {sets.map((set) => (
                     <tr key={`${set.id}`}>
                       <td className="set-number">#{set.set_number}</td>
-                      <td className="weight">
-                        {formatWeight(set.weight)}
-                      </td>
+                      <td className="weight">{formatWeight(set.weight)}</td>
                       <td className="reps">{set.reps} reps</td>
                     </tr>
                   ))}
@@ -167,7 +168,8 @@ const WorkoutHistoryDetail = () => {
                   {sets.length} {sets.length === 1 ? 'set' : 'sets'}
                 </span>
                 <span className="avg-weight">
-                  Avg: {formatWeight(sets.reduce((sum, s) => sum + s.weight, 0) / sets.length)}
+                  Avg:{' '}
+                  {formatWeight(sets.reduce((sum, s) => sum + s.weight, 0) / sets.length)}
                 </span>
               </div>
             </div>

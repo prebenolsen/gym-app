@@ -34,7 +34,11 @@ const Navigation = () => {
 
   const isActive = (path: string) => {
     if (path === '/active-workout') return location.pathname === '/active-workout';
-    if (path === '/calendar') return location.pathname === '/calendar' || location.pathname.startsWith('/workout-history');
+    if (path === '/calendar')
+      return (
+        location.pathname === '/calendar' ||
+        location.pathname.startsWith('/workout-history')
+      );
     if (path === '/settings') return location.pathname === '/settings';
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);

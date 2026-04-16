@@ -5,7 +5,11 @@
 }
 
 .active-workout-banner {
-  background: linear-gradient(135deg, var(--color-accent-500) 0%, var(--color-accent-600) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-accent-500) 0%,
+    var(--color-accent-600) 100%
+  );
   color: white;
   padding: 16px 20px;
   border-radius: 8px;
