@@ -228,24 +228,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Exercises</Text>
-
-        <View style={styles.addExercise}>
-          <TextInput
-            style={styles.input}
-            placeholder="Add a custom exercise"
-            placeholderTextColor={themeColors.textMuted}
-            value={newExerciseName}
-            onChangeText={setNewExerciseName}
-          />
-          <TouchableOpacity
-            onPress={handleAddExercise}
-            style={styles.btnPrimary}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.btnText}>+ Add</Text>
-          </TouchableOpacity>
-        </View>
+        {/*<Text style={styles.sectionTitle}>Exercises</Text>*/}
 
         <ScrollView style={styles.list}>
           {exercises.length > 0 &&
@@ -262,29 +245,35 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                 </View>
 
                 <View style={styles.exerciseControls}>
-                  <NumberSpinner
-                    value={exercise.sets}
-                    onChange={(value) =>
-                      handleUpdateExercise(exercise.id, { sets: value })
-                    }
-                    min={1}
-                    max={100}
-                    step={1}
-                    label="Sets"
-                  />
+                  <View style={styles.exerciseControlsRow}>
+                    <View style={{ flex: 1 }}>
+                      <NumberSpinner
+                        value={exercise.sets}
+                        onChange={(value) =>
+                          handleUpdateExercise(exercise.id, { sets: value })
+                        }
+                        min={1}
+                        max={100}
+                        step={1}
+                        label="Sets"
+                      />
+                    </View>
 
-                  <NumberSpinner
-                    value={exercise.rest_seconds}
-                    onChange={(value) =>
-                      handleUpdateExercise(exercise.id, {
-                        rest_seconds: value,
-                      })
-                    }
-                    min={0}
-                    max={600}
-                    step={5}
-                    label="Rest (sec)"
-                  />
+                    <View style={{ flex: 1 }}>
+                      <NumberSpinner
+                        value={exercise.rest_seconds}
+                        onChange={(value) =>
+                          handleUpdateExercise(exercise.id, {
+                            rest_seconds: value,
+                          })
+                        }
+                        min={0}
+                        max={600}
+                        step={5}
+                        label="Rest (sec)"
+                      />
+                    </View>
+                  </View>
 
                   <View style={styles.reorderGroup}>
                     <Text style={styles.label}>Reorder</Text>
@@ -312,6 +301,24 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                 </View>
               </View>
             ))}
+
+
+          <View style={styles.addExercise}>
+          <TextInput
+            style={styles.input}
+            placeholder="Add a custom exercise"
+            placeholderTextColor={themeColors.textMuted}
+            value={newExerciseName}
+            onChangeText={setNewExerciseName}
+          />
+          <TouchableOpacity
+            onPress={handleAddExercise}
+            style={styles.btnPrimary}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.btnText}>+ Add</Text>
+          </TouchableOpacity>
+        </View>
 
           <TouchableOpacity
             onPress={() =>
@@ -519,6 +526,12 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 12,
       textTransform: 'uppercase',
     },
+    exerciseControlsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: 12,
+  }
   });
 
 export default WorkoutDetailScreen;
