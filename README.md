@@ -349,15 +349,13 @@ npm run backend:dev
 2️⃣ Start web
 npm run web:dev
 
-3️⃣ Start Expo (initial attempt)
-cd mobile
-npx expo start --lan
+3️⃣Start phone
+npx expo start --lan -c
 
-4️⃣ If Expo Go shows “Something went wrong”, clear caches
-Kill node processes:
+
+4️⃣ If Expo Go shows “Something went wrong”, clear caches # POWERSHELL # 
 Stop-Process -Name node -Force
 
-✅ This command fixed the issue:
 npx expo start --lan -c
 
 
