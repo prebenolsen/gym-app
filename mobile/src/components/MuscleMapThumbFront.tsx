@@ -317,17 +317,24 @@ export default function MuscleMapThumbFront({
   mutedOpacity,
   highlightOpacity,
 }: Props) {
-  const { calves_left: _frontCalvesLeft, calves_right: _frontCalvesRight, ...frontNoCalves } =
-    anatomyPathsWithTransforms;
+  const safeAnatomyPaths = anatomyPathsWithTransforms ?? {};
+  const safeActivePaths = Array.isArray(activePaths) ? activePaths : [];
+
+  const {
+    calves_left: _frontCalvesLeft,
+    calves_right: _frontCalvesRight,
+    ...frontNoCalves
+  } = safeAnatomyPaths;
 
   // Keep this value referenced so TypeScript does not treat it as an unused local.
   void backBodyPaths;
 
   const frontRenderPaths = {
-    ...numberedPaths,
+    ...(numberedPaths ?? {}),
     ...frontNoCalves,
-    ...correctedAbsPaths,
+    ...(correctedAbsPaths ?? {}),
   };
+  const bodyBgPath = frontRenderPaths.body_bg ?? numberedPaths.path1;
 
   return (
     <Svg
@@ -336,10 +343,11 @@ export default function MuscleMapThumbFront({
       viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
       preserveAspectRatio="xMidYMid meet"
     >
-      <Path d={frontRenderPaths.body_bg.d} fill={frontRenderPaths.body_bg.fill ?? '#fafafa'} />
-      {Object.entries(frontRenderPaths).map(([pathId, pathInfo]) => {
+      <Path d={bodyBgPath.d} fill={bodyBgPath.fill ?? '#fafafa'} />
+      {Object.entries(frontRenderPaths ?? {}).map(([pathId, pathInfo]) => {
         if (pathId === 'body_bg') return null;
-        const isActive = activePaths.includes(pathId);
+        if (!pathInfo || !pathInfo.d) return null;
+        const isActive = safeActivePaths.includes(pathId);
         return (
           <G key={pathId} transform={pathInfo.transform}>
             <Path

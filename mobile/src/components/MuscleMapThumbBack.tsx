@@ -40,9 +40,12 @@ export default function MuscleMapThumbBack({
   mutedOpacity,
   highlightOpacity,
 }: Props) {
+  const safeBackPaths = BACK_SVG_PATHS ?? {};
+  const safeActivePaths = Array.isArray(activePaths) ? activePaths : [];
+
   const orderedEntries = useMemo(
-    () => Object.entries(BACK_SVG_PATHS).sort(([a], [b]) => comparePathIds(a, b)),
-    [],
+    () => Object.entries(safeBackPaths).sort(([a], [b]) => comparePathIds(a, b)),
+    [safeBackPaths],
   );
 
   return (
@@ -61,7 +64,7 @@ export default function MuscleMapThumbBack({
           );
         }
 
-        const isActive = activePaths.includes(pathId);
+        const isActive = safeActivePaths.includes(pathId);
 
         return (
           <G key={pathId} transform={pathInfo.transform}>

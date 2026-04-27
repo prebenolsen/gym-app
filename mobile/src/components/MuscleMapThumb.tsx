@@ -6,7 +6,8 @@ import MuscleMapThumbBack from './MuscleMapThumbBack';
 import MuscleMapThumbFront from './MuscleMapThumbFront';
 
 type Props = {
-  group: MuscleGroup;
+  group?: MuscleGroup;
+  groups?: MuscleGroup[];
   size?: number;
   mutedColor?: string;
   highlightColor?: string;
@@ -70,6 +71,7 @@ function getViewAndPaths(muscleGroup: MuscleGroup): { useBack: boolean; paths: s
 
 export default function MuscleMapThumb({
   group,
+  groups,
   size = 56,
   mutedColor = DEFAULT_MUTED,
   highlightColor = DEFAULT_HIGHLIGHT,
@@ -81,7 +83,31 @@ export default function MuscleMapThumb({
   const mutedOpacity = 0.1;
   const highlightOpacity = 0.65;
 
-  const { useBack, paths: activePaths } = getViewAndPaths(group);
+  const selectedGroups = groups?.length ? groups : group ? [group] : [];
+  const { frontCount, backCount, frontPaths, backPaths } = selectedGroups.reduce(
+    (acc, muscleGroup) => {
+      const { useBack: isBackView, paths } = getViewAndPaths(muscleGroup);
+      if (isBackView) {
+        acc.backCount += 1;
+        paths.forEach((path) => acc.backPaths.add(path));
+      } else {
+        acc.frontCount += 1;
+        paths.forEach((path) => acc.frontPaths.add(path));
+      }
+      return acc;
+    },
+    {
+      frontCount: 0,
+      backCount: 0,
+      frontPaths: new Set<string>(),
+      backPaths: new Set<string>(),
+    },
+  );
+
+  const resolvedUseBack = backCount > frontCount;
+  const resolvedPaths = resolvedUseBack
+    ? Array.from(backPaths)
+    : Array.from(frontPaths);
 
   return (
     <View
@@ -95,13 +121,13 @@ export default function MuscleMapThumb({
         },
       ]}
     >
-      {useBack ? (
+      {resolvedUseBack ? (
         <MuscleMapThumbBack
           size={size}
           height={height}
           viewBoxWidth={VIEWBOX_WIDTH}
           viewBoxHeight={VIEWBOX_HEIGHT}
-          activePaths={activePaths}
+          activePaths={resolvedPaths}
           mutedColor={mutedColor}
           highlightColor={highlightColor}
           mutedOpacity={mutedOpacity}
@@ -113,7 +139,7 @@ export default function MuscleMapThumb({
           height={height}
           viewBoxWidth={VIEWBOX_WIDTH}
           viewBoxHeight={VIEWBOX_HEIGHT}
-          activePaths={activePaths}
+          activePaths={resolvedPaths}
           mutedColor={mutedColor}
           highlightColor={highlightColor}
           mutedOpacity={mutedOpacity}
