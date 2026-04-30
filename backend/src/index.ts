@@ -895,39 +895,94 @@ app.get('/workouts/:workoutId/last-performance', async (req, res) => {
   try {
     const { workoutId } = req.params;
 
-    const { data: lastSession, error: sessionError } = await supabase
+    const { data: finishedSessions, error: sessionError } = await supabase
       .from('workout_sessions')
-      .select('id')
+      .select('id, ended_at, started_at')
       .eq('workout_id', workoutId)
       .eq('user_id', req.userId)
       .eq('status', 'finished')
-      .order('ended_at', { ascending: false })
+      .order('ended_at', { ascending: false, nullsFirst: false })
+      .order('started_at', { ascending: false })
       .order('id', { ascending: false })
-      .limit(1)
-      .single();
+      .limit(200);
 
-    if (sessionError && sessionError.code !== 'PGRST116') {
-      throw sessionError;
+    if (sessionError) throw sessionError;
+
+    if (!finishedSessions || finishedSessions.length === 0) {
+      return res.json({ session_id: null, sets: [] });
     }
 
-    if (!lastSession) {
-      return res.json({ session: null, sets: [] });
-    }
+    const sessionIds = finishedSessions.map((session) => session.id);
+    const sessionRankById = new Map<string, number>();
+    finishedSessions.forEach((session, index) => {
+      sessionRankById.set(session.id, index);
+    });
 
     const { data: sets, error: setsError } = await supabase
       .from('workout_session_sets')
-      .select('exercise_id, set_number, weight, reps, created_at')
-      .eq('session_id', lastSession.id)
+      .select('session_id, exercise_id, set_number, weight, reps, created_at, saved_at')
+      .in('session_id', sessionIds)
+      .eq('user_id', req.userId)
       .eq('is_deleted', false)
-      .order('exercise_id', { ascending: true })
-      .order('set_number', { ascending: true })
-      .order('created_at', { ascending: true });
+      .order('saved_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false, nullsFirst: false });
 
     if (setsError) throw setsError;
 
+    const resolvedSets = [...(sets || [])]
+      .sort((a, b) => {
+        const aRank = sessionRankById.get(a.session_id) ?? Number.MAX_SAFE_INTEGER;
+        const bRank = sessionRankById.get(b.session_id) ?? Number.MAX_SAFE_INTEGER;
+        if (aRank !== bRank) return aRank - bRank;
+
+        const aSavedAt = a.saved_at ? new Date(a.saved_at).getTime() : Number.MIN_SAFE_INTEGER;
+        const bSavedAt = b.saved_at ? new Date(b.saved_at).getTime() : Number.MIN_SAFE_INTEGER;
+        if (aSavedAt !== bSavedAt) return bSavedAt - aSavedAt;
+
+        const aCreatedAt = a.created_at
+          ? new Date(a.created_at).getTime()
+          : Number.MIN_SAFE_INTEGER;
+        const bCreatedAt = b.created_at
+          ? new Date(b.created_at).getTime()
+          : Number.MIN_SAFE_INTEGER;
+        return bCreatedAt - aCreatedAt;
+      })
+      .reduce<
+        Array<{
+          exercise_id: string;
+          set_number: number;
+          weight: number;
+          reps: number;
+          created_at: string | null;
+          saved_at: string | null;
+        }>
+      >((acc, set) => {
+        const key = `${set.exercise_id}:${set.set_number}`;
+        const exists = acc.some(
+          (entry) => `${entry.exercise_id}:${entry.set_number}` === key,
+        );
+        if (!exists) {
+          acc.push({
+            exercise_id: set.exercise_id,
+            set_number: set.set_number,
+            weight: set.weight,
+            reps: set.reps,
+            created_at: set.created_at,
+            saved_at: set.saved_at,
+          });
+        }
+        return acc;
+      }, [])
+      .sort((a, b) => {
+        if (a.exercise_id !== b.exercise_id) {
+          return a.exercise_id.localeCompare(b.exercise_id);
+        }
+        return a.set_number - b.set_number;
+      });
+
     res.json({
-      session_id: lastSession.id,
-      sets: sets || [],
+      session_id: finishedSessions[0].id,
+      sets: resolvedSets,
     });
   } catch (err: unknown) {
     const errorMsg = formatError(err);

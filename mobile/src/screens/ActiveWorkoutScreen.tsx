@@ -36,8 +36,12 @@ type SetDraft = {
 
 type SavedSetTracking = Record<number, boolean>;
 
+type LastPerformanceSet = ExerciseLastPerformance & {
+  created_at?: string;
+};
+
 type PreviousPerformance = {
-  [exerciseId: string]: ExerciseLastPerformance[];
+  [exerciseId: string]: Record<number, ExerciseLastPerformance>;
 };
 
 const normalizeDraftValue = (value: string): string => value.trim().replace(',', '.');
@@ -75,6 +79,42 @@ const parseApiDate = (value: string): number => {
   const hasTz = /[zZ]|[+\-]\d{2}:?\d{2}$/.test(value);
   const normalized = hasTz ? value : `${value}Z`;
   return new Date(normalized).getTime();
+};
+
+const buildPreviousPerformanceLookup = (sets: LastPerformanceSet[]): PreviousPerformance => {
+  const byExercise: Record<string, LastPerformanceSet[]> = {};
+
+  sets.forEach((set) => {
+    if (!byExercise[set.exercise_id]) {
+      byExercise[set.exercise_id] = [];
+    }
+    byExercise[set.exercise_id].push(set);
+  });
+
+  const lookup: PreviousPerformance = {};
+
+  Object.entries(byExercise).forEach(([exerciseId, exerciseSets]) => {
+    const sorted = [...exerciseSets].sort((a, b) => {
+      const aTs = a.created_at ? parseApiDate(a.created_at) : Number.MIN_SAFE_INTEGER;
+      const bTs = b.created_at ? parseApiDate(b.created_at) : Number.MIN_SAFE_INTEGER;
+      if (aTs !== bTs) return aTs - bTs;
+      return a.set_number - b.set_number;
+    });
+
+    const perSet: Record<number, ExerciseLastPerformance> = {};
+    sorted.forEach((set) => {
+      perSet[set.set_number] = {
+        exercise_id: set.exercise_id,
+        set_number: set.set_number,
+        weight: set.weight,
+        reps: set.reps,
+      };
+    });
+
+    lookup[exerciseId] = perSet;
+  });
+
+  return lookup;
 };
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -216,6 +256,7 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
       if (!activeSession) {
         setWorkout(null);
         setExercises([]);
+        setPreviousPerformance({});
         return;
       }
 
@@ -228,18 +269,11 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
       // Load previous performance data for this workout
       try {
         const lastPerf = await api.getLastWorkoutPerformance(activeSession.workout_id);
-        if (lastPerf && lastPerf.sets && lastPerf.sets.length > 0) {
-          const perfByExercise: PreviousPerformance = {};
-          lastPerf.sets.forEach((set) => {
-            if (!perfByExercise[set.exercise_id]) {
-              perfByExercise[set.exercise_id] = [];
-            }
-            perfByExercise[set.exercise_id].push(set);
-          });
-          setPreviousPerformance(perfByExercise);
-        }
+        const sets = (lastPerf?.sets ?? []) as LastPerformanceSet[];
+        setPreviousPerformance(buildPreviousPerformanceLookup(sets));
       } catch (err) {
         console.warn('Failed to load previous performance:', err);
+        setPreviousPerformance({});
       }
 
       const index = Math.min(
@@ -690,11 +724,7 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
                   const isSaved = currentSavedSets[setNumber] === true;
                   const canEdit = firstUnsavedSetIndex === setIndex || isSaved;
                   const isLocked = !canEdit && !isSaved;
-                  const prevPerf = previousPerformance[currentExercise.id];
-                  // Get the LAST set matching this set_number (in case multiple attempts exist)
-                  const prevForThisSet = prevPerf
-                    ? prevPerf.findLast((p) => p.set_number === setNumber)
-                    : undefined;
+                  const prevForThisSet = previousPerformance[currentExercise.id]?.[setNumber];
 
                   return (
                     <View
