@@ -25,12 +25,14 @@ const SettingsPage = () => {
     setTheme,
     accent,
     setAccent,
-    soundEnabled,
-    setSoundEnabled,
-    prepareSoundEnabled,
-    setPrepareSoundEnabled,
-    prepareSoundSeconds,
-    setPrepareSoundSeconds,
+    completionCueEnabled,
+    setCompletionCueEnabled,
+    countdownCueEnabled,
+    setCountdownCueEnabled,
+    customCueEnabled,
+    setCustomCueEnabled,
+    customCueSeconds,
+    setCustomCueSeconds,
   } = useTheme();
   const { signOut } = useAuth();
   const api = useApi();
@@ -140,45 +142,57 @@ const SettingsPage = () => {
           <div className="rounded-lg border border-border bg-muted/30 p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="font-medium text-foreground">Sounds</p>
+                <p className="font-medium text-foreground">Rest Timer Completed</p>
                 <p className="text-sm text-muted-foreground">
-                  Enable countdown and completion beeps.
+                  Play a sound when the rest timer reaches zero.
                 </p>
               </div>
-              <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
+              <Switch
+                checked={completionCueEnabled}
+                onCheckedChange={setCompletionCueEnabled}
+              />
             </div>
 
             <div className="mt-4 flex items-center justify-between gap-3">
               <div>
-                <p className="font-medium text-foreground">Prepare Cue</p>
+                <p className="font-medium text-foreground">Countdown Cues (3, 2, 1)</p>
                 <p className="text-sm text-muted-foreground">
-                  Play a pre-countdown alert before the final beeps.
+                  Play sounds at 3, 2, and 1 seconds before completion.
                 </p>
               </div>
               <Switch
-                checked={soundEnabled && prepareSoundEnabled}
-                disabled={!soundEnabled}
-                onCheckedChange={setPrepareSoundEnabled}
+                checked={countdownCueEnabled}
+                onCheckedChange={setCountdownCueEnabled}
               />
             </div>
 
-            {soundEnabled && prepareSoundEnabled ? (
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="font-medium text-foreground">Custom Cue (X Seconds)</p>
+                <p className="text-sm text-muted-foreground">
+                  Play a sound at n-seconds before the rest timer ends.
+                </p>
+              </div>
+              <Switch checked={customCueEnabled} onCheckedChange={setCustomCueEnabled} />
+            </div>
+
+            {customCueEnabled ? (
               <div className="mt-4 flex max-w-xs flex-col gap-2">
                 <label
-                  htmlFor="prepare-seconds"
+                  htmlFor="custom-cue-seconds"
                   className="text-sm font-medium text-foreground"
                 >
-                  Prepare At (seconds)
+                  Custom Cue At (seconds)
                 </label>
                 <input
-                  id="prepare-seconds"
+                  id="custom-cue-seconds"
                   type="number"
                   min={1}
-                  value={prepareSoundSeconds}
+                  value={customCueSeconds}
                   onChange={(event) => {
                     const next = Number(event.target.value);
                     if (Number.isInteger(next) && next >= 1) {
-                      setPrepareSoundSeconds(next);
+                      setCustomCueSeconds(next);
                     }
                   }}
                   className="rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"

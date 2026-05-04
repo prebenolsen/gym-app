@@ -127,9 +127,10 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     unit,
     convertFromKg,
     convertToKg,
-    soundEnabled,
-    prepareSoundEnabled,
-    prepareSoundSeconds,
+    completionCueEnabled,
+    countdownCueEnabled,
+    customCueEnabled,
+    customCueSeconds,
   } = usePreferences();
   const styles = createStyles(themeColors);
   const [loading, setLoading] = useState(true);
@@ -335,37 +336,45 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
   }, [restSecondsLeft]);
 
   useEffect(() => {
-    if (!soundEnabled) {
-      lastRestSoundSecondRef.current = restSecondsLeft;
-      return;
-    }
-
     if (lastRestSoundSecondRef.current === restSecondsLeft) {
       return;
     }
 
-    if (restSecondsLeft === 0 && lastRestSoundSecondRef.current !== 0) {
+    if (
+      completionCueEnabled &&
+      restSecondsLeft === 0 &&
+      lastRestSoundSecondRef.current !== 0
+    ) {
       void playCompletionBeep();
       lastRestSoundSecondRef.current = restSecondsLeft;
       return;
     }
 
-    if (restSecondsLeft > 0 && restSecondsLeft <= 3) {
+    const shouldPlayCountdownCue =
+      countdownCueEnabled && restSecondsLeft > 0 && restSecondsLeft <= 3;
+    const shouldPlayCustomCue =
+      customCueEnabled &&
+      restSecondsLeft > 0 &&
+      Number.isInteger(customCueSeconds) &&
+      customCueSeconds > 0 &&
+      restSecondsLeft === customCueSeconds;
+
+    if (shouldPlayCountdownCue) {
       void playCountdownBeep();
     }
 
-    if (
-      restSecondsLeft > 0 &&
-      prepareSoundEnabled &&
-      Number.isInteger(prepareSoundSeconds) &&
-      prepareSoundSeconds > 0 &&
-      restSecondsLeft === prepareSoundSeconds
-    ) {
+    if (shouldPlayCustomCue) {
       void playPrepareBeep();
     }
 
     lastRestSoundSecondRef.current = restSecondsLeft;
-  }, [restSecondsLeft, soundEnabled, prepareSoundEnabled, prepareSoundSeconds]);
+  }, [
+    restSecondsLeft,
+    completionCueEnabled,
+    countdownCueEnabled,
+    customCueEnabled,
+    customCueSeconds,
+  ]);
 
   useEffect(() => {
     const loadCurrentExerciseSets = async () => {

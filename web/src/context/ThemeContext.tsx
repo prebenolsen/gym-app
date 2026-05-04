@@ -16,19 +16,22 @@ type ThemeContextValue = {
   toggleTheme: () => void;
   accent: AccentColor;
   setAccent: (accent: AccentColor) => void;
-  soundEnabled: boolean;
-  setSoundEnabled: (enabled: boolean) => void;
-  prepareSoundEnabled: boolean;
-  setPrepareSoundEnabled: (enabled: boolean) => void;
-  prepareSoundSeconds: number;
-  setPrepareSoundSeconds: (seconds: number) => void;
+  completionCueEnabled: boolean;
+  setCompletionCueEnabled: (enabled: boolean) => void;
+  countdownCueEnabled: boolean;
+  setCountdownCueEnabled: (enabled: boolean) => void;
+  customCueEnabled: boolean;
+  setCustomCueEnabled: (enabled: boolean) => void;
+  customCueSeconds: number;
+  setCustomCueSeconds: (seconds: number) => void;
 };
 
 const STORAGE_KEY = 'gym-app.theme';
 const ACCENT_KEY = 'gym-app.accent';
-const SOUND_ENABLED_KEY = 'gym-app.sound-enabled';
-const PREPARE_SOUND_ENABLED_KEY = 'gym-app.prepare-sound-enabled';
-const PREPARE_SOUND_SECONDS_KEY = 'gym-app.prepare-sound-seconds';
+const COMPLETION_CUE_ENABLED_KEY = 'gym-app.sound-completion-enabled';
+const COUNTDOWN_CUE_ENABLED_KEY = 'gym-app.sound-countdown-enabled';
+const CUSTOM_CUE_ENABLED_KEY = 'gym-app.sound-custom-enabled';
+const CUSTOM_CUE_SECONDS_KEY = 'gym-app.sound-custom-seconds';
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
@@ -47,18 +50,23 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     return 'emerald';
   });
 
-  const [soundEnabled, setSoundEnabledState] = useState<boolean>(() => {
-    const saved = localStorage.getItem(SOUND_ENABLED_KEY);
+  const [completionCueEnabled, setCompletionCueEnabledState] = useState<boolean>(() => {
+    const saved = localStorage.getItem(COMPLETION_CUE_ENABLED_KEY);
     return saved === 'true';
   });
 
-  const [prepareSoundEnabled, setPrepareSoundEnabledState] = useState<boolean>(() => {
-    const saved = localStorage.getItem(PREPARE_SOUND_ENABLED_KEY);
+  const [countdownCueEnabled, setCountdownCueEnabledState] = useState<boolean>(() => {
+    const saved = localStorage.getItem(COUNTDOWN_CUE_ENABLED_KEY);
     return saved === 'true';
   });
 
-  const [prepareSoundSeconds, setPrepareSoundSecondsState] = useState<number>(() => {
-    const saved = Number(localStorage.getItem(PREPARE_SOUND_SECONDS_KEY));
+  const [customCueEnabled, setCustomCueEnabledState] = useState<boolean>(() => {
+    const saved = localStorage.getItem(CUSTOM_CUE_ENABLED_KEY);
+    return saved === 'true';
+  });
+
+  const [customCueSeconds, setCustomCueSecondsState] = useState<number>(() => {
+    const saved = Number(localStorage.getItem(CUSTOM_CUE_SECONDS_KEY));
     if (Number.isInteger(saved) && saved >= 1) {
       return saved;
     }
@@ -78,16 +86,20 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   }, [accent]);
 
   useEffect(() => {
-    localStorage.setItem(SOUND_ENABLED_KEY, String(soundEnabled));
-  }, [soundEnabled]);
+    localStorage.setItem(COMPLETION_CUE_ENABLED_KEY, String(completionCueEnabled));
+  }, [completionCueEnabled]);
 
   useEffect(() => {
-    localStorage.setItem(PREPARE_SOUND_ENABLED_KEY, String(prepareSoundEnabled));
-  }, [prepareSoundEnabled]);
+    localStorage.setItem(COUNTDOWN_CUE_ENABLED_KEY, String(countdownCueEnabled));
+  }, [countdownCueEnabled]);
 
   useEffect(() => {
-    localStorage.setItem(PREPARE_SOUND_SECONDS_KEY, String(prepareSoundSeconds));
-  }, [prepareSoundSeconds]);
+    localStorage.setItem(CUSTOM_CUE_ENABLED_KEY, String(customCueEnabled));
+  }, [customCueEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem(CUSTOM_CUE_SECONDS_KEY, String(customCueSeconds));
+  }, [customCueSeconds]);
 
   const value = useMemo<ThemeContextValue>(
     () => ({
@@ -97,14 +109,23 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         setThemeState((previous) => (previous === 'dark' ? 'light' : 'dark')),
       accent,
       setAccent: setAccentState,
-      soundEnabled,
-      setSoundEnabled: setSoundEnabledState,
-      prepareSoundEnabled,
-      setPrepareSoundEnabled: setPrepareSoundEnabledState,
-      prepareSoundSeconds,
-      setPrepareSoundSeconds: setPrepareSoundSecondsState,
+      completionCueEnabled,
+      setCompletionCueEnabled: setCompletionCueEnabledState,
+      countdownCueEnabled,
+      setCountdownCueEnabled: setCountdownCueEnabledState,
+      customCueEnabled,
+      setCustomCueEnabled: setCustomCueEnabledState,
+      customCueSeconds,
+      setCustomCueSeconds: setCustomCueSecondsState,
     }),
-    [theme, accent, soundEnabled, prepareSoundEnabled, prepareSoundSeconds],
+    [
+      theme,
+      accent,
+      completionCueEnabled,
+      countdownCueEnabled,
+      customCueEnabled,
+      customCueSeconds,
+    ],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

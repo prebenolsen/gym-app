@@ -24,20 +24,23 @@ type PreferencesContextValue = {
   convertFromKg: (kg: number) => number;
   convertToKg: (value: number) => number;
   formatWeight: (kg: number, digits?: number) => string;
-  soundEnabled: boolean;
-  setSoundEnabled: (enabled: boolean) => void;
-  prepareSoundEnabled: boolean;
-  setPrepareSoundEnabled: (enabled: boolean) => void;
-  prepareSoundSeconds: number;
-  setPrepareSoundSeconds: (seconds: number) => void;
+  completionCueEnabled: boolean;
+  setCompletionCueEnabled: (enabled: boolean) => void;
+  countdownCueEnabled: boolean;
+  setCountdownCueEnabled: (enabled: boolean) => void;
+  customCueEnabled: boolean;
+  setCustomCueEnabled: (enabled: boolean) => void;
+  customCueSeconds: number;
+  setCustomCueSeconds: (seconds: number) => void;
 };
 
 const THEME_KEY = 'gym-app.mobile.theme';
 const ACCENT_KEY = 'gym-app.mobile.accent';
 const UNIT_KEY = 'gym-app.mobile.weight-unit';
-const SOUND_ENABLED_KEY = 'gym-app.mobile.sound-enabled';
-const PREPARE_SOUND_ENABLED_KEY = 'gym-app.mobile.prepare-sound-enabled';
-const PREPARE_SOUND_SECONDS_KEY = 'gym-app.mobile.prepare-sound-seconds';
+const COMPLETION_CUE_ENABLED_KEY = 'gym-app.mobile.sound-completion-enabled';
+const COUNTDOWN_CUE_ENABLED_KEY = 'gym-app.mobile.sound-countdown-enabled';
+const CUSTOM_CUE_ENABLED_KEY = 'gym-app.mobile.sound-custom-enabled';
+const CUSTOM_CUE_SECONDS_KEY = 'gym-app.mobile.sound-custom-seconds';
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 
@@ -46,9 +49,10 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<ThemeMode>('light');
   const [accent, setAccentState] = useState<AccentColor>('auburn');
   const [unit, setUnitState] = useState<WeightUnit>('kg');
-  const [soundEnabled, setSoundEnabledState] = useState(false);
-  const [prepareSoundEnabled, setPrepareSoundEnabledState] = useState(false);
-  const [prepareSoundSeconds, setPrepareSoundSecondsState] = useState(10);
+  const [completionCueEnabled, setCompletionCueEnabledState] = useState(false);
+  const [countdownCueEnabled, setCountdownCueEnabledState] = useState(false);
+  const [customCueEnabled, setCustomCueEnabledState] = useState(false);
+  const [customCueSeconds, setCustomCueSecondsState] = useState(10);
 
   useEffect(() => {
     const load = async () => {
@@ -57,16 +61,18 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
           savedTheme,
           savedAccent,
           savedUnit,
-          savedSoundEnabled,
-          savedPrepareSoundEnabled,
-          savedPrepareSoundSeconds,
+          savedCompletionCueEnabled,
+          savedCountdownCueEnabled,
+          savedCustomCueEnabled,
+          savedCustomCueSeconds,
         ] = await Promise.all([
           AsyncStorage.getItem(THEME_KEY),
           AsyncStorage.getItem(ACCENT_KEY),
           AsyncStorage.getItem(UNIT_KEY),
-          AsyncStorage.getItem(SOUND_ENABLED_KEY),
-          AsyncStorage.getItem(PREPARE_SOUND_ENABLED_KEY),
-          AsyncStorage.getItem(PREPARE_SOUND_SECONDS_KEY),
+          AsyncStorage.getItem(COMPLETION_CUE_ENABLED_KEY),
+          AsyncStorage.getItem(COUNTDOWN_CUE_ENABLED_KEY),
+          AsyncStorage.getItem(CUSTOM_CUE_ENABLED_KEY),
+          AsyncStorage.getItem(CUSTOM_CUE_SECONDS_KEY),
         ]);
 
         if (savedTheme === 'light' || savedTheme === 'dark') {
@@ -78,20 +84,29 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
         if (savedUnit === 'kg' || savedUnit === 'lb') {
           setUnitState(savedUnit);
         }
-        if (savedSoundEnabled === 'true' || savedSoundEnabled === 'false') {
-          setSoundEnabledState(savedSoundEnabled === 'true');
+        if (
+          savedCompletionCueEnabled === 'true' ||
+          savedCompletionCueEnabled === 'false'
+        ) {
+          setCompletionCueEnabledState(savedCompletionCueEnabled === 'true');
         }
-        if (savedPrepareSoundEnabled === 'true' || savedPrepareSoundEnabled === 'false') {
-          setPrepareSoundEnabledState(savedPrepareSoundEnabled === 'true');
+        if (
+          savedCountdownCueEnabled === 'true' ||
+          savedCountdownCueEnabled === 'false'
+        ) {
+          setCountdownCueEnabledState(savedCountdownCueEnabled === 'true');
+        }
+        if (savedCustomCueEnabled === 'true' || savedCustomCueEnabled === 'false') {
+          setCustomCueEnabledState(savedCustomCueEnabled === 'true');
         }
 
-        const parsedPrepareSeconds = Number(savedPrepareSoundSeconds);
+        const parsedCustomCueSeconds = Number(savedCustomCueSeconds);
         if (
-          Number.isFinite(parsedPrepareSeconds) &&
-          Number.isInteger(parsedPrepareSeconds) &&
-          parsedPrepareSeconds >= 1
+          Number.isFinite(parsedCustomCueSeconds) &&
+          Number.isInteger(parsedCustomCueSeconds) &&
+          parsedCustomCueSeconds >= 1
         ) {
-          setPrepareSoundSecondsState(parsedPrepareSeconds);
+          setCustomCueSecondsState(parsedCustomCueSeconds);
         }
       } finally {
         setReady(true);
@@ -124,28 +139,39 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!ready) return;
-    AsyncStorage.setItem(SOUND_ENABLED_KEY, String(soundEnabled)).catch((err) => {
-      console.error('Failed to persist sound enabled setting:', err);
-    });
-  }, [soundEnabled, ready]);
+    AsyncStorage.setItem(COMPLETION_CUE_ENABLED_KEY, String(completionCueEnabled)).catch(
+      (err) => {
+        console.error('Failed to persist completion cue setting:', err);
+      },
+    );
+  }, [completionCueEnabled, ready]);
 
   useEffect(() => {
     if (!ready) return;
-    AsyncStorage.setItem(PREPARE_SOUND_ENABLED_KEY, String(prepareSoundEnabled)).catch(
+    AsyncStorage.setItem(COUNTDOWN_CUE_ENABLED_KEY, String(countdownCueEnabled)).catch(
       (err) => {
-        console.error('Failed to persist prepare sound enabled setting:', err);
+        console.error('Failed to persist countdown cue setting:', err);
       },
     );
-  }, [prepareSoundEnabled, ready]);
+  }, [countdownCueEnabled, ready]);
 
   useEffect(() => {
     if (!ready) return;
-    AsyncStorage.setItem(PREPARE_SOUND_SECONDS_KEY, String(prepareSoundSeconds)).catch(
+    AsyncStorage.setItem(CUSTOM_CUE_ENABLED_KEY, String(customCueEnabled)).catch(
       (err) => {
-        console.error('Failed to persist prepare sound seconds setting:', err);
+        console.error('Failed to persist custom cue setting:', err);
       },
     );
-  }, [prepareSoundSeconds, ready]);
+  }, [customCueEnabled, ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+    AsyncStorage.setItem(CUSTOM_CUE_SECONDS_KEY, String(customCueSeconds)).catch(
+      (err) => {
+        console.error('Failed to persist custom cue seconds setting:', err);
+      },
+    );
+  }, [customCueSeconds, ready]);
 
   const value = useMemo<PreferencesContextValue>(() => {
     const convertFromKg = (kg: number) => (unit === 'lb' ? kg * 2.2 : kg);
@@ -167,21 +193,24 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
       convertFromKg,
       convertToKg,
       formatWeight,
-      soundEnabled,
-      setSoundEnabled: setSoundEnabledState,
-      prepareSoundEnabled,
-      setPrepareSoundEnabled: setPrepareSoundEnabledState,
-      prepareSoundSeconds,
-      setPrepareSoundSeconds: setPrepareSoundSecondsState,
+      completionCueEnabled,
+      setCompletionCueEnabled: setCompletionCueEnabledState,
+      countdownCueEnabled,
+      setCountdownCueEnabled: setCountdownCueEnabledState,
+      customCueEnabled,
+      setCustomCueEnabled: setCustomCueEnabledState,
+      customCueSeconds,
+      setCustomCueSeconds: setCustomCueSecondsState,
     };
   }, [
     ready,
     theme,
     accent,
     unit,
-    soundEnabled,
-    prepareSoundEnabled,
-    prepareSoundSeconds,
+    completionCueEnabled,
+    countdownCueEnabled,
+    customCueEnabled,
+    customCueSeconds,
   ]);
 
   return (

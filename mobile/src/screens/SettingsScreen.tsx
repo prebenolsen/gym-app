@@ -26,12 +26,14 @@ const SettingsScreen = () => {
     setAccent,
     unit,
     setUnit,
-    soundEnabled,
-    setSoundEnabled,
-    prepareSoundEnabled,
-    setPrepareSoundEnabled,
-    prepareSoundSeconds,
-    setPrepareSoundSeconds,
+    completionCueEnabled,
+    setCompletionCueEnabled,
+    countdownCueEnabled,
+    setCountdownCueEnabled,
+    customCueEnabled,
+    setCustomCueEnabled,
+    customCueSeconds,
+    setCustomCueSeconds,
     colors: themeColors,
   } = usePreferences();
   const api = useApi();
@@ -165,16 +167,17 @@ const SettingsScreen = () => {
 
       <View style={styles.card}>
         <Text style={styles.title}>Sounds</Text>
+
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Enable Sounds</Text>
+            <Text style={styles.settingLabel}>Rest Timer Completed</Text>
             <Text style={styles.settingHelp}>
-              Countdown cues at 3, 2, 1 and completion.
+              Play a sound when the rest timer reaches zero.
             </Text>
           </View>
           <Switch
-            value={soundEnabled}
-            onValueChange={setSoundEnabled}
+            value={completionCueEnabled}
+            onValueChange={setCompletionCueEnabled}
             thumbColor="#FFFFFF"
             trackColor={{ false: themeColors.border, true: themeColors.accent }}
           />
@@ -182,30 +185,44 @@ const SettingsScreen = () => {
 
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Prepare Cue</Text>
+            <Text style={styles.settingLabel}>Countdown Cues (3, 2, 1)</Text>
             <Text style={styles.settingHelp}>
-              Play an early warning sound before completion.
+              Play sounds at 3, 2, and 1 seconds before completion.
             </Text>
           </View>
           <Switch
-            value={soundEnabled && prepareSoundEnabled}
-            onValueChange={setPrepareSoundEnabled}
+            value={countdownCueEnabled}
+            onValueChange={setCountdownCueEnabled}
             thumbColor="#FFFFFF"
-            disabled={!soundEnabled}
             trackColor={{ false: themeColors.border, true: themeColors.accent }}
           />
         </View>
 
-        {soundEnabled && prepareSoundEnabled ? (
+        <View style={styles.settingRow}>
+          <View style={styles.settingInfo}>
+            <Text style={styles.settingLabel}>Custom Cue (X Seconds)</Text>
+            <Text style={styles.settingHelp}>
+              Play a sound at n-seconds before the rest timer ends.
+            </Text>
+          </View>
+          <Switch
+            value={customCueEnabled}
+            onValueChange={setCustomCueEnabled}
+            thumbColor="#FFFFFF"
+            trackColor={{ false: themeColors.border, true: themeColors.accent }}
+          />
+        </View>
+
+        {customCueEnabled ? (
           <View style={styles.prepareInputWrap}>
-            <Text style={styles.prepareInputLabel}>Prepare At (seconds)</Text>
+            <Text style={styles.prepareInputLabel}>Custom Cue At (seconds)</Text>
             <TextInput
               style={styles.prepareInput}
-              value={String(prepareSoundSeconds)}
+              value={String(customCueSeconds)}
               onChangeText={(value) => {
                 const parsed = Number(value);
                 if (Number.isInteger(parsed) && parsed >= 1) {
-                  setPrepareSoundSeconds(parsed);
+                  setCustomCueSeconds(parsed);
                 }
               }}
               keyboardType="number-pad"
