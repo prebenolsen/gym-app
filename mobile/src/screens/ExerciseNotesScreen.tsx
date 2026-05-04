@@ -21,7 +21,7 @@ const ExerciseNotesScreen = ({ route, navigation }: any) => {
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
-  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     loadNotes();
@@ -86,6 +86,11 @@ const ExerciseNotesScreen = ({ route, navigation }: any) => {
     }
   };
 
+  const handleSaveAndGoBack = () => {
+    // Notes are auto-saved, just navigate back
+    navigation.goBack();
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -97,14 +102,6 @@ const ExerciseNotesScreen = ({ route, navigation }: any) => {
         {!saving && <View style={{ width: 40 }} />}
       </View>
 
-      <TouchableOpacity
-        style={[styles.insertDateButton, { marginTop: 12 }]}
-        onPress={insertDate}
-      >
-        <Ionicons name="calendar" size={16} color="#fff" />
-        <Text style={styles.insertDateButtonText}>Insert Date</Text>
-      </TouchableOpacity>
-
       <View style={styles.content}>
         <TextInput
           style={styles.noteInput}
@@ -115,6 +112,22 @@ const ExerciseNotesScreen = ({ route, navigation }: any) => {
           multiline
           textAlignVertical="top"
         />
+      </View>
+
+      <View style={styles.bottomActionsContainer}>
+        <TouchableOpacity
+          style={styles.insertDateButton}
+          onPress={insertDate}
+        >
+          <Ionicons name="calendar" size={14} color="#fff" />
+          <Text style={styles.insertDateButtonText}>Insert Date</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.saveNoteButton}
+          onPress={handleSaveAndGoBack}
+        >
+          <Text style={styles.saveNoteButtonText}>Save Note</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -165,19 +178,45 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontSize: 14,
     },
+    bottomActionsContainer: {
+      flexDirection: 'row',
+      gap: 10,
+      paddingHorizontal: 16,
+      paddingTop: 10,
+      paddingBottom: 16,
+      borderTopColor: themeColors.border,
+      borderTopWidth: 1,
+      backgroundColor: themeColors.surface,
+    },
     insertDateButton: {
       backgroundColor: themeColors.accent,
-      borderRadius: radius.md,
-      paddingVertical: 12,
-      paddingHorizontal: 16,
+      borderRadius: radius.sm,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 8,
+      gap: 6,
+      flex: 1,
     },
     insertDateButtonText: {
       color: '#fff',
-      fontSize: 14,
+      fontSize: 12,
+      fontWeight: '700',
+      textTransform: 'capitalize',
+    },
+    saveNoteButton: {
+      backgroundColor: themeColors.accent,
+      borderRadius: radius.sm,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flex: 1,
+    },
+    saveNoteButtonText: {
+      color: '#fff',
+      fontSize: 12,
       fontWeight: '700',
       textTransform: 'capitalize',
     },

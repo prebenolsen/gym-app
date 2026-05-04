@@ -811,6 +811,16 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
         <View style={styles.bottomArea}>
           {restSecondsLeft > 0 ? (
             <View style={styles.restTimerBox}>
+              {pendingDefaultRestSeconds !== null ? (
+                <TouchableOpacity
+                  style={styles.saveDefaultRestButton}
+                  onPress={() => updateExerciseDefaultRest(pendingDefaultRestSeconds)}
+                >
+                  <Text style={styles.saveDefaultRestButtonText}>
+                    Save new default rest timer ({pendingDefaultRestSeconds} seconds)
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
               <View style={styles.restTimerRow}>
                 <TouchableOpacity
                   style={[
@@ -832,30 +842,11 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
                   <Text style={styles.restAdjustButtonText}>+5</Text>
                 </TouchableOpacity>
               </View>
-
-              {pendingDefaultRestSeconds !== null ? (
-                <TouchableOpacity
-                  style={styles.saveDefaultRestButton}
-                  onPress={() => updateExerciseDefaultRest(pendingDefaultRestSeconds)}
-                >
-                  <Text style={styles.saveDefaultRestButtonText}>
-                    Save new default rest timer ({pendingDefaultRestSeconds} seconds)
-                  </Text>
-                </TouchableOpacity>
-              ) : null}
             </View>
           ) : null}
 
           <View style={styles.bottomActionsWrap}>
             <View style={styles.bottomActionsBar}>
-              <TouchableOpacity
-                style={[styles.navButton, currentIndex === 0 && styles.navButtonDisabled]}
-                onPress={() => handleNavigateExercise('prev')}
-                disabled={currentIndex === 0}
-              >
-                <Text style={styles.navButtonText}>Previous</Text>
-              </TouchableOpacity>
-
               <TouchableOpacity
                 style={[
                   styles.saveSetButton,
@@ -873,17 +864,6 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
                         ? `Overwrite #${activeSaveSetNumber}`
                         : `Save #${activeSaveSetNumber}`}
                 </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.navButton,
-                  currentIndex >= exercises.length - 1 && styles.navButtonDisabled,
-                ]}
-                onPress={() => handleNavigateExercise('next')}
-                disabled={currentIndex >= exercises.length - 1}
-              >
-                <Text style={styles.navButtonText}>Next</Text>
               </TouchableOpacity>
             </View>
 
@@ -1046,7 +1026,7 @@ const createStyles = (themeColors: typeof colors) =>
       borderRadius: radius.sm,
       paddingHorizontal: 8,
       paddingVertical: 10,
-      flex: 1.1,
+      flex: 1,
       alignItems: 'center',
     },
     saveSetButtonOverwrite: {
@@ -1066,6 +1046,7 @@ const createStyles = (themeColors: typeof colors) =>
       borderRadius: radius.sm,
       paddingVertical: 10,
       alignItems: 'center',
+      display: 'none',
     },
     navButtonDisabled: {
       opacity: 0.45,
@@ -1131,7 +1112,7 @@ const createStyles = (themeColors: typeof colors) =>
       textTransform: 'capitalize',
     },
     saveDefaultRestButton: {
-      marginTop: 10,
+      marginBottom: 10,
       backgroundColor: themeColors.accent,
       borderRadius: radius.sm,
       paddingVertical: 10,
