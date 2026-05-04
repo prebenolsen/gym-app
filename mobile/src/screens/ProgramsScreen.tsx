@@ -217,7 +217,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 24,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     btnPrimary: {
       backgroundColor: themeColors.accent,
@@ -229,7 +229,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '600',
       fontSize: 12,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     btnSecondary: {
       backgroundColor: themeColors.accentSoft,
@@ -242,8 +242,8 @@ const createStyles = (themeColors: typeof colors) =>
     btnSecondaryText: {
       color: themeColors.accent,
       fontWeight: '600',
-      fontSize: 11,
-      textTransform: 'uppercase',
+      fontSize: 12,
+      textTransform: 'capitalize',
     },
     list: {
       flex: 1,
@@ -257,7 +257,7 @@ const createStyles = (themeColors: typeof colors) =>
       borderColor: themeColors.border,
       color: themeColors.textStrong,
       textAlign: 'center',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     programCard: {
       backgroundColor: themeColors.surface,
@@ -283,7 +283,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 16,
       fontWeight: '600',
       color: themeColors.textStrong,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     workoutsList: {
       marginTop: 4,
@@ -304,12 +304,12 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 14,
       fontWeight: '500',
       color: themeColors.textStrong,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     workoutRowCount: {
       fontSize: 12,
       color: themeColors.textMuted,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     noWorkouts: {
       fontSize: 13,
@@ -317,7 +317,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontStyle: 'italic',
       paddingVertical: 4,
       paddingHorizontal: 12,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     btnSmall: {
       backgroundColor: themeColors.danger,
@@ -329,7 +329,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '600',
       fontSize: 14,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     notification: {
       backgroundColor: themeColors.success,
@@ -345,7 +345,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '600',
       fontSize: 14,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
   });
 

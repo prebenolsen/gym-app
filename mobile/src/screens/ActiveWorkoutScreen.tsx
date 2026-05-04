@@ -936,7 +936,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontSize: 22,
       fontWeight: '700',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     list: {
       flex: 1,
@@ -958,12 +958,12 @@ const createStyles = (themeColors: typeof colors) =>
     exerciseName: {
       color: themeColors.textStrong,
       fontWeight: '700',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     exerciseMeta: {
       color: themeColors.textMuted,
       marginTop: 4,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
       marginBottom: 10,
     },
     setsHeaderRow: {
@@ -978,9 +978,9 @@ const createStyles = (themeColors: typeof colors) =>
     setsHeaderCell: {
       flex: 1,
       color: themeColors.textMuted,
-      fontSize: 11,
+      fontSize: 12,
       fontWeight: '700',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     setsStatusHeaderCell: {
       width: 24,
@@ -992,7 +992,7 @@ const createStyles = (themeColors: typeof colors) =>
     previousValueOverlay: {
       position: 'absolute',
       right: 8,
-      fontSize: 11,
+      fontSize: 12,
       color: themeColors.textMuted,
       fontStyle: 'italic',
       top: '50%',
@@ -1055,8 +1055,8 @@ const createStyles = (themeColors: typeof colors) =>
     saveSetButtonText: {
       color: '#fff',
       fontWeight: '700',
-      fontSize: 11,
-      textTransform: 'uppercase',
+      fontSize: 12,
+      textTransform: 'capitalize',
     },
     navButton: {
       flex: 1,
@@ -1073,8 +1073,8 @@ const createStyles = (themeColors: typeof colors) =>
     navButtonText: {
       color: themeColors.accent,
       fontWeight: '700',
-      fontSize: 11,
-      textTransform: 'uppercase',
+      fontSize: 12,
+      textTransform: 'capitalize',
     },
     bottomActionsWrap: {
       backgroundColor: themeColors.surface,
@@ -1109,7 +1109,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontSize: 18,
       fontWeight: '700',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     restAdjustButton: {
       minWidth: 68,
@@ -1128,7 +1128,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.accent,
       fontWeight: '700',
       fontSize: 12,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     saveDefaultRestButton: {
       marginTop: 10,
@@ -1141,8 +1141,8 @@ const createStyles = (themeColors: typeof colors) =>
     saveDefaultRestButtonText: {
       color: '#fff',
       fontWeight: '700',
-      fontSize: 11,
-      textTransform: 'uppercase',
+      fontSize: 12,
+      textTransform: 'capitalize',
       textAlign: 'center',
     },
     bottomActionsBar: {
@@ -1179,8 +1179,8 @@ const createStyles = (themeColors: typeof colors) =>
     cancelButtonText: {
       color: themeColors.danger,
       fontWeight: '700',
-      fontSize: 11,
-      textTransform: 'uppercase',
+      fontSize: 12,
+      textTransform: 'capitalize',
     },
     secondaryButton: {
       backgroundColor: 'transparent',
@@ -1197,7 +1197,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontWeight: '700',
       fontSize: 10,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     finishButton: {
       backgroundColor: 'transparent',
@@ -1213,19 +1213,19 @@ const createStyles = (themeColors: typeof colors) =>
     finishButtonText: {
       color: themeColors.success,
       fontWeight: '700',
-      fontSize: 11,
-      textTransform: 'uppercase',
+      fontSize: 12,
+      textTransform: 'capitalize',
     },
     emptyTitle: {
       color: themeColors.textStrong,
       fontSize: 22,
       fontWeight: '700',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     emptyText: {
       color: themeColors.textMuted,
       marginTop: 10,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
       textAlign: 'center',
     },
   });

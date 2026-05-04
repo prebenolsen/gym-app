@@ -17,6 +17,7 @@ import WorkoutsCatalogScreen from './screens/WorkoutsCatalogScreen';
 import ActiveWorkoutScreen from './screens/ActiveWorkoutScreen';
 import ExerciseHistoryScreen from './screens/ExerciseHistoryScreen';
 import ExerciseNotesScreen from './screens/ExerciseNotesScreen';
+import ExerciseProgressListScreen from './screens/ExerciseProgressListScreen';
 import CalendarScreen from './screens/CalendarScreen';
 import WorkoutHistoryDetailScreen from './screens/WorkoutHistoryDetailScreen';
 import AuthScreen from './screens/AuthScreen';
@@ -54,6 +55,10 @@ const ProgramsStackNavigator = () => {
       <Stack.Screen name="ProgramsCatalog" component={ProgramsCatalogScreen} />
       <Stack.Screen name="ProgramTemplate" component={ProgramTemplateScreen} />
       <Stack.Screen name="WorkoutsCatalog" component={WorkoutsCatalogScreen} />
+      <Stack.Screen
+        name="ExerciseProgressList"
+        component={ExerciseProgressListScreen}
+      />
       <Stack.Screen name="ExerciseProgress" component={ExerciseProgressScreen} />
     </Stack.Navigator>
   );
@@ -191,6 +196,12 @@ const AppRoutes = () => {
           <Tab.Screen
             name="ProgramsStack"
             component={ProgramsStackNavigator}
+            listeners={({ navigation }) => ({
+              tabPress: (event) => {
+                event.preventDefault();
+                navigation.navigate('ProgramsStack', { screen: 'ProgramsList' });
+              },
+            })}
             options={{
               tabBarIcon: ({ color, focused }) => (
                 <View style={createTabIconWrapperStyle(focused, colors.accent)}>

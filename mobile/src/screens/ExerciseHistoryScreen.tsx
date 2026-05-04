@@ -147,7 +147,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontSize: 18,
       fontWeight: '700',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
       flex: 1,
       textAlign: 'center',
     },
@@ -174,7 +174,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 16,
       fontWeight: '700',
       marginBottom: 8,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     setsTable: {
       backgroundColor: themeColors.surface,

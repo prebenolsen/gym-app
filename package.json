@@ -18,7 +18,8 @@
     "mobile:ios": "npm run ios --workspace=mobile",
     "mobile:web": "npm run web --workspace=mobile",
     "web:dev": "npm run dev --workspace=web",
-    "backend:dev": "npm run dev --workspace=backend"
+    "backend:dev": "npm run dev --workspace=backend",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "react": "19.1.0",
@@ -27,6 +28,7 @@
     "typescript": "~5.9.2"
   },
   "devDependencies": {
+    "patch-package": "^8.0.1",
     "prettier": "^3.8.3"
   }
 }

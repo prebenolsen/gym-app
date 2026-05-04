@@ -361,7 +361,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: '700',
       color: themeColors.textStrong,
       marginBottom: 12,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     accountEmail: {
       color: themeColors.textMuted,
@@ -376,12 +376,12 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontWeight: '700',
       marginBottom: 4,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     aboutLineMuted: {
       color: themeColors.textMuted,
       marginBottom: 8,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     settingRow: {
       flexDirection: 'row',
@@ -395,7 +395,7 @@ const createStyles = (themeColors: typeof colors) =>
     settingLabel: {
       color: themeColors.textStrong,
       fontWeight: '700',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
       marginBottom: 4,
     },
     settingHelp: {
@@ -410,7 +410,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textMuted,
       fontSize: 12,
       fontWeight: '700',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     prepareInput: {
       borderWidth: 1,
@@ -420,14 +420,14 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       paddingHorizontal: 12,
       paddingVertical: 10,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     section: {
       marginTop: 16,
       marginBottom: 8,
       color: themeColors.textStrong,
       fontWeight: '700',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     chipRow: {
       flexDirection: 'row',
@@ -448,7 +448,7 @@ const createStyles = (themeColors: typeof colors) =>
     chipText: {
       color: themeColors.textMuted,
       fontWeight: '700',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     chipTextActive: {
       color: themeColors.accent,
@@ -462,7 +462,7 @@ const createStyles = (themeColors: typeof colors) =>
       paddingHorizontal: 12,
       paddingVertical: 10,
       marginBottom: 10,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     primaryButton: {
       backgroundColor: themeColors.accent,
@@ -474,7 +474,7 @@ const createStyles = (themeColors: typeof colors) =>
     primaryButtonText: {
       color: '#FFFFFF',
       fontWeight: '700',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     secondaryButton: {
       borderColor: themeColors.accent,
@@ -486,7 +486,7 @@ const createStyles = (themeColors: typeof colors) =>
     secondaryButtonText: {
       color: themeColors.accent,
       fontWeight: '700',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     successButton: {
       borderColor: themeColors.success,
@@ -528,7 +528,7 @@ const createStyles = (themeColors: typeof colors) =>
     feedbackCancelText: {
       color: themeColors.textMuted,
       fontWeight: '700',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     dangerBox: {
       marginTop: 18,
@@ -542,7 +542,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.danger,
       fontWeight: '700',
       marginBottom: 6,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     dangerButton: {
       backgroundColor: themeColors.danger,
@@ -553,7 +553,7 @@ const createStyles = (themeColors: typeof colors) =>
     dangerButtonText: {
       color: '#FFFFFF',
       fontWeight: '700',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
   });
 

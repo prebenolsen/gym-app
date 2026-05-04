@@ -1,0 +1,24 @@
+diff --git a/node_modules/react-native-worklets/src/WorkletsModule/NativeWorklets.native.ts b/node_modules/react-native-worklets/src/WorkletsModule/NativeWorklets.native.ts
+index e9ac98b..faa067c 100644
+--- a/node_modules/react-native-worklets/src/WorkletsModule/NativeWorklets.native.ts
++++ b/node_modules/react-native-worklets/src/WorkletsModule/NativeWorklets.native.ts
+@@ -26,7 +26,18 @@ class NativeWorklets implements IWorkletsModule {
+       global.__workletsModuleProxy === undefined &&
+       globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative
+     ) {
+-      WorkletsTurboModule?.installTurboModule(bundleModeEnabled);
++      // Backward-compat: older native Worklets exposes installTurboModule() with 0 args.
++      const installTurboModule = WorkletsTurboModule?.installTurboModule as
++        | ((bundleModeEnabled: boolean) => boolean)
++        | (() => boolean)
++        | undefined;
++      if (installTurboModule) {
++        if (installTurboModule.length === 0) {
++          installTurboModule();
++        } else {
++          installTurboModule(bundleModeEnabled);
++        }
++      }
+       if (__DEV__ && bundleModeEnabled) {
+         console.log(
+           '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'

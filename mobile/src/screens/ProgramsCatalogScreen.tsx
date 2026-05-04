@@ -142,7 +142,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 22,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     subtitle: {
       fontSize: 13,
@@ -165,7 +165,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 18,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
       marginBottom: 6,
     },
     cardDescription: {
@@ -187,9 +187,9 @@ const createStyles = (themeColors: typeof colors) =>
       alignItems: 'center',
     },
     statLabel: {
-      fontSize: 11,
+      fontSize: 12,
       color: themeColors.textMuted,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
       marginBottom: 4,
     },
     statValue: {
@@ -204,7 +204,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 13,
       fontWeight: '600',
       color: themeColors.textStrong,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
       marginBottom: 8,
     },
     workoutRow: {
@@ -233,7 +233,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '700',
       fontSize: 14,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
   });
 

@@ -332,13 +332,14 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
           >
             <Text style={styles.btnText}>Add exercises from the catalog</Text>
           </TouchableOpacity>
-        </ScrollView>
-      </View>
 
-      <View style={styles.bottomActions}>
-        <TouchableOpacity onPress={handleDeleteWorkout} style={styles.deleteButton}>
-          <Text style={styles.deleteButtonText}>Delete Workout</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleDeleteWorkout}
+            style={[styles.deleteButton, styles.deleteButtonInList]}
+          >
+            <Text style={styles.deleteButtonText}>Delete Workout</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
     </View>
   );
@@ -360,7 +361,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 24,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     titleInput: {
       fontSize: 24,
@@ -369,7 +370,7 @@ const createStyles = (themeColors: typeof colors) =>
       borderBottomWidth: 2,
       borderBottomColor: themeColors.accent,
       paddingBottom: 8,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     startWorkoutButton: {
       marginTop: 10,
@@ -383,7 +384,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.surface,
       fontWeight: '700',
       fontSize: 12,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     section: {
       flex: 1,
@@ -394,7 +395,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: 'bold',
       color: themeColors.textStrong,
       marginBottom: 16,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     addExercise: {
       flexDirection: 'row',
@@ -425,7 +426,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontWeight: '600',
       fontSize: 12,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     list: {
       flex: 1,
@@ -459,7 +460,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: '600',
       color: themeColors.textStrong,
       flex: 1,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     btnSmallDelete: {
       backgroundColor: themeColors.danger,
@@ -471,7 +472,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontWeight: '600',
       fontSize: 14,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     exerciseControls: {
       gap: 12,
@@ -484,7 +485,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: '600',
       color: themeColors.textStrong,
       marginBottom: 8,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     reorderButtons: {
       flexDirection: 'row',
@@ -501,17 +502,10 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontWeight: '600',
       fontSize: 12,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     btnDisabled: {
       opacity: 0.5,
-    },
-    bottomActions: {
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderTopWidth: 1,
-      borderTopColor: themeColors.border,
-      backgroundColor: themeColors.surface,
     },
     deleteButton: {
       backgroundColor: themeColors.danger,
@@ -520,11 +514,15 @@ const createStyles = (themeColors: typeof colors) =>
       borderRadius: radius.sm,
       alignItems: 'center',
     },
+    deleteButtonInList: {
+      marginTop: 8,
+      marginBottom: 20,
+    },
     deleteButtonText: {
       color: '#fff',
       fontWeight: '700',
       fontSize: 12,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     exerciseControlsRow: {
       flexDirection: 'row',

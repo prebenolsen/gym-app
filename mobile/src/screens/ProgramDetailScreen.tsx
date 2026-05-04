@@ -231,7 +231,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 24,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     titleInput: {
       fontSize: 24,
@@ -240,7 +240,7 @@ const createStyles = (themeColors: typeof colors) =>
       borderBottomWidth: 2,
       borderBottomColor: themeColors.accent,
       paddingBottom: 8,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     headerActions: {
       flexDirection: 'row',
@@ -257,8 +257,8 @@ const createStyles = (themeColors: typeof colors) =>
     favoriteButtonText: {
       color: themeColors.accent,
       fontWeight: '700',
-      fontSize: 11,
-      textTransform: 'uppercase',
+      fontSize: 12,
+      textTransform: 'capitalize',
     },
     deleteButton: {
       backgroundColor: themeColors.danger,
@@ -269,8 +269,8 @@ const createStyles = (themeColors: typeof colors) =>
     deleteButtonText: {
       color: '#fff',
       fontWeight: '700',
-      fontSize: 11,
-      textTransform: 'uppercase',
+      fontSize: 12,
+      textTransform: 'capitalize',
     },
     section: {
       flex: 1,
@@ -299,14 +299,14 @@ const createStyles = (themeColors: typeof colors) =>
     btnSecondaryText: {
       color: themeColors.accent,
       fontWeight: '600',
-      fontSize: 11,
-      textTransform: 'uppercase',
+      fontSize: 12,
+      textTransform: 'capitalize',
     },
     sectionTitle: {
       fontSize: 18,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     btnPrimary: {
       backgroundColor: themeColors.accent,
@@ -318,7 +318,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '600',
       fontSize: 12,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     list: {
       flex: 1,
@@ -331,7 +331,7 @@ const createStyles = (themeColors: typeof colors) =>
       borderColor: themeColors.border,
       color: themeColors.textStrong,
       textAlign: 'center',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     workoutCard: {
       backgroundColor: themeColors.surface,
@@ -349,19 +349,19 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: '600',
       color: themeColors.textStrong,
       marginBottom: 6,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     exerciseItem: {
       fontSize: 13,
       color: themeColors.textMuted,
       lineHeight: 20,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     exerciseEmpty: {
       fontSize: 13,
       color: themeColors.textMuted,
       fontStyle: 'italic',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
   });
 

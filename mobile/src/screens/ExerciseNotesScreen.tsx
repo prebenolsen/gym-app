@@ -145,7 +145,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontSize: 18,
       fontWeight: '700',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
       flex: 1,
       textAlign: 'center',
     },
@@ -179,7 +179,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontSize: 14,
       fontWeight: '700',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
   });
 

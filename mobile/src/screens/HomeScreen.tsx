@@ -12,7 +12,6 @@ import {
   type Program,
   type Workout,
   type WorkoutSession,
-  type ExerciseHistorySummary,
   type WorkoutHistoryByDate,
   type Exercise,
   type MuscleGroup,
@@ -161,13 +160,12 @@ const getWorkoutMessage = (count: number): string => {
 };
 
 const HomeScreen = ({ navigation }: any) => {
-  const { formatWeight, colors: themeColors } = usePreferences();
+  const { colors: themeColors } = usePreferences();
   const styles = createStyles(themeColors);
   const [stats, setStats] = useState<WorkoutStats | null>(null);
   const [programTree, setProgramTree] = useState<ProgramWithWorkouts[]>([]);
   const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null);
   const [workouts7Days, setWorkouts7Days] = useState<number>(0);
-  const [exercises, setExercises] = useState<ExerciseHistorySummary[]>([]);
   const [daysSinceByWorkout, setDaysSinceByWorkout] = useState<
     Record<string, number | null>
   >({});
@@ -270,12 +268,6 @@ const HomeScreen = ({ navigation }: any) => {
         console.error('Failed to fetch 7-day workouts count:', err);
       }
 
-      try {
-        const exercisesData = await api.getExerciseHistory();
-        setExercises(exercisesData);
-      } catch (err) {
-        console.error('Failed to fetch exercise history:', err);
-      }
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
     } finally {
@@ -300,7 +292,9 @@ const HomeScreen = ({ navigation }: any) => {
           </Text>
           <TouchableOpacity
             style={styles.btnGetStarted}
-            onPress={() => navigation.navigate('ProgramsStack')}
+            onPress={() =>
+              navigation.navigate('ProgramsStack', { screen: 'ProgramsList' })
+            }
           >
             <Text style={styles.btnGetStartedText}>Get started!</Text>
           </TouchableOpacity>
@@ -330,7 +324,9 @@ const HomeScreen = ({ navigation }: any) => {
         <View style={styles.statsGrid}>
           <TouchableOpacity
             style={styles.statCard}
-            onPress={() => navigation.navigate('ProgramsStack')}
+            onPress={() =>
+              navigation.navigate('ProgramsStack', { screen: 'ProgramsList' })
+            }
           >
             <Ionicons
               name="clipboard-outline"
@@ -344,7 +340,9 @@ const HomeScreen = ({ navigation }: any) => {
 
           <TouchableOpacity
             style={styles.statCard}
-            onPress={() => navigation.navigate('ActiveWorkoutStack')}
+            onPress={() =>
+              navigation.navigate('ProgramsStack', { screen: 'ProgramsList' })
+            }
           >
             <Ionicons
               name="body-outline"
@@ -358,7 +356,9 @@ const HomeScreen = ({ navigation }: any) => {
 
           <TouchableOpacity
             style={styles.statCard}
-            onPress={() => navigation.navigate('ProgramsStack')}
+            onPress={() =>
+              navigation.navigate('ProgramsStack', { screen: 'ExerciseProgressList' })
+            }
           >
             <Ionicons
               name="barbell-outline"
@@ -479,34 +479,6 @@ const HomeScreen = ({ navigation }: any) => {
             );
           })()}
         </View>
-
-        {exercises.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Your Exercise Progress</Text>
-            {exercises.map((exercise) => (
-              <TouchableOpacity
-                key={exercise.exercise_id}
-                style={styles.exerciseCard}
-                onPress={() => {
-                  navigation.navigate('ProgramsStack', {
-                    screen: 'ExerciseProgress',
-                    params: { exerciseId: exercise.exercise_id },
-                  });
-                }}
-              >
-                <Text style={styles.exerciseCardName}>{exercise.exercise_name}</Text>
-                <View style={styles.exerciseCardStats}>
-                  <Text style={styles.exerciseStatText}>
-                    Times exercised: {exercise.times_done}
-                  </Text>
-                  <Text style={styles.exerciseStatText}>
-                    Max: {formatWeight(exercise.personal_best)}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
       </ScrollView>
     </View>
   );
@@ -604,13 +576,13 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 24,
       fontWeight: 'bold',
       color: themeColors.accent,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     statLabel: {
       fontSize: 12,
       color: themeColors.textMuted,
       marginTop: 6,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     section: {
       marginBottom: 24,
@@ -619,7 +591,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 15,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
       marginBottom: 12,
     },
     noData: {
@@ -647,7 +619,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 15,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
       flex: 1,
     },
     workoutRowTile: {
@@ -696,29 +668,6 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textMuted,
       flex: 1,
       textAlign: 'right',
-    },
-    exerciseCard: {
-      backgroundColor: themeColors.surface,
-      borderRadius: radius.sm,
-      borderWidth: 1,
-      borderColor: themeColors.border,
-      padding: 12,
-      marginBottom: 8,
-      ...shadow.card,
-    },
-    exerciseCardName: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: themeColors.textStrong,
-      marginBottom: 4,
-    },
-    exerciseCardStats: {
-      flexDirection: 'row',
-      gap: 16,
-    },
-    exerciseStatText: {
-      fontSize: 12,
-      color: themeColors.textMuted,
     },
   });
 

@@ -35,12 +35,7 @@ const WorkoutsCatalogScreen = ({ route, navigation }: any) => {
     setImporting(template.id);
     try {
       await api.createWorkoutWithExercises(programId, template);
-      Alert.alert('Success', `"${template.name}" has been added to your program!`, [
-        {
-          text: 'Back to Program',
-          onPress: () => navigation.goBack(),
-        },
-      ]);
+      Alert.alert('Success', `"${template.name}" has been added to your program!`);
     } catch (err) {
       console.error('Failed to import template:', err);
       Alert.alert('Error', 'Failed to import workout template. Please try again.');
@@ -52,9 +47,6 @@ const WorkoutsCatalogScreen = ({ route, navigation }: any) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backBtnText}>← Back to Program</Text>
-        </TouchableOpacity>
         <Text style={styles.title}>Workout Templates</Text>
         <Text style={styles.subtitle}>
           Choose a workout template to add to your program
@@ -120,19 +112,11 @@ const createStyles = (themeColors: typeof colors) =>
       borderBottomColor: themeColors.border,
       gap: 4,
     },
-    backBtn: {
-      marginBottom: 8,
-    },
-    backBtnText: {
-      color: themeColors.accent,
-      fontSize: 14,
-      fontWeight: '600',
-    },
     title: {
       fontSize: 22,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     subtitle: {
       fontSize: 13,
@@ -162,14 +146,14 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 16,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
       flex: 1,
     },
     categoryBadge: {
-      fontSize: 11,
+      fontSize: 12,
       color: themeColors.accent,
       fontWeight: '600',
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
       borderWidth: 1,
       borderColor: themeColors.accent,
       borderRadius: radius.sm,
@@ -186,7 +170,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 13,
       fontWeight: '700',
       color: themeColors.textStrong,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
       marginBottom: 8,
     },
     exerciseRow: {
@@ -214,7 +198,7 @@ const createStyles = (themeColors: typeof colors) =>
       paddingVertical: 3,
     },
     badgeText: {
-      fontSize: 11,
+      fontSize: 12,
       color: themeColors.accent,
       fontWeight: '600',
     },
@@ -232,7 +216,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '700',
       fontSize: 14,
-      textTransform: 'uppercase',
+      textTransform: 'capitalize',
     },
     errorText: {
       color: themeColors.textStrong,
