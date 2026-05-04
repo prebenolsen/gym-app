@@ -15,9 +15,10 @@ import { usePreferences } from '../context/PreferencesContext';
 import { colors, radius, shadow } from '../theme';
 
 type ViewMode = 'max-weight' | 'total-volume';
-type RangeKey = '1m' | '3m' | '6m' | '12m' | 'all';
+type RangeKey = '2w' | '1m' | '3m' | '6m' | '12m' | 'all';
 
 const RANGE_OPTIONS: { key: RangeKey; label: string; days?: number }[] = [
+  { key: '2w', label: '2W', days: 14 },
   { key: '1m', label: '1M', days: 30 },
   { key: '3m', label: '3M', days: 90 },
   { key: '6m', label: '6M', days: 180 },
@@ -396,6 +397,9 @@ const createStyles = (themeColors: typeof colors) =>
     },
     rangeRow: {
       gap: 8,
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexGrow: 1,
       paddingRight: 4,
     },
     rangeChip: {
