@@ -279,8 +279,10 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
                 <Text style={[styles.tableCell, styles.tableHeaderText]}>Sets</Text>
                 <Text style={[styles.tableCell, styles.tableHeaderText]}>Reps</Text>
               </View>
-              {data.history.map((entry, idx) => (
-                <View
+              {[...data.history]
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                .map((entry, idx) => (
+                              <View
                   key={idx}
                   style={[styles.tableRow, idx % 2 === 0 && styles.tableRowEven]}
                 >
