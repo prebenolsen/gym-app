@@ -69,6 +69,22 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
     }
   };
 
+  const handleAddWorkout = () => {
+    Alert.alert('Add Workout', 'Choose how you want to add a workout', [
+      {
+        text: 'From Templates',
+        onPress: () => navigation.navigate('WorkoutsCatalog', { programId }),
+      },
+      {
+        text: 'Create Empty',
+        onPress: () => {
+          void handleCreateWorkout();
+        },
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
   const handleRenameProgram = async () => {
     const newName = editName.trim();
     setEditing(false);
@@ -137,49 +153,40 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        {editing ? (
-          <TextInput
-            style={styles.titleInput}
-            value={editName}
-            onChangeText={setEditName}
-            onBlur={handleRenameProgram}
-            autoFocus
-            onSubmitEditing={handleRenameProgram}
-          />
-        ) : (
-          <Text style={styles.title} onPress={() => setEditing(true)}>
-            {editName}
-          </Text>
-        )}
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.favoriteButton} onPress={handleToggleFavorite}>
-            <Text style={styles.favoriteButtonText}>
-              {program?.is_favorite_program ? '★ Favorited' : '☆ Add Favorite'}
+        <View style={styles.titleRow}>
+          <TouchableOpacity
+            style={styles.favoriteStarButton}
+            onPress={handleToggleFavorite}
+            accessibilityRole="button"
+            accessibilityLabel="Toggle favorite program"
+          >
+            <Text style={styles.favoriteStarText}>
+              {program?.is_favorite_program ? '★' : '☆'}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteProgram}>
-            <Text style={styles.deleteButtonText}>Delete Program</Text>
-          </TouchableOpacity>
+          {editing ? (
+            <TextInput
+              style={styles.titleInput}
+              value={editName}
+              onChangeText={setEditName}
+              onBlur={handleRenameProgram}
+              autoFocus
+              onSubmitEditing={handleRenameProgram}
+            />
+          ) : (
+            <Text style={styles.title} onPress={() => setEditing(true)}>
+              {editName}
+            </Text>
+          )}
         </View>
       </View>
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Workouts</Text>
-          <View style={styles.sectionActions}>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('WorkoutsCatalog', { programId })}
-              style={styles.btnSecondary}
-            >
-              <Text style={styles.btnSecondaryText}>Browse Templates</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleCreateWorkout} style={styles.btnPrimary}>
-              <Text style={styles.btnText}>+ Add</Text>
-            </TouchableOpacity>
-          </View>
         </View>
 
-        <ScrollView style={styles.list}>
+        <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
           {workouts.length === 0 ? (
             <Text style={styles.noData}>No workouts yet. Add one to get started!</Text>
           ) : (
@@ -208,6 +215,17 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
               </TouchableOpacity>
             ))
           )}
+
+          <TouchableOpacity onPress={handleAddWorkout} style={styles.addWorkoutButton}>
+            <Text style={styles.btnText}>+ Add</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.deleteButton, styles.deleteButtonInList]}
+            onPress={handleDeleteProgram}
+          >
+            <Text style={styles.deleteButtonText}>Delete Program</Text>
+          </TouchableOpacity>
         </ScrollView>
       </View>
     </View>
@@ -225,15 +243,32 @@ const createStyles = (themeColors: typeof colors) =>
       padding: 16,
       borderBottomWidth: 1,
       borderBottomColor: themeColors.border,
-      gap: 8,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    favoriteStarButton: {
+      padding: 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    favoriteStarText: {
+      color: themeColors.accent,
+      fontSize: 27,
+      fontWeight: '800',
+      lineHeight: 30,
     },
     title: {
+      flex: 1,
       fontSize: 24,
       fontWeight: 'bold',
       color: themeColors.textStrong,
       textTransform: 'capitalize',
     },
     titleInput: {
+      flex: 1,
       fontSize: 24,
       fontWeight: 'bold',
       color: themeColors.textStrong,
@@ -242,34 +277,17 @@ const createStyles = (themeColors: typeof colors) =>
       paddingBottom: 8,
       textTransform: 'capitalize',
     },
-    headerActions: {
-      flexDirection: 'row',
-      gap: 8,
-    },
-    favoriteButton: {
-      backgroundColor: themeColors.accentSoft,
-      borderWidth: 1,
-      borderColor: themeColors.accent,
-      borderRadius: radius.sm,
-      paddingHorizontal: 10,
-      paddingVertical: 8,
-    },
-    favoriteButtonText: {
-      color: themeColors.accent,
-      fontWeight: '700',
-      fontSize: 12,
-      textTransform: 'capitalize',
-    },
     deleteButton: {
       backgroundColor: themeColors.danger,
       borderRadius: radius.sm,
-      paddingHorizontal: 10,
-      paddingVertical: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      alignItems: 'center',
     },
     deleteButtonText: {
       color: '#fff',
       fontWeight: '700',
-      fontSize: 12,
+      fontSize: 13,
       textTransform: 'capitalize',
     },
     section: {
@@ -282,25 +300,6 @@ const createStyles = (themeColors: typeof colors) =>
       alignItems: 'center',
       marginBottom: 16,
       flexWrap: 'wrap',
-      gap: 8,
-    },
-    sectionActions: {
-      flexDirection: 'row',
-      gap: 8,
-    },
-    btnSecondary: {
-      backgroundColor: themeColors.accentSoft,
-      paddingHorizontal: 10,
-      paddingVertical: 8,
-      borderRadius: radius.sm,
-      borderWidth: 1,
-      borderColor: themeColors.accent,
-    },
-    btnSecondaryText: {
-      color: themeColors.accent,
-      fontWeight: '600',
-      fontSize: 12,
-      textTransform: 'capitalize',
     },
     sectionTitle: {
       fontSize: 18,
@@ -308,20 +307,26 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       textTransform: 'capitalize',
     },
-    btnPrimary: {
+    addWorkoutButton: {
       backgroundColor: themeColors.accent,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
+      width: '100%',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
       borderRadius: radius.sm,
+      alignItems: 'center',
+      marginTop: 8,
     },
     btnText: {
       color: '#fff',
-      fontWeight: '600',
-      fontSize: 12,
+      fontWeight: '700',
+      fontSize: 14,
       textTransform: 'capitalize',
     },
     list: {
       flex: 1,
+    },
+    listContent: {
+      paddingBottom: 20,
     },
     noData: {
       padding: 16,
@@ -362,6 +367,10 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textMuted,
       fontStyle: 'italic',
       textTransform: 'capitalize',
+    },
+    deleteButtonInList: {
+      marginTop: 10,
+      marginBottom: 8,
     },
   });
 

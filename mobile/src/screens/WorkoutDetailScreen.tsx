@@ -9,11 +9,29 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
-import { type Exercise } from '@gym-app/shared';
+import {
+  type Exercise,
+  type MuscleGroup,
+  exercises as exerciseCatalog,
+} from '@gym-app/shared';
 import NumberSpinner from '../components/NumberSpinner';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
+import MuscleMapThumb from '../components/MuscleMapThumb';
+
+const normalizeExerciseName = (name: string): string =>
+  name.trim().toLowerCase().replace(/\s+/g, ' ');
+
+const EXERCISE_NAME_TO_MUSCLE_GROUP = new Map<string, MuscleGroup>(
+  exerciseCatalog.map((exercise) => [
+    normalizeExerciseName(exercise.name),
+    exercise.muscleGroup,
+  ]),
+);
+
+const getExerciseMuscleGroup = (name: string): MuscleGroup | undefined =>
+  EXERCISE_NAME_TO_MUSCLE_GROUP.get(normalizeExerciseName(name));
 
 const WorkoutDetailScreen = ({ route, navigation }: any) => {
   const { colors: themeColors } = usePreferences();
@@ -90,35 +108,6 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
         style: 'destructive',
       },
     ]);
-  };
-
-  const handleMoveExercise = async (index: number, direction: 'up' | 'down') => {
-    if (
-      (direction === 'up' && index === 0) ||
-      (direction === 'down' && index === exercises.length - 1)
-    ) {
-      return;
-    }
-
-    const newExercises = [...exercises];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    [newExercises[index], newExercises[targetIndex]] = [
-      newExercises[targetIndex],
-      newExercises[index],
-    ];
-
-    setExercises(newExercises);
-
-    try {
-      const orderData = newExercises.map((e, idx) => ({
-        id: e.id,
-        order: idx + 1,
-      }));
-      await api.reorderExercises(workoutId, orderData);
-    } catch (err) {
-      console.error('Failed to reorder exercises:', err);
-      setExercises(exercises);
-    }
   };
 
   const handleStartWorkout = async () => {
@@ -218,13 +207,6 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
             {editName}
           </Text>
         )}
-        <TouchableOpacity
-          onPress={handleStartWorkout}
-          style={styles.startWorkoutButton}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.startWorkoutButtonText}>Start Workout</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
@@ -232,15 +214,23 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
 
         <ScrollView style={styles.list}>
           {exercises.length > 0 &&
-            exercises.map((exercise, index) => (
+            exercises.map((exercise) => (
               <View key={exercise.id} style={styles.exerciseCard}>
                 <View style={styles.exerciseHeader}>
-                  <Text style={styles.exerciseName}>{exercise.name}</Text>
+                  <View style={styles.exerciseHeaderLeft}>
+                    <MuscleMapThumb
+                      group={getExerciseMuscleGroup(exercise.name)}
+                      size={54}
+                      mutedColor={themeColors.textMuted}
+                      highlightColor={themeColors.accent}
+                    />
+                    <Text style={styles.exerciseName}>{exercise.name}</Text>
+                  </View>
                   <TouchableOpacity
                     onPress={() => handleDeleteExercise(exercise.id)}
                     style={styles.btnSmallDelete}
                   >
-                    <Text style={styles.btnSmallText}>✕</Text>
+                    <Text style={styles.btnSmallText}>-</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -275,29 +265,6 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                     </View>
                   </View>
 
-                  <View style={styles.reorderGroup}>
-                    <Text style={styles.label}>Reorder</Text>
-                    <View style={styles.reorderButtons}>
-                      <TouchableOpacity
-                        onPress={() => handleMoveExercise(index, 'up')}
-                        disabled={index === 0}
-                        style={[styles.btnReorder, index === 0 && styles.btnDisabled]}
-                      >
-                        <Text style={styles.btnReorderText}>▲</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        onPress={() => handleMoveExercise(index, 'down')}
-                        disabled={index === exercises.length - 1}
-                        style={[
-                          styles.btnReorder,
-                          index === exercises.length - 1 && styles.btnDisabled,
-                        ]}
-                      >
-                        <Text style={styles.btnReorderText}>▼</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
                 </View>
               </View>
             ))}
@@ -341,6 +308,16 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
           </TouchableOpacity>
         </ScrollView>
       </View>
+
+      <View style={styles.bottomActions}>
+        <TouchableOpacity
+          onPress={handleStartWorkout}
+          style={styles.startWorkoutButton}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.startWorkoutButtonText}>Start Workout</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -373,17 +350,17 @@ const createStyles = (themeColors: typeof colors) =>
       textTransform: 'capitalize',
     },
     startWorkoutButton: {
-      marginTop: 10,
       backgroundColor: themeColors.accent,
       borderRadius: radius.sm,
-      alignSelf: 'flex-start',
-      paddingHorizontal: 12,
-      paddingVertical: 8,
+      width: '100%',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      alignItems: 'center',
     },
     startWorkoutButtonText: {
-      color: themeColors.surface,
+      color: '#fff',
       fontWeight: '700',
-      fontSize: 12,
+      fontSize: 14,
       textTransform: 'capitalize',
     },
     section: {
@@ -412,7 +389,7 @@ const createStyles = (themeColors: typeof colors) =>
       backgroundColor: themeColors.surface,
     },
     btnPrimary: {
-      backgroundColor: themeColors.success,
+      backgroundColor: themeColors.accent,
       paddingHorizontal: 12,
       paddingVertical: 8,
       borderRadius: radius.sm,
@@ -423,7 +400,7 @@ const createStyles = (themeColors: typeof colors) =>
       marginBottom: 16,
     },
     btnText: {
-      color: themeColors.textStrong,
+      color: '#fff',
       fontWeight: '600',
       fontSize: 12,
       textTransform: 'capitalize',
@@ -452,8 +429,15 @@ const createStyles = (themeColors: typeof colors) =>
     exerciseHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       marginBottom: 12,
+    },
+    exerciseHeaderLeft: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingRight: 10,
     },
     exerciseName: {
       fontSize: 16,
@@ -463,49 +447,21 @@ const createStyles = (themeColors: typeof colors) =>
       textTransform: 'capitalize',
     },
     btnSmallDelete: {
-      backgroundColor: themeColors.danger,
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: themeColors.danger,
       paddingHorizontal: 10,
       paddingVertical: 6,
       borderRadius: radius.sm,
     },
     btnSmallText: {
-      color: themeColors.textStrong,
+      color: themeColors.danger,
       fontWeight: '600',
       fontSize: 14,
       textTransform: 'capitalize',
     },
     exerciseControls: {
       gap: 12,
-    },
-    reorderGroup: {
-      marginTop: 8,
-    },
-    label: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: themeColors.textStrong,
-      marginBottom: 8,
-      textTransform: 'capitalize',
-    },
-    reorderButtons: {
-      flexDirection: 'row',
-      gap: 8,
-    },
-    btnReorder: {
-      flex: 1,
-      backgroundColor: themeColors.accentSoft,
-      padding: 8,
-      borderRadius: radius.sm,
-      alignItems: 'center',
-    },
-    btnReorderText: {
-      color: themeColors.textStrong,
-      fontWeight: '600',
-      fontSize: 12,
-      textTransform: 'capitalize',
-    },
-    btnDisabled: {
-      opacity: 0.5,
     },
     deleteButton: {
       backgroundColor: themeColors.danger,
@@ -524,12 +480,20 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 12,
       textTransform: 'capitalize',
     },
+    bottomActions: {
+      paddingHorizontal: 16,
+      paddingTop: 8,
+      paddingBottom: 18,
+      backgroundColor: themeColors.background,
+      borderTopWidth: 1,
+      borderTopColor: themeColors.border,
+    },
     exerciseControlsRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       gap: 12,
-  }
+    },
   });
 
 export default WorkoutDetailScreen;

@@ -8,10 +8,122 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { type Program, type Workout } from '@gym-app/shared';
+import {
+  type Program,
+  type Workout,
+  type Exercise,
+  type WorkoutHistoryByDate,
+  type MuscleGroup,
+  exercises as exerciseCatalog,
+} from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
 import { useApi } from '../hooks/useApi';
 import { usePreferences } from '../context/PreferencesContext';
+import MuscleMapThumb from '../components/MuscleMapThumb';
+
+const TIME_PER_SET_SECONDS = { low: 30, high: 45 };
+const HISTORY_LOOKBACK_MONTHS = 18;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const FRONT_MUSCLE_GROUPS = new Set<MuscleGroup>([
+  'Chest',
+  'Shoulders',
+  'Biceps',
+  'Triceps',
+  'Legs (Quads focus)',
+  'Core / Abs',
+]);
+
+const normalizeExerciseName = (name: string): string =>
+  name.trim().toLowerCase().replace(/\s+/g, ' ');
+
+const EXERCISE_NAME_TO_MUSCLE_GROUP = new Map<string, MuscleGroup>(
+  exerciseCatalog.map((exercise) => [
+    normalizeExerciseName(exercise.name),
+    exercise.muscleGroup,
+  ]),
+);
+
+const roundDownToNearestFive = (value: number) => Math.floor(value / 5) * 5;
+const roundUpToNearestFive = (value: number) => Math.ceil(value / 5) * 5;
+
+const toMonthKey = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+};
+
+const getWorkoutEstimateDuration = (
+  exercises: Exercise[],
+): string => {
+  if (exercises.length === 0) return '0m';
+
+  const totals = exercises.reduce(
+    (acc, exercise) => {
+      const low =
+        exercise.sets * TIME_PER_SET_SECONDS.low +
+        Math.max(exercise.sets - 1, 0) * exercise.rest_seconds;
+      const high =
+        exercise.sets * TIME_PER_SET_SECONDS.high +
+        Math.max(exercise.sets - 1, 0) * exercise.rest_seconds;
+
+      return { low: acc.low + low, high: acc.high + high };
+    },
+    { low: 0, high: 0 },
+  );
+
+  const lowMinutes = roundDownToNearestFive(totals.low / 60);
+  const highMinutes = roundUpToNearestFive(totals.high / 60);
+  return lowMinutes === highMinutes ? `${lowMinutes}m` : `${lowMinutes}-${highMinutes}m`;
+};
+
+const getDominantWorkoutMuscleGroups = (workoutExercises: Exercise[]): MuscleGroup[] => {
+  const groupsCount = workoutExercises.reduce((acc, exercise) => {
+    const mappedGroup = EXERCISE_NAME_TO_MUSCLE_GROUP.get(
+      normalizeExerciseName(exercise.name),
+    );
+    if (!mappedGroup) return acc;
+
+    acc[mappedGroup] = (acc[mappedGroup] ?? 0) + 1;
+    return acc;
+  }, {} as Record<MuscleGroup, number>);
+
+  const matchedGroups = Object.entries(groupsCount) as [MuscleGroup, number][];
+  if (matchedGroups.length === 0) return [];
+
+  const frontTotal = matchedGroups.reduce(
+    (sum, [group, count]) => (FRONT_MUSCLE_GROUPS.has(group) ? sum + count : sum),
+    0,
+  );
+  const backTotal = matchedGroups.reduce(
+    (sum, [group, count]) => (FRONT_MUSCLE_GROUPS.has(group) ? sum : sum + count),
+    0,
+  );
+  const showFront = frontTotal >= backTotal;
+
+  return matchedGroups
+    .filter(([group]) => FRONT_MUSCLE_GROUPS.has(group) === showFront)
+    .sort((a, b) => b[1] - a[1])
+    .map(([group]) => group);
+};
+
+const getDaysSince = (isoDate: string): number => {
+  const date = new Date(isoDate);
+  const today = new Date();
+  const todayStart = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  ).getTime();
+  const dateStart = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+  ).getTime();
+  return Math.max(0, Math.floor((todayStart - dateStart) / DAY_MS));
+};
+
+const formatDaysSince = (days: number | null): string =>
+  days === null ? 'Never' : `${days}d`;
 
 const ProgramsScreen = ({ navigation }: any) => {
   const { colors: themeColors } = usePreferences();
@@ -22,6 +134,15 @@ const ProgramsScreen = ({ navigation }: any) => {
   );
   const [exerciseCountByWorkout, setExerciseCountByWorkout] = useState<
     Record<string, number>
+  >({});
+  const [estimatedDurationByWorkout, setEstimatedDurationByWorkout] = useState<
+    Record<string, string>
+  >({});
+  const [dominantMuscleGroupsByWorkout, setDominantMuscleGroupsByWorkout] = useState<
+    Record<string, MuscleGroup[]>
+  >({});
+  const [daysSinceByWorkout, setDaysSinceByWorkout] = useState<
+    Record<string, number | null>
   >({});
   const [loading, setLoading] = useState(true);
   const [showMessage, setShowMessage] = useState(false);
@@ -57,10 +178,57 @@ const ProgramsScreen = ({ navigation }: any) => {
         allWorkouts.map((w) => api.getExercises(w.id)),
       );
       const ecbw: Record<string, number> = {};
+      const edbw: Record<string, string> = {};
+      const dmgbw: Record<string, MuscleGroup[]> = {};
       allWorkouts.forEach((w, i) => {
         ecbw[w.id] = exercisesResults[i].length;
+        edbw[w.id] = getWorkoutEstimateDuration(exercisesResults[i]);
+        dmgbw[w.id] = getDominantWorkoutMuscleGroups(exercisesResults[i]);
       });
       setExerciseCountByWorkout(ecbw);
+      setEstimatedDurationByWorkout(edbw);
+      setDominantMuscleGroupsByWorkout(dmgbw);
+
+      const workoutIds = allWorkouts.map((workout) => workout.id);
+      const monthKeys = Array.from({ length: HISTORY_LOOKBACK_MONTHS }).map((_, idx) => {
+        const monthDate = new Date();
+        monthDate.setDate(1);
+        monthDate.setMonth(monthDate.getMonth() - idx);
+        return toMonthKey(monthDate);
+      });
+
+      const monthHistories = await Promise.all(
+        monthKeys.map(async (monthKey) => {
+          try {
+            return await api.getWorkoutsByMonth(monthKey);
+          } catch {
+            return [] as WorkoutHistoryByDate[];
+          }
+        }),
+      );
+
+      const latestByWorkout: Record<string, string> = {};
+      monthHistories.flat().forEach((entry) => {
+        if (entry.status === 'cancelled') return;
+
+        const existing = latestByWorkout[entry.workout_id];
+        if (
+          !existing ||
+          new Date(entry.started_at).getTime() > new Date(existing).getTime()
+        ) {
+          latestByWorkout[entry.workout_id] = entry.started_at;
+        }
+      });
+
+      const nextDaysSinceByWorkout: Record<string, number | null> = {};
+      workoutIds.forEach((workoutId) => {
+        const lastPerformed = latestByWorkout[workoutId];
+        nextDaysSinceByWorkout[workoutId] = lastPerformed
+          ? getDaysSince(lastPerformed)
+          : null;
+      });
+
+      setDaysSinceByWorkout(nextDaysSinceByWorkout);
     } catch (err) {
       console.error('Failed to fetch programs:', err);
     } finally {
@@ -111,12 +279,6 @@ const ProgramsScreen = ({ navigation }: any) => {
       <View style={styles.header}>
         <Text style={styles.title}>Programs</Text>
         <View style={styles.headerActions}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ProgramsCatalog')}
-            style={styles.btnSecondary}
-          >
-            <Text style={styles.btnSecondaryText}>Templates</Text>
-          </TouchableOpacity>
           <TouchableOpacity onPress={handleCreateProgram} style={styles.btnPrimary}>
             <Text style={styles.btnText}>+ Create</Text>
           </TouchableOpacity>
@@ -177,10 +339,34 @@ const ProgramsScreen = ({ navigation }: any) => {
                           })
                         }
                       >
-                        <Text style={styles.workoutRowName}>{workout.name}</Text>
-                        <Text style={styles.workoutRowCount}>
-                          {count} {count === 1 ? 'exercise' : 'exercises'}
-                        </Text>
+                        <View style={styles.workoutRowContent}>
+                          <MuscleMapThumb
+                            groups={dominantMuscleGroupsByWorkout[workout.id] ?? []}
+                            size={34}
+                            mutedColor={themeColors.textMuted}
+                            highlightColor={themeColors.accent}
+                          />
+                          <View style={styles.workoutRowMain}>
+                            <Text style={styles.workoutRowName}>{workout.name}</Text>
+                            <View style={styles.workoutRowMeta}>
+                              <View style={styles.workoutRowMetaCell}>
+                                <Text style={styles.workoutRowDays}>
+                                  {formatDaysSince(daysSinceByWorkout[workout.id] ?? null)}
+                                </Text>
+                              </View>
+                              <View style={styles.workoutRowMetaCell}>
+                                <Text style={styles.workoutRowDuration}>
+                                  {estimatedDurationByWorkout[workout.id] ?? '0m'}
+                                </Text>
+                              </View>
+                              <View style={styles.workoutRowMetaCell}>
+                                <Text style={styles.workoutRowCount}>
+                                  {count} {count === 1 ? 'exercise' : 'exercises'}
+                                </Text>
+                              </View>
+                            </View>
+                          </View>
+                        </View>
                       </TouchableOpacity>
                     );
                   })
@@ -231,20 +417,6 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 12,
       textTransform: 'capitalize',
     },
-    btnSecondary: {
-      backgroundColor: themeColors.accentSoft,
-      paddingHorizontal: 10,
-      paddingVertical: 8,
-      borderRadius: radius.sm,
-      borderWidth: 1,
-      borderColor: themeColors.accent,
-    },
-    btnSecondaryText: {
-      color: themeColors.accent,
-      fontWeight: '600',
-      fontSize: 12,
-      textTransform: 'capitalize',
-    },
     list: {
       flex: 1,
       padding: 16,
@@ -289,10 +461,8 @@ const createStyles = (themeColors: typeof colors) =>
       marginTop: 4,
     },
     workoutRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingVertical: 8,
+      alignItems: 'stretch',
+      paddingVertical: 10,
       paddingHorizontal: 12,
       marginTop: 6,
       backgroundColor: themeColors.background,
@@ -300,15 +470,47 @@ const createStyles = (themeColors: typeof colors) =>
       borderWidth: 1,
       borderColor: themeColors.border,
     },
+    workoutRowContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    workoutRowMain: {
+      flex: 1,
+    },
     workoutRowName: {
       fontSize: 14,
-      fontWeight: '500',
+      fontWeight: '600',
       color: themeColors.textStrong,
+      marginBottom: 8,
+      textTransform: 'capitalize',
+    },
+    workoutRowMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+    },
+    workoutRowMetaCell: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    workoutRowDays: {
+      fontSize: 12,
+      color: themeColors.textMuted,
+      textAlign: 'left',
+    },
+    workoutRowDuration: {
+      fontSize: 12,
+      color: themeColors.textStrong,
+      fontWeight: '700',
+      textAlign: 'center',
       textTransform: 'capitalize',
     },
     workoutRowCount: {
       fontSize: 12,
       color: themeColors.textMuted,
+      textAlign: 'right',
       textTransform: 'capitalize',
     },
     noWorkouts: {

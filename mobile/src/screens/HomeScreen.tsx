@@ -456,18 +456,24 @@ const HomeScreen = ({ navigation }: any) => {
                             <View style={styles.workoutRowTileMain}>
                               <Text style={styles.workoutRowTileName}>{workout.name}</Text>
                               <View style={styles.workoutRowMeta}>
-                                <Text style={styles.workoutRowTileDays}>
-                                  {formatDaysSince(daysSinceByWorkout[workout.id] ?? null)}
-                                </Text>
-                                <Text style={styles.workoutRowTileDuration}>
-                                  {estimatedDurations[workout.id] ?? '0m'}
-                                </Text>
-                                <Text style={styles.workoutRowTileCount}>
-                                  {exerciseCounts[workout.id] ?? 0}{' '}
-                                  {(exerciseCounts[workout.id] ?? 0) === 1
-                                    ? 'exercise'
-                                    : 'exercises'}
-                                </Text>
+                                <View style={styles.workoutRowMetaCell}>
+                                  <Text style={styles.workoutRowTileDays}>
+                                    {formatDaysSince(daysSinceByWorkout[workout.id] ?? null)}
+                                  </Text>
+                                </View>
+                                <View style={styles.workoutRowMetaCell}>
+                                  <Text style={styles.workoutRowTileDuration}>
+                                    {estimatedDurations[workout.id] ?? '0m'}
+                                  </Text>
+                                </View>
+                                <View style={styles.workoutRowMetaCell}>
+                                  <Text style={styles.workoutRowTileCount}>
+                                    {exerciseCounts[workout.id] ?? 0}{' '}
+                                    {(exerciseCounts[workout.id] ?? 0) === 1
+                                      ? 'exercise'
+                                      : 'exercises'}
+                                  </Text>
+                                </View>
                               </View>
                             </View>
                           </View>
@@ -626,7 +632,9 @@ const createStyles = (themeColors: typeof colors) =>
       alignItems: 'stretch',
       paddingVertical: 10,
       paddingHorizontal: 12,
-      backgroundColor: themeColors.accentSoft,
+      backgroundColor: themeColors.background,
+      borderWidth: 1,
+      borderColor: themeColors.border,
       borderRadius: radius.sm,
       marginBottom: 6,
     },
@@ -650,23 +658,24 @@ const createStyles = (themeColors: typeof colors) =>
       justifyContent: 'space-between',
       gap: 8,
     },
+    workoutRowMetaCell: {
+      flex: 1,
+      justifyContent: 'center',
+    },
     workoutRowTileDays: {
       fontSize: 12,
       color: themeColors.textMuted,
-      flex: 1,
       textAlign: 'left',
     },
     workoutRowTileDuration: {
       fontSize: 12,
       color: themeColors.textStrong,
       fontWeight: '700',
-      flex: 1,
       textAlign: 'center',
     },
     workoutRowTileCount: {
       fontSize: 12,
       color: themeColors.textMuted,
-      flex: 1,
       textAlign: 'right',
     },
   });
