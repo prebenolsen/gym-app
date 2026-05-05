@@ -9,6 +9,8 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
+import DraggableFlatList from 'react-native-draggable-flatlist';
+import { Ionicons } from '@expo/vector-icons';
 import {
   type Exercise,
   type MuscleGroup,
@@ -42,6 +44,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   const [newExerciseName, setNewExerciseName] = useState('');
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(workoutName);
+  const [isDraggingExercise, setIsDraggingExercise] = useState(false);
 
   const api = useApi();
 
@@ -183,6 +186,26 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
     ]);
   };
 
+  const handleReorderExercises = async (reorderedExercises: Exercise[]) => {
+    const previousExercises = exercises;
+
+    setExercises(reorderedExercises);
+
+    try {
+      await api.reorderExercises(
+        workoutId,
+        reorderedExercises.map((exercise, index) => ({
+          id: exercise.id,
+          order: index + 1,
+        })),
+      );
+    } catch (err) {
+      console.error('Failed to reorder exercises:', err);
+      setExercises(previousExercises);
+      Alert.alert('Error', 'Failed to reorder exercises');
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -212,62 +235,89 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
       <View style={styles.section}>
         {/*<Text style={styles.sectionTitle}>Exercises</Text>*/}
 
-        <ScrollView style={styles.list}>
-          {exercises.length > 0 &&
-            exercises.map((exercise) => (
-              <View key={exercise.id} style={styles.exerciseCard}>
-                <View style={styles.exerciseHeader}>
-                  <View style={styles.exerciseHeaderLeft}>
-                    <MuscleMapThumb
-                      group={getExerciseMuscleGroup(exercise.name)}
-                      size={54}
-                      mutedColor={themeColors.textMuted}
-                      highlightColor={themeColors.accent}
-                    />
-                    <Text style={styles.exerciseName}>{exercise.name}</Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => handleDeleteExercise(exercise.id)}
-                    style={styles.btnSmallDelete}
-                  >
-                    <Text style={styles.btnSmallText}>-</Text>
-                  </TouchableOpacity>
-                </View>
+        <ScrollView style={styles.list} scrollEnabled={!isDraggingExercise}>
+          {exercises.length > 0 && (
+            <DraggableFlatList
+              data={exercises}
+              keyExtractor={(item) => item.id}
+              activationDistance={12}
+              scrollEnabled={false}
+              containerStyle={styles.exercisesDraggableList}
+              onDragBegin={() => setIsDraggingExercise(true)}
+              onDragEnd={({ data }) => {
+                setIsDraggingExercise(false);
+                handleReorderExercises(data);
+              }}
+              renderItem={({ item: exercise, drag, isActive }) => (
+                <View style={[styles.exerciseCard, isActive && styles.exerciseCardActive]}>
+                  <View style={styles.exerciseHeader}>
+                    <View style={styles.exerciseHeaderLeft}>
+                      <TouchableOpacity
+                        onLongPress={drag}
+                        delayLongPress={120}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        style={styles.reorderHandle}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Reorder ${exercise.name}`}
+                      >
+                        <Ionicons
+                          name="reorder-three-outline"
+                          size={20}
+                          color={themeColors.textMuted}
+                        />
+                      </TouchableOpacity>
 
-                <View style={styles.exerciseControls}>
-                  <View style={styles.exerciseControlsRow}>
-                    <View style={{ flex: 1 }}>
-                      <NumberSpinner
-                        value={exercise.sets}
-                        onChange={(value) =>
-                          handleUpdateExercise(exercise.id, { sets: value })
-                        }
-                        min={1}
-                        max={100}
-                        step={1}
-                        label="Sets"
+                      <MuscleMapThumb
+                        group={getExerciseMuscleGroup(exercise.name)}
+                        size={54}
+                        mutedColor={themeColors.textMuted}
+                        highlightColor={themeColors.accent}
                       />
+                      <Text style={styles.exerciseName}>{exercise.name}</Text>
                     </View>
-
-                    <View style={{ flex: 1 }}>
-                      <NumberSpinner
-                        value={exercise.rest_seconds}
-                        onChange={(value) =>
-                          handleUpdateExercise(exercise.id, {
-                            rest_seconds: value,
-                          })
-                        }
-                        min={0}
-                        max={600}
-                        step={5}
-                        label="Rest (sec)"
-                      />
-                    </View>
+                    <TouchableOpacity
+                      onPress={() => handleDeleteExercise(exercise.id)}
+                      style={styles.btnSmallDelete}
+                    >
+                      <Text style={styles.btnSmallText}>-</Text>
+                    </TouchableOpacity>
                   </View>
 
+                  <View style={styles.exerciseControls}>
+                    <View style={styles.exerciseControlsRow}>
+                      <View style={{ flex: 1 }}>
+                        <NumberSpinner
+                          value={exercise.sets}
+                          onChange={(value) =>
+                            handleUpdateExercise(exercise.id, { sets: value })
+                          }
+                          min={1}
+                          max={100}
+                          step={1}
+                          label="Sets"
+                        />
+                      </View>
+
+                      <View style={{ flex: 1 }}>
+                        <NumberSpinner
+                          value={exercise.rest_seconds}
+                          onChange={(value) =>
+                            handleUpdateExercise(exercise.id, {
+                              rest_seconds: value,
+                            })
+                          }
+                          min={0}
+                          max={600}
+                          step={5}
+                          label="Rest (sec)"
+                        />
+                      </View>
+                    </View>
+                  </View>
                 </View>
-              </View>
-            ))}
+              )}
+            />
+          )}
 
 
           <View style={styles.addExercise}>
@@ -408,6 +458,9 @@ const createStyles = (themeColors: typeof colors) =>
     list: {
       flex: 1,
     },
+    exercisesDraggableList: {
+      flexGrow: 0,
+    },
     noData: {
       padding: 16,
       backgroundColor: themeColors.accentSoft,
@@ -426,6 +479,10 @@ const createStyles = (themeColors: typeof colors) =>
       marginBottom: 12,
       ...shadow.card,
     },
+    exerciseCardActive: {
+      borderColor: themeColors.accent,
+      backgroundColor: themeColors.accentSoft,
+    },
     exerciseHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -438,6 +495,12 @@ const createStyles = (themeColors: typeof colors) =>
       alignItems: 'center',
       gap: 10,
       paddingRight: 10,
+    },
+    reorderHandle: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 4,
+      paddingRight: 2,
     },
     exerciseName: {
       fontSize: 16,

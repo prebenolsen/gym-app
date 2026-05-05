@@ -4,6 +4,7 @@ import { BottomTabBar, createBottomTabNavigator } from '@react-navigation/bottom
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Text, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import HomeScreen from './screens/HomeScreen';
 import ProgramsScreen from './screens/ProgramsScreen';
@@ -132,11 +133,13 @@ const CalendarStackNavigator = () => {
 
 export default function App() {
   return (
-    <PreferencesProvider>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </PreferencesProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <PreferencesProvider>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </PreferencesProvider>
+    </GestureHandlerRootView>
   );
 }
 

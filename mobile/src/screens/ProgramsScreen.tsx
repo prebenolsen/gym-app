@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import DraggableFlatList from 'react-native-draggable-flatlist';
+import { Ionicons } from '@expo/vector-icons';
 import {
   type Program,
   type Workout,
@@ -144,6 +146,7 @@ const ProgramsScreen = ({ navigation }: any) => {
   const [daysSinceByWorkout, setDaysSinceByWorkout] = useState<
     Record<string, number | null>
   >({});
+  const [isDraggingWorkout, setIsDraggingWorkout] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showMessage, setShowMessage] = useState(false);
 
@@ -266,6 +269,32 @@ const ProgramsScreen = ({ navigation }: any) => {
     ]);
   };
 
+  const handleReorderWorkouts = async (programId: string, reorderedWorkouts: Workout[]) => {
+    const previousWorkouts = workoutsByProgram[programId] ?? [];
+
+    setWorkoutsByProgram((prev) => ({
+      ...prev,
+      [programId]: reorderedWorkouts,
+    }));
+
+    try {
+      await api.reorderWorkouts(
+        programId,
+        reorderedWorkouts.map((workout, index) => ({
+          id: workout.id,
+          order: index + 1,
+        })),
+      );
+    } catch (err) {
+      console.error('Failed to reorder workouts:', err);
+      setWorkoutsByProgram((prev) => ({
+        ...prev,
+        [programId]: previousWorkouts,
+      }));
+      Alert.alert('Error', 'Failed to reorder workouts');
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -295,7 +324,7 @@ const ProgramsScreen = ({ navigation }: any) => {
         </TouchableOpacity>
       )}
 
-      <ScrollView style={styles.list}>
+      <ScrollView style={styles.list} scrollEnabled={!isDraggingWorkout}>
         {programs.length === 0 ? (
           <Text style={styles.noData}>No programs yet. Create one to get started!</Text>
         ) : (
@@ -319,51 +348,80 @@ const ProgramsScreen = ({ navigation }: any) => {
                 {(workoutsByProgram[program.id] ?? []).length === 0 ? (
                   <Text style={styles.noWorkouts}>No workouts yet</Text>
                 ) : (
-                  (workoutsByProgram[program.id] ?? []).map((workout) => {
-                    const count = exerciseCountByWorkout[workout.id] ?? 0;
-                    return (
-                      <TouchableOpacity
-                        key={workout.id}
-                        style={styles.workoutRow}
-                        onPress={() =>
-                          navigation.navigate('WorkoutDetail', {
-                            programId: program.id,
-                            workoutId: workout.id,
-                            workoutName: workout.name,
-                          })
-                        }
-                      >
-                        <View style={styles.workoutRowContent}>
-                          <MuscleMapThumb
-                            groups={dominantMuscleGroupsByWorkout[workout.id] ?? []}
-                            size={34}
-                            mutedColor={themeColors.textMuted}
-                            highlightColor={themeColors.accent}
-                          />
-                          <View style={styles.workoutRowMain}>
-                            <Text style={styles.workoutRowName}>{workout.name}</Text>
-                            <View style={styles.workoutRowMeta}>
-                              <View style={styles.workoutRowMetaCell}>
-                                <Text style={styles.workoutRowDays}>
-                                  {formatDaysSince(daysSinceByWorkout[workout.id] ?? null)}
-                                </Text>
-                              </View>
-                              <View style={styles.workoutRowMetaCell}>
-                                <Text style={styles.workoutRowDuration}>
-                                  {estimatedDurationByWorkout[workout.id] ?? '0m'}
-                                </Text>
-                              </View>
-                              <View style={styles.workoutRowMetaCell}>
-                                <Text style={styles.workoutRowCount}>
-                                  {count} {count === 1 ? 'exercise' : 'exercises'}
-                                </Text>
+                  <DraggableFlatList
+                    data={workoutsByProgram[program.id] ?? []}
+                    keyExtractor={(item) => item.id}
+                    activationDistance={12}
+                    scrollEnabled={false}
+                    containerStyle={styles.workoutsDraggableList}
+                    onDragBegin={() => setIsDraggingWorkout(true)}
+                    onDragEnd={({ data }) => {
+                      setIsDraggingWorkout(false);
+                      handleReorderWorkouts(program.id, data);
+                    }}
+                    renderItem={({ item: workout, drag, isActive }) => {
+                      const count = exerciseCountByWorkout[workout.id] ?? 0;
+
+                      return (
+                        <TouchableOpacity
+                          style={[styles.workoutRow, isActive && styles.workoutRowActive]}
+                          activeOpacity={0.9}
+                          onPress={() =>
+                            navigation.navigate('WorkoutDetail', {
+                              programId: program.id,
+                              workoutId: workout.id,
+                              workoutName: workout.name,
+                            })
+                          }
+                        >
+                          <View style={styles.workoutRowContent}>
+                            <TouchableOpacity
+                              onLongPress={drag}
+                              delayLongPress={120}
+                              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                              style={styles.reorderHandle}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Reorder ${workout.name}`}
+                            >
+                              <Ionicons
+                                name="reorder-three-outline"
+                                size={20}
+                                color={themeColors.textMuted}
+                              />
+                            </TouchableOpacity>
+
+                            <MuscleMapThumb
+                              groups={dominantMuscleGroupsByWorkout[workout.id] ?? []}
+                              size={34}
+                              mutedColor={themeColors.textMuted}
+                              highlightColor={themeColors.accent}
+                            />
+
+                            <View style={styles.workoutRowMain}>
+                              <Text style={styles.workoutRowName}>{workout.name}</Text>
+                              <View style={styles.workoutRowMeta}>
+                                <View style={styles.workoutRowMetaCell}>
+                                  <Text style={styles.workoutRowDays}>
+                                    {formatDaysSince(daysSinceByWorkout[workout.id] ?? null)}
+                                  </Text>
+                                </View>
+                                <View style={styles.workoutRowMetaCell}>
+                                  <Text style={styles.workoutRowDuration}>
+                                    {estimatedDurationByWorkout[workout.id] ?? '0m'}
+                                  </Text>
+                                </View>
+                                <View style={styles.workoutRowMetaCell}>
+                                  <Text style={styles.workoutRowCount}>
+                                    {count} {count === 1 ? 'exercise' : 'exercises'}
+                                  </Text>
+                                </View>
                               </View>
                             </View>
                           </View>
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })
+                        </TouchableOpacity>
+                      );
+                    }}
+                  />
                 )}
               </View>
             </View>
@@ -454,6 +512,9 @@ const createStyles = (themeColors: typeof colors) =>
     workoutsList: {
       marginTop: 4,
     },
+    workoutsDraggableList: {
+      flexGrow: 0,
+    },
     workoutRow: {
       alignItems: 'stretch',
       paddingVertical: 10,
@@ -464,10 +525,20 @@ const createStyles = (themeColors: typeof colors) =>
       borderWidth: 1,
       borderColor: themeColors.border,
     },
+    workoutRowActive: {
+      borderColor: themeColors.accent,
+      backgroundColor: themeColors.accentSoft,
+    },
     workoutRowContent: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
+    },
+    reorderHandle: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 4,
+      paddingRight: 2,
     },
     workoutRowMain: {
       flex: 1,
