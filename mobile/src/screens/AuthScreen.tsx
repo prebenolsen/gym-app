@@ -199,7 +199,7 @@ const createStyles = (themeColors: typeof colors) =>
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(7, 14, 22, 0.45)',
+      backgroundColor: themeColors.overlayScrim,
       padding: 20,
     },
     card: {
@@ -246,7 +246,7 @@ const createStyles = (themeColors: typeof colors) =>
       opacity: 0.7,
     },
     primaryButtonText: {
-      color: '#fff',
+      color: themeColors.textOnAccent,
       fontWeight: '700',
       
     },

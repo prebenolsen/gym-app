@@ -73,13 +73,15 @@ export default function MuscleMapThumb({
   group,
   groups,
   size = 56,
-  mutedColor = DEFAULT_MUTED,
-  highlightColor = DEFAULT_HIGHLIGHT,
+  mutedColor,
+  highlightColor,
 }: Props) {
-  const { theme } = usePreferences();
+  const { colors } = usePreferences();
   const height = Math.round(size * (VIEWBOX_HEIGHT / VIEWBOX_WIDTH));
-  const frameBorder = theme === 'dark' ? '#64748b' : '#0f172a';
-  const frameBackground = theme === 'dark' ? '#0b1220' : '#ffffff';
+  const resolvedMutedColor = mutedColor ?? colors.textMuted ?? DEFAULT_MUTED;
+  const resolvedHighlightColor = highlightColor ?? colors.accent ?? DEFAULT_HIGHLIGHT;
+  const frameBorder = colors.thumbFrameBorder;
+  const frameBackground = colors.thumbFrameBackground;
   const mutedOpacity = 0.1;
   const highlightOpacity = 0.65;
 
@@ -128,8 +130,8 @@ export default function MuscleMapThumb({
           viewBoxWidth={VIEWBOX_WIDTH}
           viewBoxHeight={VIEWBOX_HEIGHT}
           activePaths={resolvedPaths}
-          mutedColor={mutedColor}
-          highlightColor={highlightColor}
+          mutedColor={resolvedMutedColor}
+          highlightColor={resolvedHighlightColor}
           mutedOpacity={mutedOpacity}
           highlightOpacity={highlightOpacity}
         />
@@ -140,8 +142,8 @@ export default function MuscleMapThumb({
           viewBoxWidth={VIEWBOX_WIDTH}
           viewBoxHeight={VIEWBOX_HEIGHT}
           activePaths={resolvedPaths}
-          mutedColor={mutedColor}
-          highlightColor={highlightColor}
+          mutedColor={resolvedMutedColor}
+          highlightColor={resolvedHighlightColor}
           mutedOpacity={mutedOpacity}
           highlightOpacity={highlightOpacity}
         />

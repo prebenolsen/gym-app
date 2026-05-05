@@ -386,7 +386,7 @@ const HomeScreen = ({ navigation }: any) => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Favorite Workouts</Text>
+          <Text style={styles.sectionTitle}>Favorite programs</Text>
           {(() => {
             const favorites = programTree.filter(
               ({ program }) => program.is_favorite_program,

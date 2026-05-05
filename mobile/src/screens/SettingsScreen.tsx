@@ -117,7 +117,7 @@ const SettingsScreen = () => {
           <Switch
             value={theme === 'dark'}
             onValueChange={(value) => setTheme(value ? 'dark' : 'light')}
-            thumbColor="#FFFFFF"
+            thumbColor={themeColors.switchThumb}
             trackColor={{ false: themeColors.border, true: themeColors.accent }}
           />
         </View>
@@ -178,7 +178,7 @@ const SettingsScreen = () => {
           <Switch
             value={completionCueEnabled}
             onValueChange={setCompletionCueEnabled}
-            thumbColor="#FFFFFF"
+            thumbColor={themeColors.switchThumb}
             trackColor={{ false: themeColors.border, true: themeColors.accent }}
           />
         </View>
@@ -193,7 +193,7 @@ const SettingsScreen = () => {
           <Switch
             value={countdownCueEnabled}
             onValueChange={setCountdownCueEnabled}
-            thumbColor="#FFFFFF"
+            thumbColor={themeColors.switchThumb}
             trackColor={{ false: themeColors.border, true: themeColors.accent }}
           />
         </View>
@@ -208,7 +208,7 @@ const SettingsScreen = () => {
           <Switch
             value={customCueEnabled}
             onValueChange={setCustomCueEnabled}
-            thumbColor="#FFFFFF"
+            thumbColor={themeColors.switchThumb}
             trackColor={{ false: themeColors.border, true: themeColors.accent }}
           />
         </View>
