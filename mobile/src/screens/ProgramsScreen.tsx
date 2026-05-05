@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import DraggableFlatList from 'react-native-draggable-flatlist';
+import {
+  NestableDraggableFlatList,
+  NestableScrollContainer,
+} from 'react-native-draggable-flatlist';
 import { Ionicons } from '@expo/vector-icons';
 import {
   type Program,
@@ -324,7 +326,12 @@ const ProgramsScreen = ({ navigation }: any) => {
         </TouchableOpacity>
       )}
 
-      <ScrollView style={styles.list} scrollEnabled={!isDraggingWorkout}>
+      <NestableScrollContainer
+        style={styles.list}
+        scrollEnabled={!isDraggingWorkout}
+        nestedScrollEnabled
+        keyboardShouldPersistTaps="handled"
+      >
         {programs.length === 0 ? (
           <Text style={styles.noData}>No programs yet. Create one to get started!</Text>
         ) : (
@@ -348,10 +355,9 @@ const ProgramsScreen = ({ navigation }: any) => {
                 {(workoutsByProgram[program.id] ?? []).length === 0 ? (
                   <Text style={styles.noWorkouts}>No workouts yet</Text>
                 ) : (
-                  <DraggableFlatList
+                  <NestableDraggableFlatList
                     data={workoutsByProgram[program.id] ?? []}
                     keyExtractor={(item) => item.id}
-                    activationDistance={12}
                     scrollEnabled={false}
                     containerStyle={styles.workoutsDraggableList}
                     onDragBegin={() => setIsDraggingWorkout(true)}
@@ -377,8 +383,8 @@ const ProgramsScreen = ({ navigation }: any) => {
                           <View style={styles.workoutRowContent}>
                             <TouchableOpacity
                               onLongPress={drag}
-                              delayLongPress={120}
-                              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                              delayLongPress={200}
+                              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                               style={styles.reorderHandle}
                               accessibilityRole="button"
                               accessibilityLabel={`Reorder ${workout.name}`}
@@ -427,7 +433,7 @@ const ProgramsScreen = ({ navigation }: any) => {
             </View>
           ))
         )}
-      </ScrollView>
+      </NestableScrollContainer>
     </View>
   );
 };

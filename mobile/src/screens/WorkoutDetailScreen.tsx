@@ -2,14 +2,16 @@ import { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Alert,
   TextInput,
 } from 'react-native';
-import DraggableFlatList from 'react-native-draggable-flatlist';
+import {
+  NestableDraggableFlatList,
+  NestableScrollContainer,
+} from 'react-native-draggable-flatlist';
 import { Ionicons } from '@expo/vector-icons';
 import {
   type Exercise,
@@ -235,12 +237,16 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
       <View style={styles.section}>
         {/*<Text style={styles.sectionTitle}>Exercises</Text>*/}
 
-        <ScrollView style={styles.list} scrollEnabled={!isDraggingExercise}>
+        <NestableScrollContainer
+          style={styles.list}
+          scrollEnabled={!isDraggingExercise}
+          nestedScrollEnabled
+          keyboardShouldPersistTaps="handled"
+        >
           {exercises.length > 0 && (
-            <DraggableFlatList
+            <NestableDraggableFlatList
               data={exercises}
               keyExtractor={(item) => item.id}
-              activationDistance={12}
               scrollEnabled={false}
               containerStyle={styles.exercisesDraggableList}
               onDragBegin={() => setIsDraggingExercise(true)}
@@ -254,8 +260,8 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                     <View style={styles.exerciseHeaderLeft}>
                       <TouchableOpacity
                         onLongPress={drag}
-                        delayLongPress={120}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        delayLongPress={200}
+                        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                         style={styles.reorderHandle}
                         accessibilityRole="button"
                         accessibilityLabel={`Reorder ${exercise.name}`}
@@ -356,7 +362,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
           >
             <Text style={styles.deleteButtonText}>Delete Workout</Text>
           </TouchableOpacity>
-        </ScrollView>
+        </NestableScrollContainer>
       </View>
 
       <View style={styles.bottomActions}>
@@ -488,6 +494,7 @@ const createStyles = (themeColors: typeof colors) =>
       justifyContent: 'space-between',
       alignItems: 'flex-start',
       marginBottom: 12,
+      position: 'relative',
     },
     exerciseHeaderLeft: {
       flex: 1,
@@ -510,17 +517,20 @@ const createStyles = (themeColors: typeof colors) =>
       
     },
     btnSmallDelete: {
+      position: 'absolute',
+      top:-15,
+      right: 0,
       backgroundColor: 'transparent',
-      borderWidth: 1,
+      borderWidth: 0,
       borderColor: themeColors.danger,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
+      paddingHorizontal: 2,
+      paddingVertical: 0,
       borderRadius: radius.sm,
     },
     btnSmallText: {
       color: themeColors.danger,
-      fontWeight: '600',
-      fontSize: 14,
+      fontWeight: '900',
+      fontSize: 40,
     },
     exerciseControls: {
       gap: 12,
