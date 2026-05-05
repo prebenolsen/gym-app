@@ -57,7 +57,7 @@ const createStyles = (themeColors: typeof colors) =>
     label: {
       fontSize: 12,
       fontWeight: '600',
-      textTransform: 'capitalize',
+      
       color: themeColors.textMuted,
     },
     controls: {
@@ -78,7 +78,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 12,
       color: themeColors.textMuted,
       fontWeight: '600',
-      textTransform: 'capitalize',
+      
     },
     value: {
       flex: 1,
@@ -86,7 +86,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 16,
       fontWeight: '600',
       color: themeColors.textStrong,
-      textTransform: 'capitalize',
+      
     },
   });
 

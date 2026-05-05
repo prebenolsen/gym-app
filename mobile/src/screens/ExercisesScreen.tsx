@@ -234,7 +234,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: '600',
       color: themeColors.textStrong,
       marginBottom: 12,
-      textTransform: 'capitalize',
+      
       letterSpacing: 0.3,
     },
     chipsRow: {
@@ -258,11 +258,11 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 12,
       fontWeight: '500',
       color: themeColors.textMuted,
-      textTransform: 'capitalize',
+      
     },
     chipTextActive: {
       color: themeColors.accent,
-      textTransform: 'capitalize',
+      
     },
     exercisesSection: {
       backgroundColor: themeColors.surface,
@@ -278,7 +278,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: '600',
       color: themeColors.textStrong,
       marginBottom: 16,
-      textTransform: 'capitalize',
+      
     },
     noData: {
       padding: 16,
@@ -287,7 +287,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textMuted,
       textAlign: 'center',
       fontStyle: 'italic',
-      textTransform: 'capitalize',
+      
     },
     exerciseItem: {
       paddingVertical: 12,
@@ -308,12 +308,12 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: '500',
       color: themeColors.textStrong,
       marginBottom: 4,
-      textTransform: 'capitalize',
+      
     },
     exerciseMeta: {
       fontSize: 12,
       color: themeColors.textMuted,
-      textTransform: 'capitalize',
+      
     },
     progressButton: {
       backgroundColor: themeColors.accentSoft,
@@ -327,7 +327,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.accent,
       fontWeight: '700',
       fontSize: 12,
-      textTransform: 'capitalize',
+      
     },
   });
 

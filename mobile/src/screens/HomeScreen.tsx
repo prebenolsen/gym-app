@@ -582,13 +582,13 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 24,
       fontWeight: 'bold',
       color: themeColors.accent,
-      textTransform: 'capitalize',
+      
     },
     statLabel: {
       fontSize: 12,
       color: themeColors.textMuted,
       marginTop: 6,
-      textTransform: 'capitalize',
+      
     },
     section: {
       marginBottom: 24,
@@ -597,7 +597,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 15,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'capitalize',
+      
       marginBottom: 12,
     },
     noData: {
@@ -625,7 +625,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 15,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'capitalize',
+      
       flex: 1,
     },
     workoutRowTile: {

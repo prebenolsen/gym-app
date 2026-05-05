@@ -261,7 +261,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 20,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'capitalize',
+      
     },
     subtitle: {
       fontSize: 13,
@@ -290,7 +290,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '700',
       fontSize: 14,
-      textTransform: 'capitalize',
+      
     },
     content: {
       flex: 1,
@@ -309,7 +309,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 16,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'capitalize',
+      
       marginBottom: 12,
     },
     noExercises: {

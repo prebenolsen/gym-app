@@ -116,7 +116,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 22,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'capitalize',
+      
     },
     subtitle: {
       fontSize: 13,
@@ -146,14 +146,14 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 16,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'capitalize',
+      
       flex: 1,
     },
     categoryBadge: {
       fontSize: 12,
       color: themeColors.accent,
       fontWeight: '600',
-      textTransform: 'capitalize',
+      
       borderWidth: 1,
       borderColor: themeColors.accent,
       borderRadius: radius.sm,
@@ -170,7 +170,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 13,
       fontWeight: '700',
       color: themeColors.textStrong,
-      textTransform: 'capitalize',
+      
       marginBottom: 8,
     },
     exerciseRow: {
@@ -216,7 +216,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '700',
       fontSize: 14,
-      textTransform: 'capitalize',
+      
     },
     errorText: {
       color: themeColors.textStrong,

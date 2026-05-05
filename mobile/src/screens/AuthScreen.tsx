@@ -222,7 +222,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: '700',
       color: themeColors.textStrong,
       marginBottom: 14,
-      textTransform: 'capitalize',
+      
     },
     input: {
       borderWidth: 1,
@@ -248,7 +248,7 @@ const createStyles = (themeColors: typeof colors) =>
     primaryButtonText: {
       color: '#fff',
       fontWeight: '700',
-      textTransform: 'capitalize',
+      
     },
     links: {
       marginTop: 22,
@@ -257,7 +257,7 @@ const createStyles = (themeColors: typeof colors) =>
     link: {
       color: themeColors.accent,
       fontWeight: '600',
-      textTransform: 'capitalize',
+      
     },
   });
 

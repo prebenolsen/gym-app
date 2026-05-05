@@ -265,7 +265,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 24,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'capitalize',
+      
     },
     titleInput: {
       flex: 1,
@@ -275,7 +275,7 @@ const createStyles = (themeColors: typeof colors) =>
       borderBottomWidth: 2,
       borderBottomColor: themeColors.accent,
       paddingBottom: 8,
-      textTransform: 'capitalize',
+      
     },
     deleteButton: {
       backgroundColor: themeColors.danger,
@@ -289,7 +289,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '700',
       fontSize: 13,
-      textTransform: 'capitalize',
+      
     },
     section: {
       flex: 1,
@@ -306,7 +306,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 18,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'capitalize',
+      
     },
     addWorkoutButton: {
       backgroundColor: themeColors.accent,
@@ -321,7 +321,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '700',
       fontSize: 14,
-      textTransform: 'capitalize',
+      
     },
     list: {
       flex: 1,
@@ -337,7 +337,7 @@ const createStyles = (themeColors: typeof colors) =>
       borderColor: themeColors.border,
       color: themeColors.textStrong,
       textAlign: 'center',
-      textTransform: 'capitalize',
+      
     },
     workoutCard: {
       backgroundColor: themeColors.surface,
@@ -355,19 +355,19 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: '600',
       color: themeColors.textStrong,
       marginBottom: 6,
-      textTransform: 'capitalize',
+      
     },
     exerciseItem: {
       fontSize: 13,
       color: themeColors.textMuted,
       lineHeight: 20,
-      textTransform: 'capitalize',
+      
     },
     exerciseEmpty: {
       fontSize: 13,
       color: themeColors.textMuted,
       fontStyle: 'italic',
-      textTransform: 'capitalize',
+      
     },
     deleteButtonInList: {
       marginTop: 10,

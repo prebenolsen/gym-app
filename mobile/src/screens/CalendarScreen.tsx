@@ -265,7 +265,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontSize: 22,
       fontWeight: '700',
-      textTransform: 'capitalize',
+      
     },
     monthRow: {
       marginTop: 12,
@@ -276,7 +276,7 @@ const createStyles = (themeColors: typeof colors) =>
     monthLabel: {
       color: themeColors.textStrong,
       fontWeight: '700',
-      textTransform: 'capitalize',
+      
     },
     monthButton: {
       borderColor: themeColors.border,
@@ -309,7 +309,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textMuted,
       fontSize: 12,
       fontWeight: '700',
-      textTransform: 'capitalize',
+      
     },
     daysGrid: {
       flexDirection: 'row',
@@ -363,12 +363,12 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontSize: 16,
       fontWeight: '700',
-      textTransform: 'capitalize',
+      
     },
     listSubtitle: {
       color: themeColors.textMuted,
       fontSize: 12,
-      textTransform: 'capitalize',
+      
     },
     historyItem: {
       backgroundColor: themeColors.surface,
@@ -383,11 +383,11 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontWeight: '700',
       marginBottom: 6,
-      textTransform: 'capitalize',
+      
     },
     metaText: {
       color: themeColors.textMuted,
-      textTransform: 'capitalize',
+      
       fontSize: 12,
     },
     centered: {
@@ -405,7 +405,7 @@ const createStyles = (themeColors: typeof colors) =>
     },
     emptyText: {
       color: themeColors.textMuted,
-      textTransform: 'capitalize',
+      
     },
   });
 

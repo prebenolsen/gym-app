@@ -916,7 +916,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontSize: 22,
       fontWeight: '700',
-      textTransform: 'capitalize',
+      
     },
     list: {
       flex: 1,
@@ -938,12 +938,12 @@ const createStyles = (themeColors: typeof colors) =>
     exerciseName: {
       color: themeColors.textStrong,
       fontWeight: '700',
-      textTransform: 'capitalize',
+      
     },
     exerciseMeta: {
       color: themeColors.textMuted,
       marginTop: 4,
-      textTransform: 'capitalize',
+      
       marginBottom: 10,
     },
     setsHeaderRow: {
@@ -960,7 +960,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textMuted,
       fontSize: 12,
       fontWeight: '700',
-      textTransform: 'capitalize',
+      
     },
     setsStatusHeaderCell: {
       width: 24,
@@ -1036,7 +1036,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '700',
       fontSize: 12,
-      textTransform: 'capitalize',
+      
     },
     navButton: {
       flex: 1,
@@ -1055,7 +1055,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.accent,
       fontWeight: '700',
       fontSize: 12,
-      textTransform: 'capitalize',
+      
     },
     bottomActionsWrap: {
       backgroundColor: themeColors.surface,
@@ -1090,7 +1090,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontSize: 18,
       fontWeight: '700',
-      textTransform: 'capitalize',
+      
     },
     restAdjustButton: {
       minWidth: 68,
@@ -1109,7 +1109,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.accent,
       fontWeight: '700',
       fontSize: 12,
-      textTransform: 'capitalize',
+      
     },
     saveDefaultRestButton: {
       marginBottom: 10,
@@ -1123,7 +1123,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '700',
       fontSize: 12,
-      textTransform: 'capitalize',
+      
       textAlign: 'center',
     },
     bottomActionsBar: {
@@ -1161,7 +1161,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.danger,
       fontWeight: '700',
       fontSize: 12,
-      textTransform: 'capitalize',
+      
     },
     secondaryButton: {
       backgroundColor: 'transparent',
@@ -1178,7 +1178,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontWeight: '700',
       fontSize: 10,
-      textTransform: 'capitalize',
+      
     },
     finishButton: {
       backgroundColor: 'transparent',
@@ -1195,18 +1195,18 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.success,
       fontWeight: '700',
       fontSize: 12,
-      textTransform: 'capitalize',
+      
     },
     emptyTitle: {
       color: themeColors.textStrong,
       fontSize: 22,
       fontWeight: '700',
-      textTransform: 'capitalize',
+      
     },
     emptyText: {
       color: themeColors.textMuted,
       marginTop: 10,
-      textTransform: 'capitalize',
+      
       textAlign: 'center',
     },
   });

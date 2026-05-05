@@ -338,7 +338,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 24,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'capitalize',
+      
     },
     titleInput: {
       fontSize: 24,
@@ -347,7 +347,7 @@ const createStyles = (themeColors: typeof colors) =>
       borderBottomWidth: 2,
       borderBottomColor: themeColors.accent,
       paddingBottom: 8,
-      textTransform: 'capitalize',
+      
     },
     startWorkoutButton: {
       backgroundColor: themeColors.accent,
@@ -361,7 +361,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '700',
       fontSize: 14,
-      textTransform: 'capitalize',
+      
     },
     section: {
       flex: 1,
@@ -372,7 +372,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: 'bold',
       color: themeColors.textStrong,
       marginBottom: 16,
-      textTransform: 'capitalize',
+      
     },
     addExercise: {
       flexDirection: 'row',
@@ -404,7 +404,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '600',
       fontSize: 12,
-      textTransform: 'capitalize',
+      
     },
     list: {
       flex: 1,
@@ -445,7 +445,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: '600',
       color: themeColors.textStrong,
       flex: 1,
-      textTransform: 'capitalize',
+      
     },
     btnSmallDelete: {
       backgroundColor: 'transparent',
@@ -459,7 +459,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.danger,
       fontWeight: '600',
       fontSize: 14,
-      textTransform: 'capitalize',
+      
     },
     exerciseControls: {
       gap: 12,
@@ -479,7 +479,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '700',
       fontSize: 12,
-      textTransform: 'capitalize',
+      
     },
     bottomActions: {
       paddingHorizontal: 16,

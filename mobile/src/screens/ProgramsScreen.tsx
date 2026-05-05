@@ -403,7 +403,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 24,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'capitalize',
+      
     },
     btnPrimary: {
       backgroundColor: themeColors.accent,
@@ -415,7 +415,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '600',
       fontSize: 12,
-      textTransform: 'capitalize',
+      
     },
     list: {
       flex: 1,
@@ -429,7 +429,7 @@ const createStyles = (themeColors: typeof colors) =>
       borderColor: themeColors.border,
       color: themeColors.textStrong,
       textAlign: 'center',
-      textTransform: 'capitalize',
+      
     },
     programCard: {
       backgroundColor: themeColors.surface,
@@ -455,7 +455,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 16,
       fontWeight: '600',
       color: themeColors.textStrong,
-      textTransform: 'capitalize',
+      
     },
     workoutsList: {
       marginTop: 4,
@@ -483,7 +483,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: '600',
       color: themeColors.textStrong,
       marginBottom: 8,
-      textTransform: 'capitalize',
+      
     },
     workoutRowMeta: {
       flexDirection: 'row',
@@ -505,13 +505,13 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontWeight: '700',
       textAlign: 'center',
-      textTransform: 'capitalize',
+      
     },
     workoutRowCount: {
       fontSize: 12,
       color: themeColors.textMuted,
       textAlign: 'right',
-      textTransform: 'capitalize',
+      
     },
     noWorkouts: {
       fontSize: 13,
@@ -519,7 +519,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontStyle: 'italic',
       paddingVertical: 4,
       paddingHorizontal: 12,
-      textTransform: 'capitalize',
+      
     },
     btnSmall: {
       backgroundColor: themeColors.danger,
@@ -531,7 +531,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '600',
       fontSize: 14,
-      textTransform: 'capitalize',
+      
     },
     notification: {
       backgroundColor: themeColors.success,
@@ -547,7 +547,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '600',
       fontSize: 14,
-      textTransform: 'capitalize',
+      
     },
   });
 

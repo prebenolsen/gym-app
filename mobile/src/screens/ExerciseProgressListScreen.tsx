@@ -104,7 +104,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 20,
       fontWeight: '700',
       color: themeColors.textStrong,
-      textTransform: 'capitalize',
+      
     },
     content: {
       flex: 1,
@@ -118,7 +118,7 @@ const createStyles = (themeColors: typeof colors) =>
       borderColor: themeColors.border,
       color: themeColors.textStrong,
       textAlign: 'center',
-      textTransform: 'capitalize',
+      
     },
     exerciseCard: {
       backgroundColor: themeColors.surface,
@@ -134,7 +134,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: '600',
       color: themeColors.textStrong,
       marginBottom: 4,
-      textTransform: 'capitalize',
+      
     },
     exerciseCardStats: {
       flexDirection: 'row',
@@ -143,7 +143,7 @@ const createStyles = (themeColors: typeof colors) =>
     exerciseStatText: {
       fontSize: 12,
       color: themeColors.textMuted,
-      textTransform: 'capitalize',
+      
     },
   });
 

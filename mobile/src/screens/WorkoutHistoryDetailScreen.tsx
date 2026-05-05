@@ -164,17 +164,17 @@ const createStyles = (themeColors: typeof colors) =>
     backText: {
       color: themeColors.accent,
       fontWeight: '700',
-      textTransform: 'capitalize',
+      
     },
     title: {
       color: themeColors.textStrong,
       fontSize: 22,
       fontWeight: '700',
-      textTransform: 'capitalize',
+      
     },
     metaText: {
       color: themeColors.textMuted,
-      textTransform: 'capitalize',
+      
       fontSize: 12,
     },
     list: {
@@ -194,7 +194,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontWeight: '700',
       marginBottom: 8,
-      textTransform: 'capitalize',
+      
     },
     setRow: {
       flexDirection: 'row',
@@ -205,12 +205,12 @@ const createStyles = (themeColors: typeof colors) =>
     },
     setCell: {
       color: themeColors.textMuted,
-      textTransform: 'capitalize',
+      
       fontSize: 12,
     },
     emptyText: {
       color: themeColors.textMuted,
-      textTransform: 'capitalize',
+      
       textAlign: 'center',
       marginTop: 16,
     },

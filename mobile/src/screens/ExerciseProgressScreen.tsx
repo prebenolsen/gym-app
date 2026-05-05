@@ -341,7 +341,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 20,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      textTransform: 'capitalize',
+      
     },
     personalBest: {
       fontSize: 13,
@@ -418,7 +418,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textMuted,
       fontWeight: '700',
       fontSize: 12,
-      textTransform: 'capitalize',
+      
     },
     rangeChipTextActive: {
       color: '#fff',
@@ -442,7 +442,7 @@ const createStyles = (themeColors: typeof colors) =>
     metricLabel: {
       fontSize: 12,
       color: themeColors.textMuted,
-      textTransform: 'capitalize',
+      
       marginBottom: 4,
     },
     metricValue: {
@@ -467,13 +467,13 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 13,
       textAlign: 'center',
       paddingVertical: 24,
-      textTransform: 'capitalize',
+      
     },
     sectionTitle: {
       fontSize: 13,
       fontWeight: '700',
       color: themeColors.textStrong,
-      textTransform: 'capitalize',
+      
       marginBottom: 12,
     },
     historySection: {

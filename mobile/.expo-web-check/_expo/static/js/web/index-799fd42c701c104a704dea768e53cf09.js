@@ -42834,20 +42834,20 @@ __d(
             fontSize: 24,
             fontWeight: 'bold',
             color: e.accent,
-            textTransform: 'capitalize',
+            
           },
           statLabel: {
             fontSize: 12,
             color: e.textMuted,
             marginTop: 6,
-            textTransform: 'capitalize',
+            
           },
           section: { marginBottom: 24 },
           sectionTitle: {
             fontSize: 15,
             fontWeight: 'bold',
             color: e.textStrong,
-            textTransform: 'capitalize',
+            
             marginBottom: 12,
           },
           noData: {
@@ -42877,7 +42877,7 @@ __d(
             fontSize: 15,
             fontWeight: 'bold',
             color: e.textStrong,
-            textTransform: 'capitalize',
+            
             flex: 1,
           },
           workoutRowTile: {
@@ -86339,7 +86339,7 @@ __d(
           fontSize: 24,
           fontWeight: 'bold',
           color: e.textStrong,
-          textTransform: 'capitalize',
+          
         },
         btnPrimary: {
           backgroundColor: e.accent,
@@ -86351,7 +86351,7 @@ __d(
           color: '#fff',
           fontWeight: '600',
           fontSize: 12,
-          textTransform: 'capitalize',
+          
         },
         btnSecondary: {
           backgroundColor: e.accentSoft,
@@ -86365,7 +86365,7 @@ __d(
           color: e.accent,
           fontWeight: '600',
           fontSize: 12,
-          textTransform: 'capitalize',
+          
         },
         list: { flex: 1, padding: 16 },
         noData: {
@@ -86376,7 +86376,7 @@ __d(
           borderColor: e.border,
           color: e.textStrong,
           textAlign: 'center',
-          textTransform: 'capitalize',
+          
         },
         programCard: Object.assign(
           {
@@ -86402,7 +86402,7 @@ __d(
           fontSize: 16,
           fontWeight: '600',
           color: e.textStrong,
-          textTransform: 'capitalize',
+          
         },
         workoutsList: { marginTop: 4 },
         workoutRow: {
@@ -86421,7 +86421,7 @@ __d(
           fontSize: 14,
           fontWeight: '500',
           color: e.textStrong,
-          textTransform: 'capitalize',
+          
         },
         workoutRowCount: { fontSize: 12, color: e.textMuted, textTransform: 'uppercase' },
         noWorkouts: {
@@ -86430,7 +86430,7 @@ __d(
           fontStyle: 'italic',
           paddingVertical: 4,
           paddingHorizontal: 12,
-          textTransform: 'capitalize',
+          
         },
         btnSmall: {
           backgroundColor: e.danger,
@@ -86442,7 +86442,7 @@ __d(
           color: '#fff',
           fontWeight: '600',
           fontSize: 14,
-          textTransform: 'capitalize',
+          
         },
       });
     var y = ({ navigation: e }) => {
@@ -86689,7 +86689,7 @@ __d(
           fontSize: 24,
           fontWeight: 'bold',
           color: e.textStrong,
-          textTransform: 'capitalize',
+          
         },
         titleInput: {
           fontSize: 24,
@@ -86698,7 +86698,7 @@ __d(
           borderBottomWidth: 2,
           borderBottomColor: e.accent,
           paddingBottom: 8,
-          textTransform: 'capitalize',
+          
         },
         headerActions: { flexDirection: 'row', gap: 8 },
         favoriteButton: {
@@ -86713,7 +86713,7 @@ __d(
           color: e.accent,
           fontWeight: '700',
           fontSize: 12,
-          textTransform: 'capitalize',
+          
         },
         deleteButton: {
           backgroundColor: e.danger,
@@ -86725,7 +86725,7 @@ __d(
           color: '#fff',
           fontWeight: '700',
           fontSize: 12,
-          textTransform: 'capitalize',
+          
         },
         section: { flex: 1, padding: 16 },
         sectionHeader: {
@@ -86749,13 +86749,13 @@ __d(
           color: e.accent,
           fontWeight: '600',
           fontSize: 12,
-          textTransform: 'capitalize',
+          
         },
         sectionTitle: {
           fontSize: 18,
           fontWeight: 'bold',
           color: e.textStrong,
-          textTransform: 'capitalize',
+          
         },
         btnPrimary: {
           backgroundColor: e.accent,
@@ -86767,7 +86767,7 @@ __d(
           color: '#fff',
           fontWeight: '600',
           fontSize: 12,
-          textTransform: 'capitalize',
+          
         },
         list: { flex: 1 },
         noData: {
@@ -86778,7 +86778,7 @@ __d(
           borderColor: e.border,
           color: e.textStrong,
           textAlign: 'center',
-          textTransform: 'capitalize',
+          
         },
         workoutCard: Object.assign(
           {
@@ -86798,19 +86798,19 @@ __d(
           fontWeight: '600',
           color: e.textStrong,
           marginBottom: 6,
-          textTransform: 'capitalize',
+          
         },
         exerciseItem: {
           fontSize: 13,
           color: e.textMuted,
           lineHeight: 20,
-          textTransform: 'capitalize',
+          
         },
         exerciseEmpty: {
           fontSize: 13,
           color: e.textMuted,
           fontStyle: 'italic',
-          textTransform: 'capitalize',
+          
         },
       });
     var S = ({ route: e, navigation: i }) => {
@@ -87435,7 +87435,7 @@ __d(
           fontSize: 24,
           fontWeight: 'bold',
           color: e.textStrong,
-          textTransform: 'capitalize',
+          
         },
         titleInput: {
           fontSize: 24,
@@ -87444,7 +87444,7 @@ __d(
           borderBottomWidth: 2,
           borderBottomColor: e.accent,
           paddingBottom: 8,
-          textTransform: 'capitalize',
+          
         },
         startWorkoutButton: {
           marginTop: 10,
@@ -87458,7 +87458,7 @@ __d(
           color: e.surface,
           fontWeight: '700',
           fontSize: 12,
-          textTransform: 'capitalize',
+          
         },
         section: { flex: 1, padding: 16 },
         sectionTitle: {
@@ -87466,7 +87466,7 @@ __d(
           fontWeight: 'bold',
           color: e.textStrong,
           marginBottom: 16,
-          textTransform: 'capitalize',
+          
         },
         addExercise: { flexDirection: 'row', gap: 10, marginBottom: 16 },
         input: {
@@ -87490,7 +87490,7 @@ __d(
           color: e.textStrong,
           fontWeight: '600',
           fontSize: 12,
-          textTransform: 'capitalize',
+          
         },
         list: { flex: 1 },
         noData: {
@@ -87524,7 +87524,7 @@ __d(
           fontWeight: '600',
           color: e.textStrong,
           flex: 1,
-          textTransform: 'capitalize',
+          
         },
         btnSmallDelete: {
           backgroundColor: e.danger,
@@ -87536,7 +87536,7 @@ __d(
           color: e.textStrong,
           fontWeight: '600',
           fontSize: 14,
-          textTransform: 'capitalize',
+          
         },
         exerciseControls: { gap: 12 },
         reorderGroup: { marginTop: 8 },
@@ -87545,7 +87545,7 @@ __d(
           fontWeight: '600',
           color: e.textStrong,
           marginBottom: 8,
-          textTransform: 'capitalize',
+          
         },
         reorderButtons: { flexDirection: 'row', gap: 8 },
         btnReorder: {
@@ -87559,7 +87559,7 @@ __d(
           color: e.textStrong,
           fontWeight: '600',
           fontSize: 12,
-          textTransform: 'capitalize',
+          
         },
         btnDisabled: { opacity: 0.5 },
       });
@@ -87891,7 +87891,7 @@ __d(
         label: {
           fontSize: 12,
           fontWeight: '600',
-          textTransform: 'capitalize',
+          
           color: e.textMuted,
         },
         controls: {
@@ -87908,7 +87908,7 @@ __d(
           fontSize: 12,
           color: e.textMuted,
           fontWeight: '600',
-          textTransform: 'capitalize',
+          
         },
         value: {
           flex: 1,
@@ -87916,7 +87916,7 @@ __d(
           fontSize: 16,
           fontWeight: '600',
           color: e.textStrong,
-          textTransform: 'capitalize',
+          
         },
       });
     var x = ({
@@ -87994,7 +87994,7 @@ __d(
           color: '#fff',
           fontSize: 14,
           fontWeight: '500',
-          textTransform: 'capitalize',
+          
         },
         bannerWorkout: { fontWeight: '700' },
         content: { flex: 1, padding: 16 },
@@ -88004,7 +88004,7 @@ __d(
           fontWeight: '600',
           color: e.textStrong,
           marginBottom: 12,
-          textTransform: 'capitalize',
+          
           letterSpacing: 0.3,
         },
         chipsRow: { flexDirection: 'row', marginBottom: 8 },
@@ -88022,7 +88022,7 @@ __d(
           fontSize: 12,
           fontWeight: '500',
           color: e.textMuted,
-          textTransform: 'capitalize',
+          
         },
         chipTextActive: { color: e.accent, textTransform: 'uppercase' },
         exercisesSection: Object.assign(
@@ -88043,7 +88043,7 @@ __d(
           color: e.textStrong,
           paddingVertical: 16,
           paddingHorizontal: 16,
-          textTransform: 'capitalize',
+          
         },
         noData: {
           padding: 16,
@@ -88052,7 +88052,7 @@ __d(
           color: e.textMuted,
           textAlign: 'center',
           fontStyle: 'italic',
-          textTransform: 'capitalize',
+          
         },
         exerciseItem: {
           flexDirection: 'row',
@@ -88078,7 +88078,7 @@ __d(
           color: e.accent,
           fontSize: 14,
           fontWeight: '600',
-          textTransform: 'capitalize',
+          
         },
         exerciseInfo: { flex: 1 },
         exerciseName: {
@@ -88086,7 +88086,7 @@ __d(
           fontWeight: '500',
           color: e.textStrong,
           marginBottom: 4,
-          textTransform: 'capitalize',
+          
         },
         exerciseMeta: { fontSize: 12, color: e.textMuted, textTransform: 'uppercase' },
         spacer: { height: 20 },
@@ -88111,7 +88111,7 @@ __d(
           color: '#fff',
           fontWeight: '600',
           fontSize: 14,
-          textTransform: 'capitalize',
+          
         },
       });
     var S = ({ route: e, navigation: c }) => {
@@ -88432,7 +88432,7 @@ __d(
             fontSize: 20,
             fontWeight: 'bold',
             color: e.textStrong,
-            textTransform: 'capitalize',
+            
           },
           personalBest: { fontSize: 13, color: e.textMuted, marginTop: 2 },
           personalBestValue: { color: e.accent, fontWeight: 'bold' },
@@ -88476,7 +88476,7 @@ __d(
             color: e.textMuted,
             fontWeight: '700',
             fontSize: 12,
-            textTransform: 'capitalize',
+            
           },
           rangeChipTextActive: { color: '#fff' },
           metricsGrid: {
@@ -88500,7 +88500,7 @@ __d(
           metricLabel: {
             fontSize: 12,
             color: e.textMuted,
-            textTransform: 'capitalize',
+            
             marginBottom: 4,
           },
           metricValue: { fontSize: 20, fontWeight: 'bold', color: e.accent },
@@ -88521,13 +88521,13 @@ __d(
             fontSize: 13,
             textAlign: 'center',
             paddingVertical: 24,
-            textTransform: 'capitalize',
+            
           },
           sectionTitle: {
             fontSize: 13,
             fontWeight: '700',
             color: e.textStrong,
-            textTransform: 'capitalize',
+            
             marginBottom: 12,
           },
           historySection: Object.assign(
@@ -117657,7 +117657,7 @@ __d(
             fontSize: 22,
             fontWeight: 'bold',
             color: t.textStrong,
-            textTransform: 'capitalize',
+            
           },
           subtitle: { fontSize: 13, color: t.textMuted },
           content: { flex: 1, padding: 16 },
@@ -117676,7 +117676,7 @@ __d(
             fontSize: 18,
             fontWeight: 'bold',
             color: t.textStrong,
-            textTransform: 'capitalize',
+            
             marginBottom: 6,
           },
           cardDescription: {
@@ -117696,7 +117696,7 @@ __d(
           statLabel: {
             fontSize: 12,
             color: t.textMuted,
-            textTransform: 'capitalize',
+            
             marginBottom: 4,
           },
           statValue: { fontSize: 14, fontWeight: 'bold', color: t.textStrong },
@@ -117705,7 +117705,7 @@ __d(
             fontSize: 13,
             fontWeight: '600',
             color: t.textStrong,
-            textTransform: 'capitalize',
+            
             marginBottom: 8,
           },
           workoutRow: {
@@ -117727,7 +117727,7 @@ __d(
             color: '#fff',
             fontWeight: '700',
             fontSize: 14,
-            textTransform: 'capitalize',
+            
           },
         });
     var k = ({ navigation: t }) => {
@@ -117918,7 +117918,7 @@ __d(
             fontSize: 20,
             fontWeight: 'bold',
             color: e.textStrong,
-            textTransform: 'capitalize',
+            
           },
           subtitle: { fontSize: 13, color: e.textMuted, lineHeight: 18, marginBottom: 8 },
           btnImport: {
@@ -117940,7 +117940,7 @@ __d(
             color: '#fff',
             fontWeight: '700',
             fontSize: 14,
-            textTransform: 'capitalize',
+            
           },
           content: { flex: 1, padding: 16 },
           workoutCard: Object.assign(
@@ -117958,7 +117958,7 @@ __d(
             fontSize: 16,
             fontWeight: 'bold',
             color: e.textStrong,
-            textTransform: 'capitalize',
+            
             marginBottom: 12,
           },
           noExercises: {
@@ -118294,7 +118294,7 @@ __d(
           fontSize: 22,
           fontWeight: 'bold',
           color: e.textStrong,
-          textTransform: 'capitalize',
+          
         },
         subtitle: { fontSize: 13, color: e.textMuted },
         content: { flex: 1, padding: 16 },
@@ -118320,14 +118320,14 @@ __d(
           fontSize: 16,
           fontWeight: 'bold',
           color: e.textStrong,
-          textTransform: 'capitalize',
+          
           flex: 1,
         },
         categoryBadge: {
           fontSize: 12,
           color: e.accent,
           fontWeight: '600',
-          textTransform: 'capitalize',
+          
           borderWidth: 1,
           borderColor: e.accent,
           borderRadius: b.radius.sm,
@@ -118344,7 +118344,7 @@ __d(
           fontSize: 13,
           fontWeight: '700',
           color: e.textStrong,
-          textTransform: 'capitalize',
+          
           marginBottom: 8,
         },
         exerciseRow: {
@@ -118377,7 +118377,7 @@ __d(
           color: '#fff',
           fontWeight: '700',
           fontSize: 14,
-          textTransform: 'capitalize',
+          
         },
         errorText: { color: e.textStrong, fontSize: 16, padding: 16 },
       });
@@ -118591,7 +118591,7 @@ __d(
             color: e.textStrong,
             fontSize: 22,
             fontWeight: '700',
-            textTransform: 'capitalize',
+            
           },
           restTimerText: {
             color: e.textMuted,
@@ -118615,12 +118615,12 @@ __d(
           exerciseName: {
             color: e.textStrong,
             fontWeight: '700',
-            textTransform: 'capitalize',
+            
           },
           exerciseMeta: {
             color: e.textMuted,
             marginTop: 4,
-            textTransform: 'capitalize',
+            
             marginBottom: 10,
           },
           setsHeaderRow: {
@@ -118637,7 +118637,7 @@ __d(
             color: e.textMuted,
             fontSize: 12,
             fontWeight: '700',
-            textTransform: 'capitalize',
+            
           },
           setsStatusHeaderCell: { width: 24 },
           setRow: {
@@ -118684,7 +118684,7 @@ __d(
             color: '#fff',
             fontWeight: '700',
             fontSize: 12,
-            textTransform: 'capitalize',
+            
           },
           navButton: {
             flex: 1,
@@ -118700,7 +118700,7 @@ __d(
             color: e.accent,
             fontWeight: '700',
             fontSize: 12,
-            textTransform: 'capitalize',
+            
           },
           bottomActionsWrap: {
             borderTopWidth: 1,
@@ -118739,7 +118739,7 @@ __d(
             color: e.danger,
             fontWeight: '700',
             fontSize: 12,
-            textTransform: 'capitalize',
+            
           },
           finishButton: {
             backgroundColor: 'transparent',
@@ -118756,18 +118756,18 @@ __d(
             color: e.success,
             fontWeight: '700',
             fontSize: 12,
-            textTransform: 'capitalize',
+            
           },
           emptyTitle: {
             color: e.textStrong,
             fontSize: 22,
             fontWeight: '700',
-            textTransform: 'capitalize',
+            
           },
           emptyText: {
             color: e.textMuted,
             marginTop: 10,
-            textTransform: 'capitalize',
+            
             textAlign: 'center',
           },
         });
@@ -119366,7 +119366,7 @@ __d(
             color: e.textStrong,
             fontSize: 22,
             fontWeight: '700',
-            textTransform: 'capitalize',
+            
           },
           monthRow: {
             marginTop: 12,
@@ -119377,7 +119377,7 @@ __d(
           monthLabel: {
             color: e.textStrong,
             fontWeight: '700',
-            textTransform: 'capitalize',
+            
           },
           monthButton: {
             borderColor: e.border,
@@ -119406,7 +119406,7 @@ __d(
             color: e.textMuted,
             fontSize: 12,
             fontWeight: '700',
-            textTransform: 'capitalize',
+            
           },
           daysGrid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 6 },
           dayCell: {
@@ -119439,7 +119439,7 @@ __d(
             color: e.textStrong,
             fontSize: 16,
             fontWeight: '700',
-            textTransform: 'capitalize',
+            
           },
           listSubtitle: { color: e.textMuted, fontSize: 12, textTransform: 'uppercase' },
           historyItem: Object.assign(
@@ -119457,9 +119457,9 @@ __d(
             color: e.textStrong,
             fontWeight: '700',
             marginBottom: 6,
-            textTransform: 'capitalize',
+            
           },
-          metaText: { color: e.textMuted, textTransform: 'capitalize', fontSize: 12 },
+          metaText: { color: e.textMuted,  fontSize: 12 },
           centered: {
             flex: 1,
             alignItems: 'center',
@@ -119731,9 +119731,9 @@ __d(
             color: e.textStrong,
             fontSize: 22,
             fontWeight: '700',
-            textTransform: 'capitalize',
+            
           },
-          metaText: { color: e.textMuted, textTransform: 'capitalize', fontSize: 12 },
+          metaText: { color: e.textMuted,  fontSize: 12 },
           list: { flex: 1, padding: 16 },
           exerciseCard: Object.assign(
             {
@@ -119750,7 +119750,7 @@ __d(
             color: e.textStrong,
             fontWeight: '700',
             marginBottom: 8,
-            textTransform: 'capitalize',
+            
           },
           setRow: {
             flexDirection: 'row',
@@ -119759,10 +119759,10 @@ __d(
             borderTopColor: e.border,
             borderTopWidth: 1,
           },
-          setCell: { color: e.textMuted, textTransform: 'capitalize', fontSize: 12 },
+          setCell: { color: e.textMuted,  fontSize: 12 },
           emptyText: {
             color: e.textMuted,
-            textTransform: 'capitalize',
+            
             textAlign: 'center',
             marginTop: 16,
           },
@@ -119980,7 +119980,7 @@ __d(
           fontWeight: '700',
           color: e.textStrong,
           marginBottom: 14,
-          textTransform: 'capitalize',
+          
         },
         input: {
           borderWidth: 1,
@@ -120004,7 +120004,7 @@ __d(
         primaryButtonText: {
           color: '#fff',
           fontWeight: '700',
-          textTransform: 'capitalize',
+          
         },
         links: { marginTop: 22, gap: 10 },
         link: { color: e.accent, fontWeight: '600', textTransform: 'uppercase' },
@@ -120324,7 +120324,7 @@ __d(
           fontWeight: '700',
           color: e.textStrong,
           marginBottom: 12,
-          textTransform: 'capitalize',
+          
         },
         accountEmail: { color: e.textMuted, marginTop: -6, marginBottom: 12 },
         settingRow: {
@@ -120337,7 +120337,7 @@ __d(
         settingLabel: {
           color: e.textStrong,
           fontWeight: '700',
-          textTransform: 'capitalize',
+          
           marginBottom: 4,
         },
         settingHelp: { color: e.textMuted, fontSize: 13 },
@@ -120346,7 +120346,7 @@ __d(
           marginBottom: 8,
           color: e.textStrong,
           fontWeight: '700',
-          textTransform: 'capitalize',
+          
         },
         chipRow: { flexDirection: 'row', gap: 10 },
         chip: {
@@ -120369,7 +120369,7 @@ __d(
           paddingHorizontal: 12,
           paddingVertical: 10,
           marginBottom: 10,
-          textTransform: 'capitalize',
+          
         },
         primaryButton: {
           backgroundColor: e.accent,
@@ -120380,7 +120380,7 @@ __d(
         primaryButtonText: {
           color: '#FFFFFF',
           fontWeight: '700',
-          textTransform: 'capitalize',
+          
         },
         secondaryButton: {
           borderColor: e.accent,
@@ -120392,7 +120392,7 @@ __d(
         secondaryButtonText: {
           color: e.accent,
           fontWeight: '700',
-          textTransform: 'capitalize',
+          
         },
         dangerBox: {
           marginTop: 18,
@@ -120406,7 +120406,7 @@ __d(
           color: e.danger,
           fontWeight: '700',
           marginBottom: 6,
-          textTransform: 'capitalize',
+          
         },
         dangerButton: {
           backgroundColor: e.danger,
@@ -120417,7 +120417,7 @@ __d(
         dangerButtonText: {
           color: '#FFFFFF',
           fontWeight: '700',
-          textTransform: 'capitalize',
+          
         },
       });
     var w = () => {
