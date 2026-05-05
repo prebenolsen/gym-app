@@ -26,7 +26,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { PreferencesProvider, usePreferences } from './context/PreferencesContext';
 import { useApi } from './hooks/useApi';
 import { Ionicons } from '@expo/vector-icons';
-import { APP_INFO } from './constants/appInfo';
+import type { NavigationState, PartialState, Route } from '@react-navigation/native';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -44,6 +44,53 @@ const createTabIconWrapperStyle = (isFocused: boolean, accentColor: string) => (
   minHeight: 30,
   alignItems: 'center' as const,
 });
+
+type NestedNavigationState = NavigationState | PartialState<NavigationState>;
+
+const SCREEN_FILE_NAME_BY_ROUTE: Record<string, string> = {
+  Home: 'HomeScreen.tsx',
+  ProgramsStack: 'ProgramsScreen.tsx',
+  ProgramsList: 'ProgramsScreen.tsx',
+  ProgramDetail: 'ProgramDetailScreen.tsx',
+  WorkoutDetail: 'WorkoutDetailScreen.tsx',
+  ExercisesCatalog: 'ExercisesCatalogScreen.tsx',
+  ExerciseProgress: 'ExerciseProgressScreen.tsx',
+  ProgramsCatalog: 'ProgramsCatalogScreen.tsx',
+  ProgramTemplate: 'ProgramTemplateScreen.tsx',
+  WorkoutsCatalog: 'WorkoutsCatalogScreen.tsx',
+  ExerciseProgressList: 'ExerciseProgressListScreen.tsx',
+  ActiveWorkoutStack: 'ActiveWorkoutScreen.tsx',
+  ActiveWorkout: 'ActiveWorkoutScreen.tsx',
+  ExerciseHistory: 'ExerciseHistoryScreen.tsx',
+  ExerciseNotes: 'ExerciseNotesScreen.tsx',
+  CalendarStack: 'CalendarScreen.tsx',
+  Calendar: 'CalendarScreen.tsx',
+  WorkoutHistoryDetail: 'WorkoutHistoryDetailScreen.tsx',
+  Settings: 'SettingsScreen.tsx',
+  Auth: 'AuthScreen.tsx',
+};
+
+const getDeepestActiveRouteName = (state: NestedNavigationState): string => {
+  const activeIndex = state.index ?? 0;
+  const activeRoute = state.routes[activeIndex] as Route<string> & {
+    state?: NestedNavigationState;
+  };
+
+  if (!activeRoute) {
+    return 'UnknownScreen';
+  }
+
+  if (activeRoute.state) {
+    return getDeepestActiveRouteName(activeRoute.state);
+  }
+
+  return activeRoute.name;
+};
+
+const getActiveScreenFileName = (state: NestedNavigationState): string => {
+  const activeRouteName = getDeepestActiveRouteName(state);
+  return SCREEN_FILE_NAME_BY_ROUTE[activeRouteName] ?? `${activeRouteName}.tsx`;
+};
 
 const ProgramsStackNavigator = () => {
   return (
@@ -157,9 +204,7 @@ const AppRoutes = () => {
             <View style={styles.tabBarWrapper}>
               <BottomTabBar {...props} />
               <View style={styles.tabBarFooter}>
-                <Text style={styles.versionText}>
-                  Version {APP_INFO.version} ({APP_INFO.stage})
-                </Text>
+                <Text style={styles.versionText}>{getActiveScreenFileName(props.state)}</Text>
               </View>
             </View>
           )}

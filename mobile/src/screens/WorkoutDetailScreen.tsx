@@ -315,7 +315,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
           style={styles.startWorkoutButton}
           activeOpacity={0.8}
         >
-          <Text style={styles.startWorkoutButtonText}>Start Workout</Text>
+          <Text style={styles.startWorkoutButtonText}>Start workout</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -361,7 +361,6 @@ const createStyles = (themeColors: typeof colors) =>
       color: '#fff',
       fontWeight: '700',
       fontSize: 14,
-      
     },
     section: {
       flex: 1,
@@ -483,8 +482,8 @@ const createStyles = (themeColors: typeof colors) =>
     },
     bottomActions: {
       paddingHorizontal: 16,
-      paddingTop: 8,
-      paddingBottom: 18,
+      paddingTop: 4,
+      paddingBottom: 10,
       backgroundColor: themeColors.background,
       borderTopWidth: 1,
       borderTopColor: themeColors.border,
