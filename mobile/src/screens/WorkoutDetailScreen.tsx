@@ -391,9 +391,10 @@ const createStyles = (themeColors: typeof colors) =>
     btnPrimary: {
       backgroundColor: themeColors.accent,
       paddingHorizontal: 12,
-      paddingVertical: 8,
+      paddingVertical: 12,
       borderRadius: radius.sm,
       justifyContent: 'center',
+      alignItems: 'center',
     },
     catalogButton: {
       marginTop: 8,
@@ -466,12 +467,12 @@ const createStyles = (themeColors: typeof colors) =>
     deleteButton: {
       backgroundColor: themeColors.danger,
       paddingHorizontal: 12,
-      paddingVertical: 10,
+      paddingVertical: 12,
       borderRadius: radius.sm,
       alignItems: 'center',
     },
     deleteButtonInList: {
-      marginTop: 8,
+      marginTop: 0,
       marginBottom: 20,
     },
     deleteButtonText: {

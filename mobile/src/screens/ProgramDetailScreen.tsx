@@ -280,10 +280,11 @@ const createStyles = (themeColors: typeof colors) =>
     deleteButton: {
       backgroundColor: themeColors.danger,
       borderRadius: radius.sm,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
       alignItems: 'center',
     },
+    
     deleteButtonText: {
       color: '#fff',
       fontWeight: '700',

@@ -408,7 +408,7 @@ const createStyles = (themeColors: typeof colors) =>
     btnPrimary: {
       backgroundColor: themeColors.accent,
       paddingHorizontal: 12,
-      paddingVertical: 8,
+      paddingVertical: 12,
       borderRadius: radius.sm,
     },
     btnText: {
@@ -523,7 +523,7 @@ const createStyles = (themeColors: typeof colors) =>
     },
     btnSmall: {
       backgroundColor: themeColors.danger,
-      paddingHorizontal: 10,
+      paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: radius.sm,
     },
