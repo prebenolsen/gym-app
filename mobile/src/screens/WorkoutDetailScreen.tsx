@@ -458,7 +458,6 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.danger,
       fontWeight: '600',
       fontSize: 14,
-      
     },
     exerciseControls: {
       gap: 12,

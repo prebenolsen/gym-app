@@ -313,12 +313,6 @@ const ProgramsScreen = ({ navigation }: any) => {
                 >
                   <Text style={styles.programName}>{program.name}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => handleDeleteProgram(program.id, program.name)}
-                  style={styles.btnSmall}
-                >
-                  <Text style={styles.btnSmallText}>✕</Text>
-                </TouchableOpacity>
               </View>
 
               <View style={styles.workoutsList}>
@@ -519,18 +513,6 @@ const createStyles = (themeColors: typeof colors) =>
       fontStyle: 'italic',
       paddingVertical: 4,
       paddingHorizontal: 12,
-      
-    },
-    btnSmall: {
-      backgroundColor: themeColors.danger,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: radius.sm,
-    },
-    btnSmallText: {
-      color: '#fff',
-      fontWeight: '600',
-      fontSize: 14,
       
     },
     notification: {
