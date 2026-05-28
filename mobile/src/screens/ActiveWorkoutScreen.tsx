@@ -50,6 +50,11 @@ type HugeWeightWarningState = {
   setIndex: number | null;
 };
 
+type PendingSetCountPrompt = {
+  exerciseId: string;
+  nextSets: number;
+};
+
 const normalizeDraftValue = (value: string): string => value.trim().replace(',', '.');
 
 const hasDraftChanged = (draft: SetDraft, baseline?: SetDraft): boolean => {
@@ -171,6 +176,8 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     exerciseId: null,
     setIndex: null,
   });
+  const [pendingSetCountPrompt, setPendingSetCountPrompt] =
+    useState<PendingSetCountPrompt | null>(null);
   const lastRestSoundSecondRef = useRef<number | null>(null);
 
   const currentExercise = exercises[currentIndex] ?? null;
@@ -549,6 +556,66 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     }
   };
 
+  const updateExerciseDefaultSetCount = async (
+    exerciseId: string,
+    nextSets: number,
+  ) => {
+    try {
+      await api.updateExercise(exerciseId, { sets: nextSets });
+      setExercises((prev) =>
+        prev.map((exercise) =>
+          exercise.id === exerciseId ? { ...exercise, sets: nextSets } : exercise,
+        ),
+      );
+    } catch (err) {
+      console.error('Failed to update default set count:', err);
+      Alert.alert('Error', 'Failed to save default set count');
+    }
+  };
+
+  const handleConfirmSaveDefaultSetCount = () => {
+    if (!pendingSetCountPrompt) return;
+    void updateExerciseDefaultSetCount(
+      pendingSetCountPrompt.exerciseId,
+      pendingSetCountPrompt.nextSets,
+    );
+    setPendingSetCountPrompt(null);
+  };
+
+  const handleDismissSaveDefaultSetCount = () => {
+    setPendingSetCountPrompt(null);
+  };
+
+  const handleAddSet = () => {
+    if (!currentExercise) return;
+
+    const exerciseId = currentExercise.id;
+    let nextSetCount = 0;
+
+    setSetDraftsByExercise((prev) => {
+      const current = prev[exerciseId] ?? [];
+      const next = [...current, { weight: '', reps: '' }];
+      nextSetCount = next.length;
+      return {
+        ...prev,
+        [exerciseId]: next,
+      };
+    });
+
+    setSavedDraftBaselinesByExercise((prev) => ({
+      ...prev,
+      [exerciseId]: [...(prev[exerciseId] ?? []), { weight: '', reps: '' }],
+    }));
+
+    setLastEditedSetIndexByExercise((prev) => ({
+      ...prev,
+      [exerciseId]: Math.max(nextSetCount - 1, 0),
+    }));
+
+    setPendingSetCountPrompt({ exerciseId, nextSets: nextSetCount });
+  };
+
+
   const adjustRestTimer = (deltaSeconds: number) => {
     if (!currentExercise || restSecondsLeft <= 0) return;
 
@@ -852,6 +919,37 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
                     </Text>
                   </View>
                 ) : null}
+
+                <View style={styles.addSetRow}>
+                  <TouchableOpacity
+                    style={styles.addSetHitbox}
+                    onPress={handleAddSet}
+                  >
+                    <Text style={styles.setCellLabel}>+</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {pendingSetCountPrompt?.exerciseId === currentExercise.id ? (
+                  <View style={styles.inlineSetPromptBox}>
+                    <Text style={styles.inlineSetPromptText}>
+                      Save new amount of sets to exercise?
+                    </Text>
+                    <View style={styles.inlineSetPromptButtons}>
+                      <TouchableOpacity
+                        style={styles.inlineSetPromptNoButton}
+                        onPress={handleDismissSaveDefaultSetCount}
+                      >
+                        <Text style={styles.inlineSetPromptNoButtonText}>No</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.inlineSetPromptYesButton}
+                        onPress={handleConfirmSaveDefaultSetCount}
+                      >
+                        <Text style={styles.inlineSetPromptYesButtonText}>Yes</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : null}
               </View>
             )}
           </ScrollView>
@@ -1139,6 +1237,66 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontSize: 12,
       fontWeight: '600',
+    },
+    addSetRow: {
+      marginTop: 2,
+      flexDirection: 'row',
+    },
+    addSetHitbox: {
+      width: 30,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 6,
+    },
+    inlineSetPromptBox: {
+      marginTop: 2,
+      marginLeft: 36,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: radius.sm,
+      backgroundColor: themeColors.background,
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+    },
+    inlineSetPromptText: {
+      color: themeColors.textStrong,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    inlineSetPromptButtons: {
+      marginTop: 8,
+      flexDirection: 'row',
+      gap: 8,
+    },
+    inlineSetPromptNoButton: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: themeColors.danger,
+      backgroundColor: themeColors.accentSoft,
+      borderRadius: radius.sm,
+      paddingVertical: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    inlineSetPromptNoButtonText: {
+      color: themeColors.danger,
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    inlineSetPromptYesButton: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: themeColors.warning,
+      backgroundColor: themeColors.warning,
+      borderRadius: radius.sm,
+      paddingVertical: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    inlineSetPromptYesButtonText: {
+      color: '#fff',
+      fontSize: 12,
+      fontWeight: '700',
     },
     bottomArea: {
       paddingHorizontal: 16,
