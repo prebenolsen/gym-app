@@ -44,6 +44,12 @@ type PreviousPerformance = {
   [exerciseId: string]: Record<number, ExerciseLastPerformance>;
 };
 
+type HugeWeightWarningState = {
+  visible: boolean;
+  exerciseId: string | null;
+  setIndex: number | null;
+};
+
 const normalizeDraftValue = (value: string): string => value.trim().replace(',', '.');
 
 const hasDraftChanged = (draft: SetDraft, baseline?: SetDraft): boolean => {
@@ -160,6 +166,11 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     number | null
   >(null);
   const [previousPerformance, setPreviousPerformance] = useState<PreviousPerformance>({});
+  const [hugeWeightWarning, setHugeWeightWarning] = useState<HugeWeightWarningState>({
+    visible: false,
+    exerciseId: null,
+    setIndex: null,
+  });
   const lastRestSoundSecondRef = useRef<number | null>(null);
 
   const currentExercise = exercises[currentIndex] ?? null;
@@ -424,6 +435,30 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
 
       return { ...prev, [exerciseId]: next };
     });
+
+    if (field === 'weight') {
+      const previousSet = previousPerformance[exerciseId]?.[index + 1];
+      const enteredWeight = Number(normalizeDraftValue(value));
+      const isSameSetAsWarning =
+        hugeWeightWarning.exerciseId === exerciseId && hugeWeightWarning.setIndex === index;
+
+      if (
+        previousSet &&
+        previousSet.weight > 0 &&
+        !Number.isNaN(enteredWeight) &&
+        enteredWeight > 0
+      ) {
+        const enteredWeightKg = convertToKg(enteredWeight);
+        if (enteredWeightKg > previousSet.weight * 10) {
+          setHugeWeightWarning({ visible: true, exerciseId, setIndex: index });
+          return;
+        }
+      }
+
+      if (isSameSetAsWarning) {
+        setHugeWeightWarning({ visible: false, exerciseId: null, setIndex: null });
+      }
+    }
   };
 
   const handleSaveSet = async (index: number) => {
@@ -478,6 +513,12 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
           [index + 1]: false,
         },
       }));
+
+      setHugeWeightWarning((prev) =>
+        prev.exerciseId === currentExercise.id && prev.setIndex === index
+          ? { visible: false, exerciseId: null, setIndex: null }
+          : prev,
+      );
 
       setRestSecondsLeft(currentExercise.rest_seconds);
       setPendingDefaultRestSeconds(null);
@@ -801,6 +842,16 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
                     </View>
                   );
                 })}
+
+                {hugeWeightWarning.visible &&
+                hugeWeightWarning.exerciseId === currentExercise.id ? (
+                  <View style={styles.warningBanner}>
+                    <Text style={styles.warningBannerIcon}>⚠</Text>
+                    <Text style={styles.warningBannerText}>
+                      Huge improvement, impressive or a typo?
+                    </Text>
+                  </View>
+                ) : null}
               </View>
             )}
           </ScrollView>
@@ -1065,6 +1116,29 @@ const createStyles = (themeColors: typeof colors) =>
       paddingHorizontal: 12,
       paddingTop: 10,
       paddingBottom: 10,
+    },
+    warningBanner: {
+      marginBottom: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      borderRadius: radius.sm,
+      borderWidth: 1,
+      borderColor: themeColors.warning,
+      backgroundColor: themeColors.accentSoft,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    warningBannerIcon: {
+      color: themeColors.warning,
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    warningBannerText: {
+      flex: 1,
+      color: themeColors.textStrong,
+      fontSize: 12,
+      fontWeight: '600',
     },
     bottomArea: {
       paddingHorizontal: 16,
