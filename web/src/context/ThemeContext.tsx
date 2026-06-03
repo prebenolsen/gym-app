@@ -24,6 +24,8 @@ type ThemeContextValue = {
   setCustomCueEnabled: (enabled: boolean) => void;
   customCueSeconds: number;
   setCustomCueSeconds: (seconds: number) => void;
+  showFileDisplay: boolean;
+  setShowFileDisplay: (enabled: boolean) => void;
 };
 
 const STORAGE_KEY = 'gym-app.theme';
@@ -32,6 +34,7 @@ const COMPLETION_CUE_ENABLED_KEY = 'gym-app.sound-completion-enabled';
 const COUNTDOWN_CUE_ENABLED_KEY = 'gym-app.sound-countdown-enabled';
 const CUSTOM_CUE_ENABLED_KEY = 'gym-app.sound-custom-enabled';
 const CUSTOM_CUE_SECONDS_KEY = 'gym-app.sound-custom-seconds';
+const SHOW_FILE_DISPLAY_KEY = 'gym-app.show-file-display';
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
@@ -73,6 +76,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     return 10;
   });
 
+  const [showFileDisplay, setShowFileDisplayState] = useState<boolean>(() => {
+    const saved = localStorage.getItem(SHOW_FILE_DISPLAY_KEY);
+    return saved !== 'false';
+  });
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, theme);
     document.documentElement.setAttribute('data-theme', theme);
@@ -101,6 +109,10 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem(CUSTOM_CUE_SECONDS_KEY, String(customCueSeconds));
   }, [customCueSeconds]);
 
+  useEffect(() => {
+    localStorage.setItem(SHOW_FILE_DISPLAY_KEY, String(showFileDisplay));
+  }, [showFileDisplay]);
+
   const value = useMemo<ThemeContextValue>(
     () => ({
       theme,
@@ -117,6 +129,8 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       setCustomCueEnabled: setCustomCueEnabledState,
       customCueSeconds,
       setCustomCueSeconds: setCustomCueSecondsState,
+      showFileDisplay,
+      setShowFileDisplay: setShowFileDisplayState,
     }),
     [
       theme,
@@ -125,6 +139,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       countdownCueEnabled,
       customCueEnabled,
       customCueSeconds,
+      showFileDisplay,
     ],
   );
 

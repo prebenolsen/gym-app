@@ -25,6 +25,8 @@ const SettingsPage = () => {
     setTheme,
     accent,
     setAccent,
+    showFileDisplay,
+    setShowFileDisplay,
     completionCueEnabled,
     setCompletionCueEnabled,
     countdownCueEnabled,
@@ -137,6 +139,14 @@ const SettingsPage = () => {
                 );
               })}
             </div>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
+            <span className="font-medium text-foreground">Show File Display at Bottom</span>
+            <Switch
+              checked={showFileDisplay}
+              onCheckedChange={setShowFileDisplay}
+            />
           </div>
 
           <div className="rounded-lg border border-border bg-muted/30 p-4">

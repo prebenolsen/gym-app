@@ -275,39 +275,92 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
       if (!activeSession) {
         setWorkout(null);
         setExercises([]);
+        setSetDraftsByExercise({});
+        setSavedSetsByExercise({});
+        setSavedDraftBaselinesByExercise({});
+        setDirtySavedSetsByExercise({});
+        setLastEditedSetIndexByExercise({});
         setPreviousPerformance({});
         return;
       }
 
-      const currentWorkout = await loadWorkoutById(activeSession.workout_id);
+      const [currentWorkout, workoutExercises] = await Promise.all([
+        loadWorkoutById(activeSession.workout_id),
+        api.getExercises(activeSession.workout_id),
+      ]);
       setWorkout(currentWorkout);
-
-      const workoutExercises = await api.getExercises(activeSession.workout_id);
       setExercises(workoutExercises);
 
-      // Load previous performance data for this workout
-      try {
-        const lastPerf = await api.getLastWorkoutPerformance(activeSession.workout_id);
-        const sets = (lastPerf?.sets ?? []) as LastPerformanceSet[];
-        setPreviousPerformance(buildPreviousPerformanceLookup(sets));
-      } catch (err) {
-        console.warn('Failed to load previous performance:', err);
-        setPreviousPerformance({});
-      }
+      const [lastPerfResult, setsByExercise] = await Promise.all([
+        api.getLastWorkoutPerformance(activeSession.workout_id).catch((err) => {
+          console.warn('Failed to load previous performance:', err);
+          return null;
+        }),
+        Promise.all(
+          workoutExercises.map(async (exercise) => {
+            try {
+              const savedSets = await api.getSessionSets(activeSession.id, exercise.id);
+              return [exercise.id, savedSets] as [string, WorkoutSessionSet[]];
+            } catch (err) {
+              console.error(
+                `Failed to load sets for exercise ${exercise.id} while preloading:`,
+                err,
+              );
+              return [exercise.id, []] as [string, WorkoutSessionSet[]];
+            }
+          }),
+        ),
+      ]);
+
+      const perfSets = (lastPerfResult?.sets ?? []) as LastPerformanceSet[];
+      setPreviousPerformance(buildPreviousPerformanceLookup(perfSets));
+
+      const setsByExerciseLookup = new Map(setsByExercise);
+      const nextDraftsByExercise: Record<string, SetDraft[]> = {};
+      const nextSavedSetsByExercise: Record<string, SavedSetTracking> = {};
+      const nextSavedDraftBaselinesByExercise: Record<string, SetDraft[]> = {};
+      const nextDirtySavedSetsByExercise: Record<string, SavedSetTracking> = {};
+      const nextLastEditedSetIndexByExercise: Record<string, number | null> = {};
+
+      workoutExercises.forEach((exercise) => {
+        const savedSets = setsByExerciseLookup.get(exercise.id) ?? [];
+        const drafts: SetDraft[] = Array.from({ length: exercise.sets }).map((_, idx) => {
+          const found = savedSets.find((set) => set.set_number === idx + 1);
+          return {
+            weight: found ? formatWeightInput(found.weight) : '',
+            reps: found ? String(found.reps) : '',
+          };
+        });
+
+        const tracking: SavedSetTracking = {};
+        savedSets.forEach((set) => {
+          tracking[set.set_number] = true;
+        });
+
+        const firstUnsavedIndex = drafts.findIndex((_, idx) => !tracking[idx + 1]);
+        nextDraftsByExercise[exercise.id] = drafts;
+        nextSavedSetsByExercise[exercise.id] = tracking;
+        nextSavedDraftBaselinesByExercise[exercise.id] = drafts;
+        nextDirtySavedSetsByExercise[exercise.id] = {};
+        nextLastEditedSetIndexByExercise[exercise.id] =
+          firstUnsavedIndex >= 0
+            ? firstUnsavedIndex
+            : drafts.length > 0
+              ? drafts.length - 1
+              : null;
+      });
+
+      setSetDraftsByExercise(nextDraftsByExercise);
+      setSavedSetsByExercise(nextSavedSetsByExercise);
+      setSavedDraftBaselinesByExercise(nextSavedDraftBaselinesByExercise);
+      setDirtySavedSetsByExercise(nextDirtySavedSetsByExercise);
+      setLastEditedSetIndexByExercise(nextLastEditedSetIndexByExercise);
 
       const index = Math.min(
         activeSession.current_exercise_index || 0,
         Math.max(workoutExercises.length - 1, 0),
       );
       setCurrentIndex(index);
-
-      if (workoutExercises[index]) {
-        const savedSets = await api.getSessionSets(
-          activeSession.id,
-          workoutExercises[index].id,
-        );
-        hydrateDrafts(workoutExercises[index], savedSets);
-      }
 
       const startedAtMs = parseApiDate(activeSession.started_at);
       const nowMs = Date.now();
@@ -393,22 +446,6 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
     customCueEnabled,
     customCueSeconds,
   ]);
-
-  useEffect(() => {
-    const loadCurrentExerciseSets = async () => {
-      if (!session || !currentExercise) return;
-      if (setDraftsByExercise[currentExercise.id]) return;
-
-      try {
-        const savedSets = await api.getSessionSets(session.id, currentExercise.id);
-        hydrateDrafts(currentExercise, savedSets);
-      } catch (err) {
-        console.error('Failed to load sets for current exercise:', err);
-      }
-    };
-
-    loadCurrentExerciseSets();
-  }, [session?.id, currentExercise?.id]);
 
   const handleSetFieldChange = (
     exerciseId: string,
@@ -830,7 +867,7 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
               <View style={styles.exerciseCard}>
                 <Text style={styles.exerciseName}>{currentExercise.name}</Text>
                 <View style={styles.setsHeaderRow}>
-                  <Text style={styles.setsHeaderCell}>Set</Text>
+                  <Text style={styles.setsHeaderSetCell}>Set</Text>
                   <Text style={styles.setsHeaderCell}>Weight ({unit})</Text>
                   <Text style={styles.setsHeaderCell}>Reps</Text>
                   <Text style={styles.setsStatusHeaderCell}></Text>
@@ -1102,14 +1139,21 @@ const createStyles = (themeColors: typeof colors) =>
       borderTopColor: themeColors.border,
       paddingTop: 8,
       marginBottom: 6,
-      gap: 6,
+      gap: 8,
+    },
+    setsHeaderSetCell: {
+      width: 30,
+      color: themeColors.textMuted,
+      fontSize: 12,
+      fontWeight: '700',
+      textAlign: 'center',
     },
     setsHeaderCell: {
       flex: 1,
       color: themeColors.textMuted,
       fontSize: 12,
       fontWeight: '700',
-      
+      textAlign: 'center',
     },
     setsStatusHeaderCell: {
       width: 24,

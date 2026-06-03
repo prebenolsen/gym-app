@@ -3,7 +3,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
 import './Navigation.css';
 
-const navItems = [
+interface NavigationProps {
+  showFileDisplay?: boolean;
+}
+
+const Navigation = ({ showFileDisplay = true }: NavigationProps) => {
   { path: '/', label: 'Home', icon: '⚡' },
   { path: '/active-workout', label: 'Active Workout', icon: '🏋️' },
   { path: '/programs', label: 'Programs', icon: '📋' },
@@ -45,7 +49,7 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="navigation">
+    <nav className={`navigation ${!showFileDisplay ? 'navigation-hidden' : ''}`}>
       <div className="nav-header">
         <img
           src="../../shared/assets/logo-weak-cursiv-k-barbell-under.svg"

@@ -145,11 +145,11 @@ export default function App() {
 
 const AppRoutes = () => {
   const { session, loading } = useAuth();
-  const { ready, colors } = usePreferences();
+  const { ready, colors, showFileDisplay } = usePreferences();
   const api = useApi();
   const [hasActiveSession, setHasActiveSession] = useState(false);
   const [loadingActiveSession, setLoadingActiveSession] = useState(true);
-  const styles = createStyles(colors);
+  const styles = createStyles(colors, showFileDisplay);
 
   useEffect(() => {
     let isMounted = true;
@@ -204,9 +204,9 @@ const AppRoutes = () => {
       <NavigationContainer>
         <Tab.Navigator
           tabBar={(props) => (
-            <View style={styles.tabBarWrapper}>
+            <View style={[styles.tabBarWrapper, !showFileDisplay && styles.tabBarWrapperHidden]}>
               <BottomTabBar {...props} />
-              <View style={styles.tabBarFooter}>
+              <View style={[styles.tabBarFooter, !showFileDisplay && styles.tabBarFooterHidden]}>
                 <Text style={styles.versionText}>{getActiveScreenFileName(props.state)}</Text>
               </View>
             </View>
@@ -331,7 +331,7 @@ const AppRoutes = () => {
   );
 };
 
-const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors']) =>
+const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors'], showFileDisplay: boolean) =>
   StyleSheet.create({
     safeArea: {
       flex: 1,
@@ -339,7 +339,10 @@ const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors']) 
     },
     tabBarWrapper: {
       backgroundColor: themeColors.surface,
-      marginBottom: 12,
+      marginBottom: showFileDisplay ? 12 : 60,
+    },
+    tabBarWrapperHidden: {
+      marginBottom: 60,
     },
     tabBarFooter: {
       width: '100%',
@@ -348,6 +351,9 @@ const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors']) 
       paddingTop: 6,
       paddingBottom: 10,
       alignItems: 'center',
+    },
+    tabBarFooterHidden: {
+      display: 'none',
     },
     versionText: {
       fontSize: 12,

@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
 import Navigation from './components/Navigation';
 import LoginPage from './pages/LoginPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import { useTheme } from './context/ThemeContext';
 import HomePage from './pages/HomePage';
 import ProgramsPage from './pages/ProgramsPage';
 import ProgramDetailPage from './pages/ProgramDetailPage';
@@ -23,6 +24,7 @@ import './App.css';
 
 function AppContent() {
   const { loading, session, isPasswordRecovery } = useAuth();
+  const { showFileDisplay } = useTheme();
   const location = useLocation();
 
   if (loading) {
@@ -37,10 +39,31 @@ function AppContent() {
     return <LoginPage />;
   }
 
+  const getFileNameFromPath = (path: string) => {
+    const screenMapping: Record<string, string> = {
+      '/': 'HomePage.tsx',
+      '/programs': 'ProgramsPage.tsx',
+      '/programs-catalog': 'ProgramsCatalogPage.tsx',
+      '/exercises': 'ExercisesPage.tsx',
+      '/active-workout': 'ActiveWorkoutPage.tsx',
+      '/calendar': 'CalendarPage.tsx',
+      '/settings': 'SettingsPage.tsx',
+    };
+
+    for (const [route, fileName] of Object.entries(screenMapping)) {
+      if (path === route || (route !== '/' && path.startsWith(route))) {
+        return fileName;
+      }
+    }
+    return 'App.tsx';
+  };
+
+  const currentFileName = getFileNameFromPath(location.pathname);
+
   return (
     <div className="app">
-      <div className="app-shell">
-        <Navigation />
+      <div className={`app-shell ${!showFileDisplay ? 'app-shell-navbar-hidden' : ''}`}>
+        <Navigation showFileDisplay={showFileDisplay} />
         <div className="app-content">
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -75,6 +98,11 @@ function AppContent() {
           </Routes>
         </div>
       </div>
+      {showFileDisplay && (
+        <div className="app-footer">
+          <span className="footer-file-display">{currentFileName}</span>
+        </div>
+      )}
     </div>
   );
 }

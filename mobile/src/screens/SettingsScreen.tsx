@@ -26,6 +26,8 @@ const SettingsScreen = () => {
     setAccent,
     unit,
     setUnit,
+    showFileDisplay,
+    setShowFileDisplay,
     completionCueEnabled,
     setCompletionCueEnabled,
     countdownCueEnabled,
@@ -162,6 +164,19 @@ const SettingsScreen = () => {
               lb
             </Text>
           </TouchableOpacity>
+        </View>
+
+        <View style={styles.settingRow}>
+          <View style={styles.settingInfo}>
+            <Text style={styles.settingLabel}>Show File Display</Text>
+            <Text style={styles.settingHelp}>Display file name at the bottom of the screen.</Text>
+          </View>
+          <Switch
+            value={showFileDisplay}
+            onValueChange={setShowFileDisplay}
+            thumbColor={themeColors.switchThumb}
+            trackColor={{ false: themeColors.border, true: themeColors.accent }}
+          />
         </View>
       </View>
 

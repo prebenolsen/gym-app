@@ -32,6 +32,8 @@ type PreferencesContextValue = {
   setCustomCueEnabled: (enabled: boolean) => void;
   customCueSeconds: number;
   setCustomCueSeconds: (seconds: number) => void;
+  showFileDisplay: boolean;
+  setShowFileDisplay: (enabled: boolean) => void;
 };
 
 const THEME_KEY = 'gym-app.mobile.theme';
@@ -41,6 +43,7 @@ const COMPLETION_CUE_ENABLED_KEY = 'gym-app.mobile.sound-completion-enabled';
 const COUNTDOWN_CUE_ENABLED_KEY = 'gym-app.mobile.sound-countdown-enabled';
 const CUSTOM_CUE_ENABLED_KEY = 'gym-app.mobile.sound-custom-enabled';
 const CUSTOM_CUE_SECONDS_KEY = 'gym-app.mobile.sound-custom-seconds';
+const SHOW_FILE_DISPLAY_KEY = 'gym-app.mobile.show-file-display';
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 
@@ -53,6 +56,7 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
   const [countdownCueEnabled, setCountdownCueEnabledState] = useState(false);
   const [customCueEnabled, setCustomCueEnabledState] = useState(false);
   const [customCueSeconds, setCustomCueSecondsState] = useState(10);
+  const [showFileDisplay, setShowFileDisplayState] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -65,6 +69,7 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
           savedCountdownCueEnabled,
           savedCustomCueEnabled,
           savedCustomCueSeconds,
+          savedShowFileDisplay,
         ] = await Promise.all([
           AsyncStorage.getItem(THEME_KEY),
           AsyncStorage.getItem(ACCENT_KEY),
@@ -73,6 +78,7 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
           AsyncStorage.getItem(COUNTDOWN_CUE_ENABLED_KEY),
           AsyncStorage.getItem(CUSTOM_CUE_ENABLED_KEY),
           AsyncStorage.getItem(CUSTOM_CUE_SECONDS_KEY),
+          AsyncStorage.getItem(SHOW_FILE_DISPLAY_KEY),
         ]);
 
         if (savedTheme === 'light' || savedTheme === 'dark') {
@@ -107,6 +113,9 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
           parsedCustomCueSeconds >= 1
         ) {
           setCustomCueSecondsState(parsedCustomCueSeconds);
+        }
+        if (savedShowFileDisplay === 'true' || savedShowFileDisplay === 'false') {
+          setShowFileDisplayState(savedShowFileDisplay === 'true');
         }
       } finally {
         setReady(true);
@@ -173,6 +182,13 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
     );
   }, [customCueSeconds, ready]);
 
+  useEffect(() => {
+    if (!ready) return;
+    AsyncStorage.setItem(SHOW_FILE_DISPLAY_KEY, String(showFileDisplay)).catch((err) => {
+      console.error('Failed to persist show file display setting:', err);
+    });
+  }, [showFileDisplay, ready]);
+
   const value = useMemo<PreferencesContextValue>(() => {
     const convertFromKg = (kg: number) => (unit === 'lb' ? kg * 2.2 : kg);
     const convertToKg = (input: number) => (unit === 'lb' ? input / 2.2 : input);
@@ -201,6 +217,8 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
       setCustomCueEnabled: setCustomCueEnabledState,
       customCueSeconds,
       setCustomCueSeconds: setCustomCueSecondsState,
+      showFileDisplay,
+      setShowFileDisplay: setShowFileDisplayState,
     };
   }, [
     ready,
@@ -211,6 +229,7 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
     countdownCueEnabled,
     customCueEnabled,
     customCueSeconds,
+    showFileDisplay,
   ]);
 
   return (
