@@ -1,166 +1,167 @@
-# GymApp - Workout Tracker
+# GymApp - Mobile Workout Tracker
 
-A full-stack three-tier GymApp workout management app with web and mobile frontends.
+GymApp is a mobile-first workout tracker built with Expo React Native, an Express backend, and Supabase.
 
 ## Features
 
-- **Three-tier hierarchy**: Programs → Workouts → Exercises
-- **Exercise management**: Add, edit, delete exercises with customizable sets and rest times
-- **Reordering**: Drag exercises up/down to customize workout order
-- **Stats dashboard**: View total programs, workouts, and exercises
-- **Cross-platform**: Web (React) + Mobile (React Native)
-- **Cloud storage**: Supabase PostgreSQL backend
+- Programs → workouts → exercises hierarchy
+- Active workout sessions with saved sets and history
+- Custom exercises with optional muscle-group mapping
+- Exercise notes and progress tracking
+- Mobile app plus backend/shared workspace only
 
 ## Tech Stack
 
-- **Frontend**: React (web) + React Native (mobile)
-- **Backend**: Node.js + Express
-- **Database**: Supabase (PostgreSQL)
-- **Structure**: Monorepo with shared types and API client
+- Frontend: React Native + Expo
+- Backend: Node.js + Express
+- Database: Supabase PostgreSQL
+- Shared package: types, exercise catalogs, and API client
 
 ## Quick Start
 
-### 1. Clone & Install Dependencies
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-This installs all workspaces: `/web`, `/mobile`, `/backend`, `/shared`
+### 2. Create a Supabase project
 
-### 2. Set Up Supabase (MANUAL SETUP REQUIRED)
-
-This is the critical step. You'll need to manually create a Supabase project and schema:
-
-#### A. Create a Supabase Project
 1. Go to [supabase.com](https://supabase.com)
-2. Sign up or log in
-3. Create a new project (choose any region)
-4. Wait for it to provision
-5. Copy your **Project URL** and **Anon Key** from the API settings
+2. Create a project
+3. Copy the project URL, anon key, and service role key from Settings → API
 
-#### B. Create Database Schema
+### 3. Create the database tables used by the mobile app
 
-In the Supabase SQL Editor, run the following SQL to create the three tables:
+In the Supabase SQL editor, run this base schema first:
 
 ```sql
--- Programs table
-CREATE TABLE programs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  user_id TEXT NOT NULL,
-  "order" INTEGER NOT NULL DEFAULT 1,
-  created_at TIMESTAMP DEFAULT NOW(),
-  CONSTRAINT programs_user_order_unique UNIQUE(user_id, "order")
+create extension if not exists pgcrypto;
+
+create table if not exists programs (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  user_id text not null,
+  "order" integer not null default 1,
+  is_favorite_program boolean not null default false,
+  created_at timestamptz not null default now(),
+  constraint programs_user_order_unique unique (user_id, "order")
 );
 
--- Workouts table
-CREATE TABLE workouts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  program_id UUID NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  user_id TEXT NOT NULL,
-  "order" INTEGER NOT NULL DEFAULT 1,
-  created_at TIMESTAMP DEFAULT NOW(),
-  FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE,
-  CONSTRAINT workouts_program_order_unique UNIQUE(program_id, "order")
+create table if not exists workouts (
+  id uuid primary key default gen_random_uuid(),
+  program_id uuid not null references programs(id) on delete cascade,
+  name text not null,
+  user_id text not null,
+  "order" integer not null default 1,
+  created_at timestamptz not null default now(),
+  constraint workouts_program_order_unique unique (program_id, "order")
 );
 
--- Exercises table
-CREATE TABLE exercises (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  workout_id UUID NOT NULL REFERENCES workouts(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  sets INTEGER NOT NULL DEFAULT 1,
-  rest_seconds INTEGER NOT NULL DEFAULT 120,
-  user_id TEXT NOT NULL,
-  "order" INTEGER NOT NULL DEFAULT 1,
-  created_at TIMESTAMP DEFAULT NOW(),
-  FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE,
-  CONSTRAINT exercises_workout_order_unique UNIQUE(workout_id, "order")
+create table if not exists exercises (
+  id uuid primary key default gen_random_uuid(),
+  workout_id uuid not null references workouts(id) on delete cascade,
+  name text not null,
+  sets integer not null default 1,
+  rest_seconds integer not null default 120,
+  custom_muscle_groups text[] null,
+  is_custom boolean not null default false,
+  user_id text not null,
+  "order" integer not null default 1,
+  created_at timestamptz not null default now(),
+  constraint exercises_workout_order_unique unique (workout_id, "order")
 );
 
--- Create indexes
-CREATE INDEX idx_programs_user_id ON programs(user_id);
-CREATE INDEX idx_workouts_program_id ON workouts(program_id);
-CREATE INDEX idx_workouts_user_id ON workouts(user_id);
-CREATE INDEX idx_exercises_workout_id ON exercises(workout_id);
-CREATE INDEX idx_exercises_user_id ON exercises(user_id);
+create table if not exists workout_sessions (
+  id uuid primary key default gen_random_uuid(),
+  workout_id uuid not null references workouts(id) on delete cascade,
+  user_id text not null,
+  status text not null check (status in ('active', 'cancelled', 'finished')),
+  current_exercise_index integer not null default 0,
+  started_at timestamptz not null default now(),
+  ended_at timestamptz null,
+  created_at timestamptz not null default now()
+);
 
--- Enable RLS (Row Level Security) - Optional for MVP
--- ALTER TABLE programs ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE workouts ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE exercises ENABLE ROW LEVEL SECURITY;
+create table if not exists workout_session_sets (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid not null references workout_sessions(id) on delete cascade,
+  exercise_id uuid not null references exercises(id) on delete cascade,
+  set_number integer not null,
+  weight numeric not null default 0,
+  reps integer not null,
+  is_deleted boolean not null default false,
+  user_id text not null,
+  saved_at timestamptz null,
+  created_at timestamptz not null default now(),
+  constraint workout_session_sets_unique unique (session_id, exercise_id, set_number)
+);
+
+create table if not exists exercise_notes (
+  exercise_id uuid not null references exercises(id) on delete cascade,
+  user_id text not null,
+  notes text not null default '',
+  updated_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  primary key (exercise_id, user_id)
+);
+
+create index if not exists idx_programs_user_id on programs(user_id);
+create index if not exists idx_workouts_program_id on workouts(program_id);
+create index if not exists idx_workouts_user_id on workouts(user_id);
+create index if not exists idx_exercises_workout_id on exercises(workout_id);
+create index if not exists idx_exercises_user_id on exercises(user_id);
+create index if not exists idx_workout_sessions_user_id on workout_sessions(user_id);
+create index if not exists idx_workout_sessions_workout_id on workout_sessions(workout_id);
+create index if not exists idx_workout_session_sets_session_id on workout_session_sets(session_id);
+create index if not exists idx_workout_session_sets_exercise_id on workout_session_sets(exercise_id);
+create index if not exists idx_workout_session_sets_user_id on workout_session_sets(user_id);
 ```
 
-#### C. Get Your Service Role Key
+If you are upgrading an older schema, also run:
 
-1. In Supabase, go to **Settings → API**
-2. Copy your **Service Role Key** (this is for backend use only)
+- `backend/sql/add-custom-exercise-muscle-group.sql`
+- `backend/sql/enable-rls.sql`
 
-### 3. Configure Environment Variables
+### 4. Configure `.env`
 
-Create a `.env` file in the root directory:
+Create a root `.env` file:
 
-```
-# Supabase Configuration
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
-
-# Backend Configuration
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+EXPO_PUBLIC_API_BASE_URL=http://localhost:3000
 PORT=3000
 NODE_ENV=development
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_KEY=your-service-key-here
+SUPABASE_SERVICE_KEY=your-service-role-key
 ```
 
-Replace with your actual Supabase Project URL and keys.
+`EXPO_PUBLIC_API_BASE_URL=http://localhost:3000` is the correct setting for Android USB debugging with `adb reverse`.
 
-### 4. Start the Backend Server
+### 5. Start the backend
 
 ```bash
 npm run backend:dev
 ```
 
-Server runs on `http://localhost:3000`
-
-### 5. Start the Web App
-
-In a new terminal:
-
-```bash
-npm run web:dev
-```
-
-Web app runs on `http://localhost:5173`
-
-### 6. Start the Mobile App (Optional)
-
-In a new terminal:
+### 6. Start the mobile app
 
 ```bash
 npm run mobile:dev
 ```
 
-This starts Expo. You can:
-- Press `w` for web
-- Press `a` for Android
-- Press `i` for iOS
+For a connected Android phone over USB-C, use localhost mode instead:
+
+```bash
+cd mobile
+npx expo start -c --localhost
+```
 
 ## Project Structure
 
 ```
 gym/
-├── web/                    # React web app
-│   ├── src/
-│   │   ├── pages/         # HomePage, ProgramsPage, etc.
-│   │   ├── components/    # NumberSpinner, Navigation, etc.
-│   │   ├── App.tsx
-│   │   └── main.tsx
-│   ├── index.html
-│   ├── vite.config.ts
-│   └── package.json
-│
 ├── mobile/                 # React Native app
 │   ├── src/
 │   │   ├── screens/       # HomeScreen, ProgramsScreen, etc.
@@ -194,18 +195,14 @@ gym/
 ```bash
 # Backend
 npm run backend:dev        # Start dev server (auto-reload)
-npm run backend:build      # Compile TypeScript
-
-# Web
-npm run web:dev            # Start dev server
-npm run web:build          # Build for production
 
 # Mobile
 npm run mobile:dev         # Start Expo
-npm run mobile:start       # Alternative Expo start
+npm run mobile:android     # Launch Android flow
+npm run mobile:ios         # Launch iOS flow
 
-# Shared
-npm run shared:build       # Compile shared types
+# Validation
+npx tsc -p mobile/tsconfig.json --noEmit
 ```
 
 ## API Endpoints
@@ -303,68 +300,59 @@ npm run shared:build       # Compile shared types
 
 ## Troubleshooting
 
-### Backend port already in use
+### Supabase connection problems
+
+- Verify `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_URL`, and `SUPABASE_SERVICE_KEY` in `.env`
+- Make sure the base schema above has been created
+- If you upgraded from an older schema, run `backend/sql/add-custom-exercise-muscle-group.sql`
+
+### Missing session or notes tables
+
+If the mobile app reports missing `workout_sessions`, `workout_session_sets`, or `exercise_notes`, rerun the base schema SQL in the Supabase SQL editor.
+
+### Android phone over USB-C
+
+Use this flow when the phone is physically connected to the computer and you want the mobile app to talk to your local backend through the cable:
+
+1. Start the backend:
+
+  ```bash
+  npm run backend:dev
+  ```
+
+2. Start Expo in localhost mode:
+
+  ```bash
+  cd mobile
+  npx expo start -c --localhost
+  ```
+
+3. In another terminal, run `adb reverse` from your Android platform-tools directory:
+
+  ```bash
+  adb reverse --remove-all
+  adb reverse tcp:8081 tcp:8081
+  adb reverse tcp:3000 tcp:3000
+  ```
+
+4. Keep `EXPO_PUBLIC_API_BASE_URL=http://localhost:3000` in the root `.env`
+
+This matches the mobile API client behavior in `mobile/src/hooks/useApi.ts`.
+
+### Expo Go LAN fallback
+
+If you are not using USB-C, you can let Expo use LAN instead:
+
 ```bash
-# Change PORT in .env
-PORT=3001
-```
-
-### Supabase connection error
-- Verify `VITE_SUPABASE_URL` and `SUPABASE_SERVICE_KEY` in `.env`
-- Ensure Supabase project is active
-- Check network connectivity
-
-### React/React Native import errors
-```bash
-# Rebuild workspace
-npm install
-npm run shared:build
-```
-
-### TypeScript errors
-```bash
-npm run backend:build  # Check backend compilation
-npm run web:build      # Check web compilation
-npm run shared:build   # Check shared compilation
-```
-
-## Support
-
-For issues or questions, check the terminal output for detailed error messages.
-
----
-
-**Happy lifting! 💪**
-
-npm run backend:dev
-npm run -w shared build
-npx expo start --lan # i mobile
-npm run web:dev # i app, denne trengs for mobil
-
-Expo Go troubleshooting steps (LAN)
-
-1️⃣ Start backend
-npm run backend:dev
-
-2️⃣ Start web
-npm run web:dev
-
-3️⃣Start phone
+cd mobile
 npx expo start --lan -c
+```
 
+### Clear stuck Expo sessions
 
-4️⃣ If Expo Go shows “Something went wrong”, clear caches # POWERSHELL # 
+```bash
 Stop-Process -Name node -Force
-
-npx expo start --lan -c
-
-For USB mobiL:
+cd mobile
 npx expo start -c --localhost
-
-
-På telefon er cmd viktig:
-C:\AndroidSDK\platform-tools>
-adb reverse --remove-all
-adb reverse tcp:8081 tcp:8081
-adb reverse tcp:3000 tcp:3000
+```
 

@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "web",
     "mobile",
     "shared",
     "backend"
@@ -12,18 +11,14 @@
     "start": "npm run dev --workspace=mobile",
     "android": "npm run android --workspace=mobile",
     "ios": "npm run ios --workspace=mobile",
-    "web:mobile": "npm run web --workspace=mobile",
     "mobile:dev": "npm run dev --workspace=mobile",
     "mobile:android": "npm run android --workspace=mobile",
     "mobile:ios": "npm run ios --workspace=mobile",
-    "mobile:web": "npm run web --workspace=mobile",
-    "web:dev": "npm run dev --workspace=web",
     "backend:dev": "npm run dev --workspace=backend",
     "postinstall": "patch-package"
   },
   "dependencies": {
     "react": "19.1.0",
-    "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "typescript": "~5.9.2"
   },

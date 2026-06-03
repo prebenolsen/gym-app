@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import {
   type MuscleGroup,
   getMuscleGroups,
   resolveExerciseMuscleGroup,
+  suggestMuscleGroupsFromInput,
 } from '@gym-app/shared';
 import NumberSpinner from '../components/NumberSpinner';
 import { useApi } from '../hooks/useApi';
@@ -35,17 +36,29 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
   const [newExerciseName, setNewExerciseName] = useState('');
-  const [newExerciseMuscleGroups, setNewExerciseMuscleGroups] = useState<MuscleGroup[]>([]);
+  const [newExerciseMuscleGroups, setNewExerciseMuscleGroups] = useState<
+    MuscleGroup[] | null
+  >(null);
+  const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(workoutName);
   const [isDraggingExercise, setIsDraggingExercise] = useState(false);
 
   const api = useApi();
   const muscleGroupOptions = getMuscleGroups();
+  const suggestedGroups = useMemo(
+    () => suggestMuscleGroupsFromInput(newExerciseName),
+    [newExerciseName],
+  );
+  const autoMappedGroups = useMemo(
+    () => (newExerciseMuscleGroups === null ? suggestedGroups : newExerciseMuscleGroups),
+    [newExerciseMuscleGroups, suggestedGroups],
+  );
 
   useEffect(() => {
+    setEditName(workoutName);
     fetchExercises();
-  }, []);
+  }, [workoutId, workoutName]);
 
   const fetchExercises = async () => {
     setLoading(true);
@@ -60,24 +73,27 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   };
 
   const handleAddExercise = async () => {
-    if (!newExerciseName.trim()) return;
+    if (!newExerciseName.trim() || isAddingExercise) return;
 
+    setIsAddingExercise(true);
     try {
+      const resolvedGroups = autoMappedGroups.length > 0 ? autoMappedGroups : null;
       const newExercise = await api.createExercise(workoutId, {
         name: newExerciseName,
         sets: 4,
         rest_seconds: 120,
-        custom_muscle_groups:
-          newExerciseMuscleGroups.length > 0 ? newExerciseMuscleGroups : null,
+        custom_muscle_groups: resolvedGroups,
         is_custom: true,
       });
 
-      setExercises([...exercises, newExercise]);
+      setExercises((currentExercises) => [...currentExercises, newExercise]);
       setNewExerciseName('');
-      setNewExerciseMuscleGroups([]);
+      setNewExerciseMuscleGroups(null);
     } catch (err) {
       console.error('Failed to add exercise:', err);
       Alert.alert('Error', 'Failed to add exercise');
+    } finally {
+      setIsAddingExercise(false);
     }
   };
 
@@ -91,7 +107,9 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   ) => {
     try {
       const updated = await api.updateExercise(id, updates);
-      setExercises(exercises.map((e) => (e.id === id ? updated : e)));
+      setExercises((currentExercises) =>
+        currentExercises.map((exercise) => (exercise.id === id ? updated : exercise)),
+      );
     } catch (err) {
       console.error('Failed to update exercise:', err);
     }
@@ -412,14 +430,16 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
             placeholder="Add a custom exercise"
             placeholderTextColor={themeColors.textMuted}
             value={newExerciseName}
+            editable={!isAddingExercise}
             onChangeText={setNewExerciseName}
           />
           <TouchableOpacity
             onPress={handleAddExercise}
-            style={styles.btnPrimary}
+            style={[styles.btnPrimary, isAddingExercise && styles.btnPrimaryDisabled]}
             activeOpacity={0.7}
+            disabled={isAddingExercise}
           >
-            <Text style={styles.btnText}>+ Add</Text>
+            <Text style={styles.btnText}>{isAddingExercise ? 'Adding...' : '+ Add'}</Text>
           </TouchableOpacity>
         </View>
 
@@ -428,18 +448,23 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
               <Text style={styles.customGroupLabel}>
                 Optional muscle groups for custom exercise
               </Text>
+              {suggestedGroups.length > 0 ? (
+                <Text style={styles.suggestionText}>
+                  Auto-mapped from name: {suggestedGroups.join(', ')}
+                </Text>
+              ) : null}
               <View style={styles.customGroupChipsWrap}>
                 <TouchableOpacity
                   style={[
                     styles.customGroupChip,
-                    newExerciseMuscleGroups.length === 0 && styles.customGroupChipActive,
+                    autoMappedGroups.length === 0 && styles.customGroupChipActive,
                   ]}
                   onPress={() => setNewExerciseMuscleGroups([])}
                 >
                   <Text
                     style={[
                       styles.customGroupChipText,
-                      newExerciseMuscleGroups.length === 0 && styles.customGroupChipTextActive,
+                      autoMappedGroups.length === 0 && styles.customGroupChipTextActive,
                     ]}
                   >
                     None
@@ -450,17 +475,18 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                     key={`new-${group}`}
                     style={[
                       styles.customGroupChip,
-                      newExerciseMuscleGroups.includes(group) &&
-                        styles.customGroupChipActive,
+                      autoMappedGroups.includes(group) && styles.customGroupChipActive,
                     ]}
                     onPress={() =>
-                      setNewExerciseMuscleGroups((prev) => toggleGroupSelection(prev, group))
+                      setNewExerciseMuscleGroups((prev) =>
+                        toggleGroupSelection(prev ?? [], group),
+                      )
                     }
                   >
                     <Text
                       style={[
                         styles.customGroupChipText,
-                        newExerciseMuscleGroups.includes(group) &&
+                        autoMappedGroups.includes(group) &&
                           styles.customGroupChipTextActive,
                       ]}
                     >
@@ -589,6 +615,9 @@ const createStyles = (themeColors: typeof colors) =>
       justifyContent: 'center',
       alignItems: 'center',
     },
+    btnPrimaryDisabled: {
+      opacity: 0.55,
+    },
     catalogButton: {
       marginTop: 8,
       marginBottom: 16,
@@ -685,6 +714,11 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textMuted,
       fontSize: 12,
       fontWeight: '600',
+    },
+    suggestionText: {
+      color: themeColors.textMuted,
+      fontSize: 12,
+      marginTop: -2,
     },
     customGroupChipsWrap: {
       flexDirection: 'row',

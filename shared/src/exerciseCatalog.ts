@@ -539,6 +539,173 @@ const EXERCISE_NAME_GROUP_ALIASES: Record<string, MuscleGroup> = {
   'tricep rope pushdowns': 'Triceps',
 };
 
+const MUSCLE_MAPPING_TERMS: Record<string, MuscleGroup> = {
+  // Back
+  back: 'Back',
+  'upper back': 'Back',
+  'mid back': 'Back',
+  'middle back': 'Back',
+  'lower back': 'Back',
+  lats: 'Back',
+  lat: 'Back',
+  latissimus: 'Back',
+  'latissimus dorsi': 'Back',
+  'teres major': 'Back',
+  rhomboids: 'Back',
+  rhomboid: 'Back',
+  traps: 'Back',
+  trap: 'Back',
+  trapezius: 'Back',
+  erectors: 'Back',
+  'spinal erectors': 'Back',
+  'erector spinae': 'Back',
+
+  // Biceps
+  biceps: 'Biceps',
+  bicep: 'Biceps',
+  brachialis: 'Biceps',
+  brachioradialis: 'Biceps',
+  forearms: 'Biceps',
+  forearm: 'Biceps',
+  'wrist flexors': 'Biceps',
+  'wrist extensors': 'Biceps',
+  grip: 'Biceps',
+
+  // Calves
+  calves: 'Calves',
+  calf: 'Calves',
+  gastrocnemius: 'Calves',
+  soleus: 'Calves',
+  tibialis: 'Calves',
+  'tibialis anterior': 'Calves',
+
+  // Chest
+  chest: 'Chest',
+  pecs: 'Chest',
+  pec: 'Chest',
+  pectoral: 'Chest',
+  pectorals: 'Chest',
+  pectoralis: 'Chest',
+  'pectoralis major': 'Chest',
+  'pectoralis minor': 'Chest',
+  'upper chest': 'Chest',
+  'lower chest': 'Chest',
+  'inner chest': 'Chest',
+
+  // Core / Abs
+  abs: 'Core / Abs',
+  abdominals: 'Core / Abs',
+  core: 'Core / Abs',
+  'rectus abdominis': 'Core / Abs',
+  obliques: 'Core / Abs',
+  oblique: 'Core / Abs',
+  'transverse abdominis': 'Core / Abs',
+  tva: 'Core / Abs',
+  serratus: 'Core / Abs',
+  'serratus anterior': 'Core / Abs',
+
+  // Hamstrings / Glutes
+  glutes: 'Hamstrings / Glutes',
+  glute: 'Hamstrings / Glutes',
+  gluteus: 'Hamstrings / Glutes',
+  'gluteus maximus': 'Hamstrings / Glutes',
+  'gluteus medius': 'Hamstrings / Glutes',
+  'gluteus minimus': 'Hamstrings / Glutes',
+  hamstrings: 'Hamstrings / Glutes',
+  hamstring: 'Hamstrings / Glutes',
+  'posterior chain': 'Hamstrings / Glutes',
+  'hip extensors': 'Hamstrings / Glutes',
+  'hip hinge': 'Hamstrings / Glutes',
+
+  // Legs
+  legs: 'Legs',
+  leg: 'Legs',
+  quads: 'Legs',
+  quad: 'Legs',
+  quadriceps: 'Legs',
+  'vastus lateralis': 'Legs',
+  'vastus medialis': 'Legs',
+  'vastus intermedius': 'Legs',
+  'rectus femoris': 'Legs',
+  adductors: 'Legs',
+  adductor: 'Legs',
+  abductors: 'Legs',
+  abductor: 'Legs',
+  'inner thigh': 'Legs',
+  'outer thigh': 'Legs',
+  thighs: 'Legs',
+  thigh: 'Legs',
+  'hip flexors': 'Legs',
+  'hip flexor': 'Legs',
+
+  // Shoulders
+  shoulders: 'Shoulders',
+  shoulder: 'Shoulders',
+  delts: 'Shoulders',
+  delt: 'Shoulders',
+  deltoid: 'Shoulders',
+  deltoids: 'Shoulders',
+  'front delts': 'Shoulders',
+  'anterior delts': 'Shoulders',
+  'rear delts': 'Shoulders',
+  'posterior delts': 'Shoulders',
+  'side delts': 'Shoulders',
+  'lateral delts': 'Shoulders',
+  'rotator cuff': 'Shoulders',
+  supraspinatus: 'Shoulders',
+  infraspinatus: 'Shoulders',
+  'teres minor': 'Shoulders',
+  subscapularis: 'Shoulders',
+
+  // Triceps
+  triceps: 'Triceps',
+  tricep: 'Triceps',
+  'triceps brachii': 'Triceps',
+  'long head tricep': 'Triceps',
+  'lateral head tricep': 'Triceps',
+  'medial head tricep': 'Triceps',
+};
+
+const escapeRegex = (value: string): string =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+export const suggestMuscleGroupsFromInput = (input: string): MuscleGroup[] => {
+  const normalized = input
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!normalized) {
+    return [];
+  }
+
+  const tokens = normalized.split(' ').filter(Boolean);
+  const suffixTerms = tokens.map((_, index) => tokens.slice(index).join(' '));
+  const partialTerms = tokens;
+  const searchTerms = [...new Set([...suffixTerms, ...partialTerms])]
+    .filter((term) => term.length >= 2)
+    .sort((a, b) => b.length - a.length);
+
+  if (searchTerms.length === 0) {
+    return [];
+  }
+
+  const groups = new Set<MuscleGroup>();
+
+  for (const [alias, group] of Object.entries(MUSCLE_MAPPING_TERMS)) {
+    for (const term of searchTerms) {
+      const regex = new RegExp(`\\b${escapeRegex(term)}`, 'i');
+      if (regex.test(alias)) {
+        groups.add(group);
+        break;
+      }
+    }
+  }
+
+  return getMuscleGroups().filter((group) => groups.has(group));
+};
+
 export const resolveExerciseMuscleGroup = (
   name: string,
 ): MuscleGroup | undefined => {
