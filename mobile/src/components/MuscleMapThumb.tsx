@@ -47,7 +47,7 @@ function getViewAndPaths(muscleGroup: MuscleGroup): { useBack: boolean; paths: s
         'abs_bottom_right',
       ],
     },
-    'Legs (Quads focus)': { useBack: false, paths: ['leg_left', 'leg_right'] },
+    'Legs': { useBack: false, paths: ['leg_left', 'leg_right'] },
     'Hamstrings / Glutes': {
       useBack: true,
       paths: ['glutes_left', 'glutes_right', 'hamstring_left', 'hamstring_right'],

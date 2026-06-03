@@ -2,6 +2,8 @@
  * Core data models for GymApp
  */
 
+import type { MuscleGroup } from './exerciseCatalog';
+
 export interface Program {
   id: string;
   name: string;
@@ -26,6 +28,8 @@ export interface Exercise {
   name: string;
   sets: number;
   rest_seconds: number;
+  custom_muscle_groups?: MuscleGroup[] | null;
+  is_custom?: boolean;
   user_id: string;
   order: number;
   created_at: string;
@@ -93,12 +97,15 @@ export interface CreateExerciseRequest {
   name: string;
   sets?: number;
   rest_seconds?: number;
+  custom_muscle_groups?: MuscleGroup[] | null;
+  is_custom?: boolean;
 }
 
 export interface UpdateExerciseRequest {
   name?: string;
   sets?: number;
   rest_seconds?: number;
+  custom_muscle_groups?: MuscleGroup[] | null;
 }
 
 export interface ReorderRequest {

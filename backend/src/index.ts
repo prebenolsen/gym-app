@@ -17,6 +17,18 @@ const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+const VALID_MUSCLE_GROUPS = new Set([
+  'Chest',
+  'Back',
+  'Shoulders',
+  'Biceps',
+  'Triceps',
+  'Legs',
+  'Hamstrings / Glutes',
+  'Calves',
+  'Core / Abs',
+]);
+
 declare global {
   namespace Express {
     interface Request {
@@ -382,7 +394,30 @@ app.get('/workouts/:workoutId/exercises', async (req, res) => {
 app.post('/workouts/:workoutId/exercises', async (req, res) => {
   try {
     const { workoutId } = req.params;
-    const { name, sets = 4, rest_seconds = 120 } = req.body;
+    const {
+      name,
+      sets = 4,
+      rest_seconds = 120,
+      custom_muscle_groups = null,
+      is_custom = false,
+    } = req.body;
+
+    if (!name || typeof name !== 'string') {
+      return res.status(400).json({ error: 'Exercise name is required' });
+    }
+
+    if (
+      custom_muscle_groups !== null &&
+      (!Array.isArray(custom_muscle_groups) ||
+        custom_muscle_groups.some((group) => !VALID_MUSCLE_GROUPS.has(group)))
+    ) {
+      return res.status(400).json({ error: 'Invalid muscle group selection' });
+    }
+
+    const resolvedCustomMuscleGroups =
+      is_custom && Array.isArray(custom_muscle_groups) && custom_muscle_groups.length > 0
+        ? [...new Set(custom_muscle_groups)]
+        : null;
 
     // Get the next order number
     const { data: existing } = await supabase
@@ -402,6 +437,8 @@ app.post('/workouts/:workoutId/exercises', async (req, res) => {
           name,
           sets,
           rest_seconds,
+          custom_muscle_groups: resolvedCustomMuscleGroups,
+          is_custom,
           user_id: req.userId,
           order: nextOrder,
         },
@@ -422,9 +459,40 @@ app.put('/exercises/:id', async (req, res) => {
     const { id } = req.params;
     const updates: Record<string, unknown> = {};
 
+    const { data: currentExercise, error: fetchError } = await supabase
+      .from('exercises')
+      .select('id, is_custom')
+      .eq('id', id)
+      .eq('user_id', req.userId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
     if ('name' in req.body) updates.name = req.body.name;
     if ('sets' in req.body) updates.sets = req.body.sets;
     if ('rest_seconds' in req.body) updates.rest_seconds = req.body.rest_seconds;
+    if ('custom_muscle_groups' in req.body) {
+      if (!currentExercise?.is_custom) {
+        return res.status(403).json({
+          error: 'Muscle group mapping can only be changed for custom exercises',
+        });
+      }
+
+      if (
+        req.body.custom_muscle_groups !== null &&
+        (!Array.isArray(req.body.custom_muscle_groups) ||
+          req.body.custom_muscle_groups.some(
+            (group: string) => !VALID_MUSCLE_GROUPS.has(group),
+          ))
+      ) {
+        return res.status(400).json({ error: 'Invalid muscle group selection' });
+      }
+
+      updates.custom_muscle_groups =
+        Array.isArray(req.body.custom_muscle_groups) && req.body.custom_muscle_groups.length > 0
+          ? [...new Set(req.body.custom_muscle_groups)]
+          : null;
+    }
 
     const { data, error } = await supabase
       .from('exercises')

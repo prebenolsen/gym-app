@@ -18,7 +18,7 @@ import {
   type Exercise,
   type WorkoutHistoryByDate,
   type MuscleGroup,
-  exercises as exerciseCatalog,
+  resolveExerciseMuscleGroup,
 } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
 import { useApi } from '../hooks/useApi';
@@ -33,19 +33,9 @@ const FRONT_MUSCLE_GROUPS = new Set<MuscleGroup>([
   'Shoulders',
   'Biceps',
   'Triceps',
-  'Legs (Quads focus)',
+  'Legs',
   'Core / Abs',
 ]);
-
-const normalizeExerciseName = (name: string): string =>
-  name.trim().toLowerCase().replace(/\s+/g, ' ');
-
-const EXERCISE_NAME_TO_MUSCLE_GROUP = new Map<string, MuscleGroup>(
-  exerciseCatalog.map((exercise) => [
-    normalizeExerciseName(exercise.name),
-    exercise.muscleGroup,
-  ]),
-);
 
 const roundDownToNearestFive = (value: number) => Math.floor(value / 5) * 5;
 const roundUpToNearestFive = (value: number) => Math.ceil(value / 5) * 5;
@@ -82,12 +72,19 @@ const getWorkoutEstimateDuration = (
 
 const getDominantWorkoutMuscleGroups = (workoutExercises: Exercise[]): MuscleGroup[] => {
   const groupsCount = workoutExercises.reduce((acc, exercise) => {
-    const mappedGroup = EXERCISE_NAME_TO_MUSCLE_GROUP.get(
-      normalizeExerciseName(exercise.name),
-    );
-    if (!mappedGroup) return acc;
+    const mappedGroups =
+      exercise.custom_muscle_groups && exercise.custom_muscle_groups.length > 0
+        ? exercise.custom_muscle_groups
+        : (() => {
+            const fallback = resolveExerciseMuscleGroup(exercise.name);
+            return fallback ? [fallback] : [];
+          })();
 
-    acc[mappedGroup] = (acc[mappedGroup] ?? 0) + 1;
+    if (mappedGroups.length === 0) return acc;
+
+    mappedGroups.forEach((group) => {
+      acc[group] = (acc[group] ?? 0) + 1;
+    });
     return acc;
   }, {} as Record<MuscleGroup, number>);
 

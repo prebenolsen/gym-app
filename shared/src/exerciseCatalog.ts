@@ -9,7 +9,7 @@ export type MuscleGroup =
   | 'Shoulders'
   | 'Biceps'
   | 'Triceps'
-  | 'Legs (Quads focus)'
+  | 'Legs'
   | 'Hamstrings / Glutes'
   | 'Calves'
   | 'Core / Abs';
@@ -296,46 +296,46 @@ export const exercises: CatalogExercise[] = [
     movementType: 'isolation',
   },
 
-  // Legs (Quads focus)
+  // Legs
   {
     id: 'legs_001',
     name: 'Barbell Back Squat',
-    muscleGroup: 'Legs (Quads focus)',
+    muscleGroup: 'Legs',
     equipment: 'Barbell',
     movementType: 'compound',
   },
   {
     id: 'legs_002',
     name: 'Leg Press',
-    muscleGroup: 'Legs (Quads focus)',
+    muscleGroup: 'Legs',
     equipment: 'Machine',
     movementType: 'compound',
   },
   {
     id: 'legs_003',
     name: 'Front Squat',
-    muscleGroup: 'Legs (Quads focus)',
+    muscleGroup: 'Legs',
     equipment: 'Barbell',
     movementType: 'compound',
   },
   {
     id: 'legs_004',
     name: 'Bulgarian Split Squat',
-    muscleGroup: 'Legs (Quads focus)',
+    muscleGroup: 'Legs',
     equipment: 'Dumbbell',
     movementType: 'compound',
   },
   {
     id: 'legs_005',
     name: 'Walking Lunge',
-    muscleGroup: 'Legs (Quads focus)',
+    muscleGroup: 'Legs',
     equipment: 'Dumbbell',
     movementType: 'compound',
   },
   {
     id: 'legs_006',
     name: 'Leg Extension',
-    muscleGroup: 'Legs (Quads focus)',
+    muscleGroup: 'Legs',
     equipment: 'Machine',
     movementType: 'isolation',
   },
@@ -458,6 +458,160 @@ export const exercises: CatalogExercise[] = [
     movementType: 'isolation',
   },
 ];
+
+const EXERCISE_NAME_CANONICAL_ALIASES: Record<string, string> = {
+  'bench press': 'barbell bench press',
+  'incline dumbbell press': 'incline dumbbell bench press',
+  'incline barbell press': 'incline barbell bench press',
+  'cable flyes': 'cable chest fly',
+  'push ups': 'push up',
+  'push up': 'push up',
+  'pull ups': 'pull up',
+  'pull up': 'pull up',
+  'lat pulldowns': 'lat pulldown',
+  'barbell rows': 'barbell row',
+  'seated cable rows': 'seated cable row',
+  'dumbbell rows': 'dumbbell row',
+  'barbell back squats': 'barbell back squat',
+  squats: 'barbell back squat',
+  squat: 'barbell back squat',
+  'front squats': 'front squat',
+  'bulgarian split squats': 'bulgarian split squat',
+  'walking lunges': 'walking lunge',
+  'romanian deadlifts': 'romanian deadlift',
+  deadlifts: 'deadlift',
+  deadlift: 'deadlift',
+  'hip thrusts': 'hip thrust',
+  'leg curls': 'lying leg curl',
+  'leg extensions': 'leg extension',
+  'calf raises': 'calf raise',
+  'lateral raises': 'lateral raise',
+  'barbell curls': 'barbell curl',
+  'dumbbell curls': 'dumbbell curl',
+  'tricep dips': 'bench dip',
+  'tricep rope pushdowns': 'triceps pushdown',
+  'rope pushdowns': 'triceps pushdown',
+  'face pulls': 'reverse pec deck',
+  'rear delt flies': 'rear delt fly',
+  'rear delt flyes': 'rear delt fly',
+  'decline sit ups': 'decline sit-up',
+};
+
+const normalizeExerciseName = (name: string): string => {
+  const normalized = name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return EXERCISE_NAME_CANONICAL_ALIASES[normalized] ?? normalized;
+};
+
+const EXERCISE_NAME_TO_MUSCLE_GROUP = new Map<string, MuscleGroup>(
+  exercises.map((exercise) => [
+    normalizeExerciseName(exercise.name),
+    exercise.muscleGroup,
+  ]),
+);
+
+const EXERCISE_NAME_GROUP_ALIASES: Record<string, MuscleGroup> = {
+  'speed bench press': 'Chest',
+  'incline dumbbell press': 'Chest',
+  'cable flyes': 'Chest',
+  'pull ups': 'Back',
+  'lat pulldowns': 'Back',
+  'barbell rows': 'Back',
+  'face pulls': 'Shoulders',
+  'lateral raises': 'Shoulders',
+  squats: 'Legs',
+  'barbell back squats': 'Legs',
+  'front squats': 'Legs',
+  lunges: 'Legs',
+  'speed squats': 'Legs',
+  'leg extensions': 'Legs',
+  'romanian deadlifts': 'Hamstrings / Glutes',
+  deadlifts: 'Hamstrings / Glutes',
+  'leg curls': 'Hamstrings / Glutes',
+  'calf raises': 'Calves',
+  'tricep dips': 'Triceps',
+  'rope pushdowns': 'Triceps',
+  'tricep rope pushdowns': 'Triceps',
+};
+
+export const resolveExerciseMuscleGroup = (
+  name: string,
+): MuscleGroup | undefined => {
+  const normalizedName = normalizeExerciseName(name);
+  const directMatch = (
+    EXERCISE_NAME_TO_MUSCLE_GROUP.get(normalizedName) ??
+    EXERCISE_NAME_GROUP_ALIASES[normalizedName]
+  );
+  if (directMatch) {
+    return directMatch;
+  }
+
+  if (
+    normalizedName.includes('bench') ||
+    normalizedName.includes('chest') ||
+    normalizedName.includes('fly')
+  ) {
+    return 'Chest';
+  }
+  if (
+    normalizedName.includes('row') ||
+    normalizedName.includes('pull up') ||
+    normalizedName.includes('pulldown') ||
+    normalizedName.includes('back extension')
+  ) {
+    return 'Back';
+  }
+  if (
+    normalizedName.includes('overhead press') ||
+    normalizedName.includes('lateral raise') ||
+    normalizedName.includes('front raise') ||
+    normalizedName.includes('rear delt') ||
+    normalizedName.includes('face pull')
+  ) {
+    return 'Shoulders';
+  }
+  if (normalizedName.includes('leg curl') || normalizedName.includes('deadlift')) {
+    return 'Hamstrings / Glutes';
+  }
+  if (
+    normalizedName.includes('squat') ||
+    normalizedName.includes('lunge') ||
+    normalizedName.includes('leg press') ||
+    normalizedName.includes('leg extension')
+  ) {
+    return 'Legs';
+  }
+  if (normalizedName.includes('calf raise')) {
+    return 'Calves';
+  }
+  if (normalizedName.includes('curl')) {
+    return 'Biceps';
+  }
+  if (
+    normalizedName.includes('tricep') ||
+    normalizedName.includes('triceps') ||
+    normalizedName.includes('pushdown')
+  ) {
+    return 'Triceps';
+  }
+  if (
+    normalizedName.includes('plank') ||
+    normalizedName.includes('ab ') ||
+    normalizedName.includes('sit up') ||
+    normalizedName.includes('crunch') ||
+    normalizedName.includes('twist') ||
+    normalizedName.includes('leg raise')
+  ) {
+    return 'Core / Abs';
+  }
+
+  return undefined;
+};
 
 // Helper to get unique muscle groups sorted
 export const getMuscleGroups = (): MuscleGroup[] => {

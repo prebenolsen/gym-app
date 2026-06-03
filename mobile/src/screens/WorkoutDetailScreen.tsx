@@ -16,7 +16,8 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   type Exercise,
   type MuscleGroup,
-  exercises as exerciseCatalog,
+  getMuscleGroups,
+  resolveExerciseMuscleGroup,
 } from '@gym-app/shared';
 import NumberSpinner from '../components/NumberSpinner';
 import { useApi } from '../hooks/useApi';
@@ -24,18 +25,8 @@ import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
 import MuscleMapThumb from '../components/MuscleMapThumb';
 
-const normalizeExerciseName = (name: string): string =>
-  name.trim().toLowerCase().replace(/\s+/g, ' ');
-
-const EXERCISE_NAME_TO_MUSCLE_GROUP = new Map<string, MuscleGroup>(
-  exerciseCatalog.map((exercise) => [
-    normalizeExerciseName(exercise.name),
-    exercise.muscleGroup,
-  ]),
-);
-
 const getExerciseMuscleGroup = (name: string): MuscleGroup | undefined =>
-  EXERCISE_NAME_TO_MUSCLE_GROUP.get(normalizeExerciseName(name));
+  resolveExerciseMuscleGroup(name);
 
 const WorkoutDetailScreen = ({ route, navigation }: any) => {
   const { colors: themeColors } = usePreferences();
@@ -44,11 +35,13 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
   const [newExerciseName, setNewExerciseName] = useState('');
+  const [newExerciseMuscleGroups, setNewExerciseMuscleGroups] = useState<MuscleGroup[]>([]);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(workoutName);
   const [isDraggingExercise, setIsDraggingExercise] = useState(false);
 
   const api = useApi();
+  const muscleGroupOptions = getMuscleGroups();
 
   useEffect(() => {
     fetchExercises();
@@ -74,10 +67,14 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
         name: newExerciseName,
         sets: 4,
         rest_seconds: 120,
+        custom_muscle_groups:
+          newExerciseMuscleGroups.length > 0 ? newExerciseMuscleGroups : null,
+        is_custom: true,
       });
 
       setExercises([...exercises, newExercise]);
       setNewExerciseName('');
+      setNewExerciseMuscleGroups([]);
     } catch (err) {
       console.error('Failed to add exercise:', err);
       Alert.alert('Error', 'Failed to add exercise');
@@ -86,7 +83,11 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
 
   const handleUpdateExercise = async (
     id: string,
-    updates: { sets?: number; rest_seconds?: number },
+    updates: {
+      sets?: number;
+      rest_seconds?: number;
+      custom_muscle_groups?: MuscleGroup[] | null;
+    },
   ) => {
     try {
       const updated = await api.updateExercise(id, updates);
@@ -94,6 +95,28 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
     } catch (err) {
       console.error('Failed to update exercise:', err);
     }
+  };
+
+  const getResolvedExerciseMuscleGroups = (exercise: Exercise): MuscleGroup[] => {
+    if (exercise.custom_muscle_groups && exercise.custom_muscle_groups.length > 0) {
+      return exercise.custom_muscle_groups;
+    }
+    if (exercise.is_custom) {
+      return [];
+    }
+    const resolved = getExerciseMuscleGroup(exercise.name);
+    return resolved ? [resolved] : [];
+  };
+
+  const toggleGroupSelection = (
+    selected: MuscleGroup[] | null | undefined,
+    group: MuscleGroup,
+  ): MuscleGroup[] => {
+    const current = selected ?? [];
+    if (current.includes(group)) {
+      return current.filter((entry) => entry !== group);
+    }
+    return [...current, group];
   };
 
   const handleDeleteExercise = async (id: string) => {
@@ -274,7 +297,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                       </TouchableOpacity>
 
                       <MuscleMapThumb
-                        group={getExerciseMuscleGroup(exercise.name)}
+                        groups={getResolvedExerciseMuscleGroups(exercise)}
                         size={54}
                         mutedColor={themeColors.textMuted}
                         highlightColor={themeColors.accent}
@@ -290,6 +313,63 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                   </View>
 
                   <View style={styles.exerciseControls}>
+                    {exercise.is_custom ? (
+                      <View style={styles.customGroupEditorBox}>
+                        <Text style={styles.customGroupLabel}>Custom muscle group</Text>
+                        <View style={styles.customGroupChipsWrap}>
+                          <TouchableOpacity
+                            style={[
+                              styles.customGroupChip,
+                              (!exercise.custom_muscle_groups ||
+                                exercise.custom_muscle_groups.length === 0) &&
+                                styles.customGroupChipActive,
+                            ]}
+                            onPress={() =>
+                              handleUpdateExercise(exercise.id, {
+                                custom_muscle_groups: null,
+                              })
+                            }
+                          >
+                            <Text
+                              style={[
+                                styles.customGroupChipText,
+                                (!exercise.custom_muscle_groups ||
+                                  exercise.custom_muscle_groups.length === 0) &&
+                                  styles.customGroupChipTextActive,
+                              ]}
+                            >
+                              None
+                            </Text>
+                          </TouchableOpacity>
+                          {muscleGroupOptions.map((group) => (
+                            <TouchableOpacity
+                              key={`${exercise.id}-${group}`}
+                              style={[
+                                styles.customGroupChip,
+                                (exercise.custom_muscle_groups ?? []).includes(group) &&
+                                  styles.customGroupChipActive,
+                              ]}
+                              onPress={() =>
+                                handleUpdateExercise(exercise.id, {
+                                  custom_muscle_groups:
+                                    toggleGroupSelection(exercise.custom_muscle_groups, group),
+                                })
+                              }
+                            >
+                              <Text
+                                style={[
+                                  styles.customGroupChipText,
+                                  (exercise.custom_muscle_groups ?? []).includes(group) &&
+                                    styles.customGroupChipTextActive,
+                                ]}
+                              >
+                                {group}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      </View>
+                    ) : null}
                     <View style={styles.exerciseControlsRow}>
                       <View style={{ flex: 1 }}>
                         <NumberSpinner
@@ -342,6 +422,55 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
             <Text style={styles.btnText}>+ Add</Text>
           </TouchableOpacity>
         </View>
+
+          {newExerciseName.trim().length > 0 ? (
+            <View style={styles.customGroupCreateBox}>
+              <Text style={styles.customGroupLabel}>
+                Optional muscle groups for custom exercise
+              </Text>
+              <View style={styles.customGroupChipsWrap}>
+                <TouchableOpacity
+                  style={[
+                    styles.customGroupChip,
+                    newExerciseMuscleGroups.length === 0 && styles.customGroupChipActive,
+                  ]}
+                  onPress={() => setNewExerciseMuscleGroups([])}
+                >
+                  <Text
+                    style={[
+                      styles.customGroupChipText,
+                      newExerciseMuscleGroups.length === 0 && styles.customGroupChipTextActive,
+                    ]}
+                  >
+                    None
+                  </Text>
+                </TouchableOpacity>
+                {muscleGroupOptions.map((group) => (
+                  <TouchableOpacity
+                    key={`new-${group}`}
+                    style={[
+                      styles.customGroupChip,
+                      newExerciseMuscleGroups.includes(group) &&
+                        styles.customGroupChipActive,
+                    ]}
+                    onPress={() =>
+                      setNewExerciseMuscleGroups((prev) => toggleGroupSelection(prev, group))
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.customGroupChipText,
+                        newExerciseMuscleGroups.includes(group) &&
+                          styles.customGroupChipTextActive,
+                      ]}
+                    >
+                      {group}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          ) : null}
 
           <TouchableOpacity
             onPress={() =>
@@ -432,7 +561,16 @@ const createStyles = (themeColors: typeof colors) =>
     addExercise: {
       flexDirection: 'row',
       gap: 10,
+      marginBottom: 10,
+    },
+    customGroupCreateBox: {
       marginBottom: 16,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: radius.sm,
+      backgroundColor: themeColors.surface,
+      gap: 8,
     },
     input: {
       flex: 1,
@@ -534,6 +672,44 @@ const createStyles = (themeColors: typeof colors) =>
     },
     exerciseControls: {
       gap: 12,
+    },
+    customGroupEditorBox: {
+      padding: 10,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: radius.sm,
+      backgroundColor: themeColors.background,
+      gap: 8,
+    },
+    customGroupLabel: {
+      color: themeColors.textMuted,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    customGroupChipsWrap: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    customGroupChip: {
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      backgroundColor: themeColors.background,
+    },
+    customGroupChipActive: {
+      borderColor: themeColors.accent,
+      backgroundColor: themeColors.accentSoft,
+    },
+    customGroupChipText: {
+      color: themeColors.textMuted,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    customGroupChipTextActive: {
+      color: themeColors.accent,
     },
     deleteButton: {
       backgroundColor: themeColors.danger,

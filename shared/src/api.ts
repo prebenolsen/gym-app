@@ -234,6 +234,8 @@ class ApiClient {
       name: req.name,
       sets: req.sets || 4,
       rest_seconds: req.rest_seconds || 120,
+      custom_muscle_groups: req.custom_muscle_groups ?? null,
+      is_custom: req.is_custom ?? false,
     });
   }
 

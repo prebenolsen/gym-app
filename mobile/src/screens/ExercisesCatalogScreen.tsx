@@ -103,6 +103,7 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
           name: ex.name,
           sets: 4,
           rest_seconds: 120,
+          is_custom: false,
         });
       }
 

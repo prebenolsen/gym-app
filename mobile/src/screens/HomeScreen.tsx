@@ -15,7 +15,7 @@ import {
   type WorkoutHistoryByDate,
   type Exercise,
   type MuscleGroup,
-  exercises as exerciseCatalog,
+  resolveExerciseMuscleGroup,
 } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
@@ -39,22 +39,12 @@ const FRONT_MUSCLE_GROUPS = new Set<MuscleGroup>([
   'Shoulders',
   'Biceps',
   'Triceps',
-  'Legs (Quads focus)',
+  'Legs',
   'Core / Abs',
 ]);
 
-const normalizeExerciseName = (name: string): string =>
-  name.trim().toLowerCase().replace(/\s+/g, ' ');
-
-const EXERCISE_NAME_TO_MUSCLE_GROUP = new Map<string, MuscleGroup>(
-  exerciseCatalog.map((exercise) => [
-    normalizeExerciseName(exercise.name),
-    exercise.muscleGroup,
-  ]),
-);
-
-const roundDownToNearestFive = (value: number) => Math.floor(value / 5) * 5;
-const roundUpToNearestFive = (value: number) => Math.ceil(value / 5) * 5;
+const roundDownToNearestFive = (value: number): number => Math.floor(value / 5) * 5;
+const roundUpToNearestFive = (value: number): number => Math.ceil(value / 5) * 5;
 
 const toMonthKey = (date: Date): string => {
   const year = date.getFullYear();
@@ -86,12 +76,19 @@ const getWorkoutEstimateDuration = (exercises: Exercise[]): string => {
 
 const getDominantWorkoutMuscleGroups = (workoutExercises: Exercise[]): MuscleGroup[] => {
   const groupsCount = workoutExercises.reduce((acc, exercise) => {
-    const mappedGroup = EXERCISE_NAME_TO_MUSCLE_GROUP.get(
-      normalizeExerciseName(exercise.name),
-    );
-    if (!mappedGroup) return acc;
+    const mappedGroups =
+      exercise.custom_muscle_groups && exercise.custom_muscle_groups.length > 0
+        ? exercise.custom_muscle_groups
+        : (() => {
+            const fallback = resolveExerciseMuscleGroup(exercise.name);
+            return fallback ? [fallback] : [];
+          })();
 
-    acc[mappedGroup] = (acc[mappedGroup] ?? 0) + 1;
+    if (mappedGroups.length === 0) return acc;
+
+    mappedGroups.forEach((group) => {
+      acc[group] = (acc[group] ?? 0) + 1;
+    });
     return acc;
   }, {} as Record<MuscleGroup, number>);
 
@@ -135,6 +132,9 @@ const getDaysSortValue = (days: number | null): number =>
 
 const formatDaysSince = (days: number | null): string =>
   days === null ? 'Never' : `${days}d`;
+
+const formatDaysSinceLabel = (days: number | null): string =>
+  days === null ? 'Never' : `${formatDaysSince(days)} ago`;
 
 const getWorkoutMessage = (count: number): string => {
   switch (count) {
@@ -447,33 +447,30 @@ const HomeScreen = ({ navigation }: any) => {
                           }}
                         >
                           <View style={styles.workoutRowTileContent}>
-                            <MuscleMapThumb
-                              groups={dominantMuscleGroups[workout.id] ?? []}
-                              size={34}
-                              mutedColor={themeColors.textMuted}
-                              highlightColor={themeColors.accent}
-                            />
+                            <View style={styles.workoutRowThumbWrap}>
+                              <MuscleMapThumb
+                                groups={dominantMuscleGroups[workout.id] ?? []}
+                                size={68}
+                                mutedColor={themeColors.textMuted}
+                                highlightColor={themeColors.accent}
+                              />
+                            </View>
                             <View style={styles.workoutRowTileMain}>
                               <Text style={styles.workoutRowTileName}>{workout.name}</Text>
-                              <View style={styles.workoutRowMeta}>
-                                <View style={styles.workoutRowMetaCell}>
-                                  <Text style={styles.workoutRowTileDays}>
-                                    {formatDaysSince(daysSinceByWorkout[workout.id] ?? null)}
-                                  </Text>
-                                </View>
-                                <View style={styles.workoutRowMetaCell}>
-                                  <Text style={styles.workoutRowTileDuration}>
-                                    {estimatedDurations[workout.id] ?? '0m'}
-                                  </Text>
-                                </View>
-                                <View style={styles.workoutRowMetaCell}>
-                                  <Text style={styles.workoutRowTileCount}>
-                                    {exerciseCounts[workout.id] ?? 0}{' '}
-                                    {(exerciseCounts[workout.id] ?? 0) === 1
-                                      ? 'exercise'
-                                      : 'exercises'}
-                                  </Text>
-                                </View>
+                              <Text style={styles.workoutRowTileDuration}>
+                                Est. {estimatedDurations[workout.id] ?? '0m'}
+                              </Text>
+                              <Text style={styles.workoutRowTileCount}>
+                                {exerciseCounts[workout.id] ?? 0}{' '}
+                                {(exerciseCounts[workout.id] ?? 0) === 1
+                                  ? 'exercise'
+                                  : 'exercises'}
+                              </Text>
+                              <View style={styles.workoutRowTileFooter}>
+                                <View />
+                                <Text style={styles.workoutRowTileDays}>
+                                  {formatDaysSinceLabel(daysSinceByWorkout[workout.id] ?? null)}
+                                </Text>
                               </View>
                             </View>
                           </View>
@@ -630,52 +627,61 @@ const createStyles = (themeColors: typeof colors) =>
     },
     workoutRowTile: {
       alignItems: 'stretch',
-      paddingVertical: 10,
+      paddingVertical: 12,
       paddingHorizontal: 12,
       backgroundColor: themeColors.background,
       borderWidth: 1,
       borderColor: themeColors.border,
       borderRadius: radius.sm,
       marginBottom: 6,
+      minHeight: 146,
     },
     workoutRowTileContent: {
       flexDirection: 'row',
+      alignItems: 'stretch',
+      gap: 12,
+      flex: 1,
+    },
+    workoutRowThumbWrap: {
+      alignSelf: 'stretch',
+      justifyContent: 'center',
       alignItems: 'center',
-      gap: 10,
+      minWidth: 76,
     },
     workoutRowTileMain: {
       flex: 1,
+      minHeight: 118,
+      justifyContent: 'space-between',
     },
     workoutRowTileName: {
       fontSize: 14,
       color: themeColors.textStrong,
-      fontWeight: '600',
+      fontWeight: '700',
       marginBottom: 8,
-    },
-    workoutRowMeta: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 8,
-    },
-    workoutRowMetaCell: {
-      flex: 1,
-      justifyContent: 'center',
-    },
-    workoutRowTileDays: {
-      fontSize: 12,
-      color: themeColors.textMuted,
-      textAlign: 'left',
     },
     workoutRowTileDuration: {
       fontSize: 12,
       color: themeColors.textStrong,
       fontWeight: '700',
-      textAlign: 'center',
+      marginBottom: 2,
     },
     workoutRowTileCount: {
       fontSize: 12,
       color: themeColors.textMuted,
+      fontWeight: '600',
+      marginBottom: 10,
+    },
+    workoutRowTileFooter: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      justifyContent: 'space-between',
+      gap: 8,
+      marginTop: 'auto',
+    },
+    workoutRowTileDays: {
+      fontSize: 12,
+      color: themeColors.textMuted,
+      fontWeight: '600',
       textAlign: 'right',
     },
   });

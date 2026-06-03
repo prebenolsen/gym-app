@@ -40,7 +40,7 @@ const ExerciseHistoryScreen = ({ route, navigation }: any) => {
       // Collect all sets for this exercise, grouped by date
       for (const session of sessions) {
         const date = new Date(
-          session.finished_at || session.started_at,
+          session.ended_at || session.started_at,
         ).toLocaleDateString('en-CA');
         const sets = await api.getSessionSets(session.id, exerciseId);
 
