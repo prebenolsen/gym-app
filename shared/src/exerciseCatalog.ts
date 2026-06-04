@@ -9,8 +9,10 @@ export type MuscleGroup =
   | 'Shoulders'
   | 'Biceps'
   | 'Triceps'
+  | 'Forearms'
   | 'Legs'
-  | 'Hamstrings / Glutes'
+  | 'Hamstrings'
+  | 'Glutes'
   | 'Calves'
   | 'Core / Abs';
 
@@ -252,6 +254,36 @@ export const exercises: CatalogExercise[] = [
     movementType: 'isolation',
   },
 
+  // Forearms
+  {
+    id: 'forearms_001',
+    name: 'Palm Down Wrist Curls',
+    muscleGroup: 'Forearms',
+    equipment: 'Barbell',
+    movementType: 'isolation',
+  },
+  {
+    id: 'forearms_002',
+    name: 'Palm Up Wrist Curls',
+    muscleGroup: 'Forearms',
+    equipment: 'Barbell',
+    movementType: 'isolation',
+  },
+  {
+    id: 'forearms_003',
+    name: 'Reverse Grip Curl',
+    muscleGroup: 'Forearms',
+    equipment: 'Barbell',
+    movementType: 'isolation',
+  },
+  {
+    id: 'forearms_004',
+    name: 'Zottman Curl',
+    muscleGroup: 'Forearms',
+    equipment: 'Dumbbell',
+    movementType: 'isolation',
+  },
+
   // Triceps
   {
     id: 'triceps_001',
@@ -340,46 +372,48 @@ export const exercises: CatalogExercise[] = [
     movementType: 'isolation',
   },
 
-  // Hamstrings / Glutes
+  // Hamstrings
   {
-    id: 'ham_glute_001',
+    id: 'hamstrings_001',
     name: 'Romanian Deadlift',
-    muscleGroup: 'Hamstrings / Glutes',
+    muscleGroup: 'Hamstrings',
     equipment: 'Barbell',
     movementType: 'compound',
   },
   {
-    id: 'ham_glute_002',
+    id: 'hamstrings_002',
     name: 'Deadlift',
-    muscleGroup: 'Hamstrings / Glutes',
+    muscleGroup: 'Hamstrings',
     equipment: 'Barbell',
     movementType: 'compound',
   },
   {
-    id: 'ham_glute_003',
-    name: 'Hip Thrust',
-    muscleGroup: 'Hamstrings / Glutes',
-    equipment: 'Barbell',
-    movementType: 'compound',
-  },
-  {
-    id: 'ham_glute_004',
+    id: 'hamstrings_003',
     name: 'Lying Leg Curl',
-    muscleGroup: 'Hamstrings / Glutes',
+    muscleGroup: 'Hamstrings',
     equipment: 'Machine',
     movementType: 'isolation',
   },
   {
-    id: 'ham_glute_005',
+    id: 'hamstrings_004',
     name: 'Seated Leg Curl',
-    muscleGroup: 'Hamstrings / Glutes',
+    muscleGroup: 'Hamstrings',
     equipment: 'Machine',
     movementType: 'isolation',
   },
+
+  // Glutes
   {
-    id: 'ham_glute_006',
+    id: 'glutes_001',
+    name: 'Hip Thrust',
+    muscleGroup: 'Glutes',
+    equipment: 'Barbell',
+    movementType: 'compound',
+  },
+  {
+    id: 'glutes_002',
     name: 'Glute Bridge',
-    muscleGroup: 'Hamstrings / Glutes',
+    muscleGroup: 'Glutes',
     equipment: 'Bodyweight',
     movementType: 'compound',
   },
@@ -488,6 +522,12 @@ const EXERCISE_NAME_CANONICAL_ALIASES: Record<string, string> = {
   'lateral raises': 'lateral raise',
   'barbell curls': 'barbell curl',
   'dumbbell curls': 'dumbbell curl',
+  'reverse grip curls': 'reverse grip curl',
+  'zottman curls': 'zottman curl',
+  'palm down wrist curl': 'palm down wrist curls',
+  'palm up wrist curl': 'palm up wrist curls',
+  'wrist curl': 'palm up wrist curls',
+  'wrist curls': 'palm up wrist curls',
   'tricep dips': 'bench dip',
   'tricep rope pushdowns': 'triceps pushdown',
   'rope pushdowns': 'triceps pushdown',
@@ -530,9 +570,22 @@ const EXERCISE_NAME_GROUP_ALIASES: Record<string, MuscleGroup> = {
   lunges: 'Legs',
   'speed squats': 'Legs',
   'leg extensions': 'Legs',
-  'romanian deadlifts': 'Hamstrings / Glutes',
-  deadlifts: 'Hamstrings / Glutes',
-  'leg curls': 'Hamstrings / Glutes',
+  'romanian deadlifts': 'Hamstrings',
+  deadlifts: 'Hamstrings',
+  'leg curls': 'Hamstrings',
+  'hip thrusts': 'Glutes',
+  'glute bridges': 'Glutes',
+  'palm down wrist curls': 'Forearms',
+  'palm up wrist curls': 'Forearms',
+  'reverse grip curl': 'Forearms',
+  'reverse grip curls': 'Forearms',
+  'zottman curl': 'Forearms',
+  'zottman curls': 'Forearms',
+  forearms: 'Forearms',
+  forearm: 'Forearms',
+  'wrist flexors': 'Forearms',
+  'wrist extensors': 'Forearms',
+  grip: 'Forearms',
   'calf raises': 'Calves',
   'tricep dips': 'Triceps',
   'rope pushdowns': 'Triceps',
@@ -564,12 +617,16 @@ const MUSCLE_MAPPING_TERMS: Record<string, MuscleGroup> = {
   biceps: 'Biceps',
   bicep: 'Biceps',
   brachialis: 'Biceps',
-  brachioradialis: 'Biceps',
-  forearms: 'Biceps',
-  forearm: 'Biceps',
-  'wrist flexors': 'Biceps',
-  'wrist extensors': 'Biceps',
-  grip: 'Biceps',
+
+  // Forearms
+  forearms: 'Forearms',
+  forearm: 'Forearms',
+  'wrist flexors': 'Forearms',
+  'wrist extensors': 'Forearms',
+  grip: 'Forearms',
+  brachioradialis: 'Forearms',
+  pronator: 'Forearms',
+  supinator: 'Forearms',
 
   // Calves
   calves: 'Calves',
@@ -604,18 +661,21 @@ const MUSCLE_MAPPING_TERMS: Record<string, MuscleGroup> = {
   serratus: 'Core / Abs',
   'serratus anterior': 'Core / Abs',
 
-  // Hamstrings / Glutes
-  glutes: 'Hamstrings / Glutes',
-  glute: 'Hamstrings / Glutes',
-  gluteus: 'Hamstrings / Glutes',
-  'gluteus maximus': 'Hamstrings / Glutes',
-  'gluteus medius': 'Hamstrings / Glutes',
-  'gluteus minimus': 'Hamstrings / Glutes',
-  hamstrings: 'Hamstrings / Glutes',
-  hamstring: 'Hamstrings / Glutes',
-  'posterior chain': 'Hamstrings / Glutes',
-  'hip extensors': 'Hamstrings / Glutes',
-  'hip hinge': 'Hamstrings / Glutes',
+  // Glutes
+  glutes: 'Glutes',
+  glute: 'Glutes',
+  gluteus: 'Glutes',
+  'gluteus maximus': 'Glutes',
+  'gluteus medius': 'Glutes',
+  'gluteus minimus': 'Glutes',
+  'hip extension': 'Glutes',
+  'hip extensors': 'Glutes',
+
+  // Hamstrings
+  hamstrings: 'Hamstrings',
+  hamstring: 'Hamstrings',
+  'posterior chain': 'Hamstrings',
+  'hip hinge': 'Hamstrings',
 
   // Legs
   legs: 'Legs',
@@ -742,8 +802,15 @@ export const resolveExerciseMuscleGroup = (
   ) {
     return 'Shoulders';
   }
+  if (
+    normalizedName.includes('hip thrust') ||
+    normalizedName.includes('glute bridge') ||
+    normalizedName.includes('glute')
+  ) {
+    return 'Glutes';
+  }
   if (normalizedName.includes('leg curl') || normalizedName.includes('deadlift')) {
-    return 'Hamstrings / Glutes';
+    return 'Hamstrings';
   }
   if (
     normalizedName.includes('squat') ||
@@ -755,6 +822,14 @@ export const resolveExerciseMuscleGroup = (
   }
   if (normalizedName.includes('calf raise')) {
     return 'Calves';
+  }
+  if (
+    normalizedName.includes('wrist curl') ||
+    normalizedName.includes('reverse grip curl') ||
+    normalizedName.includes('zottman') ||
+    normalizedName.includes('forearm')
+  ) {
+    return 'Forearms';
   }
   if (normalizedName.includes('curl')) {
     return 'Biceps';

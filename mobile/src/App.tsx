@@ -339,10 +339,10 @@ const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors'], 
     },
     tabBarWrapper: {
       backgroundColor: themeColors.surface,
-      marginBottom: showFileDisplay ? 12 : 60,
+      marginBottom: showFileDisplay ? 12 : 6,
     },
     tabBarWrapperHidden: {
-      marginBottom: 60,
+      marginBottom: 0,
     },
     tabBarFooter: {
       width: '100%',

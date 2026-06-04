@@ -23,8 +23,10 @@ const VALID_MUSCLE_GROUPS = new Set([
   'Shoulders',
   'Biceps',
   'Triceps',
+  'Forearms',
   'Legs',
-  'Hamstrings / Glutes',
+  'Hamstrings',
+  'Glutes',
   'Calves',
   'Core / Abs',
 ]);
@@ -459,9 +461,9 @@ app.put('/exercises/:id', async (req, res) => {
     const { id } = req.params;
     const updates: Record<string, unknown> = {};
 
-    const { data: currentExercise, error: fetchError } = await supabase
+    const { error: fetchError } = await supabase
       .from('exercises')
-      .select('id, is_custom')
+      .select('id')
       .eq('id', id)
       .eq('user_id', req.userId)
       .single();
@@ -471,27 +473,10 @@ app.put('/exercises/:id', async (req, res) => {
     if ('name' in req.body) updates.name = req.body.name;
     if ('sets' in req.body) updates.sets = req.body.sets;
     if ('rest_seconds' in req.body) updates.rest_seconds = req.body.rest_seconds;
-    if ('custom_muscle_groups' in req.body) {
-      if (!currentExercise?.is_custom) {
-        return res.status(403).json({
-          error: 'Muscle group mapping can only be changed for custom exercises',
-        });
-      }
-
-      if (
-        req.body.custom_muscle_groups !== null &&
-        (!Array.isArray(req.body.custom_muscle_groups) ||
-          req.body.custom_muscle_groups.some(
-            (group: string) => !VALID_MUSCLE_GROUPS.has(group),
-          ))
-      ) {
-        return res.status(400).json({ error: 'Invalid muscle group selection' });
-      }
-
-      updates.custom_muscle_groups =
-        Array.isArray(req.body.custom_muscle_groups) && req.body.custom_muscle_groups.length > 0
-          ? [...new Set(req.body.custom_muscle_groups)]
-          : null;
+    if ('custom_muscle_groups' in req.body || 'custom_muscle_group' in req.body) {
+      return res.status(400).json({
+        error: 'Custom muscle groups can only be set when creating an exercise',
+      });
     }
 
     const { data, error } = await supabase

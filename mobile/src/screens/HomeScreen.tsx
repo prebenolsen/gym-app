@@ -39,6 +39,7 @@ const FRONT_MUSCLE_GROUPS = new Set<MuscleGroup>([
   'Shoulders',
   'Biceps',
   'Triceps',
+  'Forearms',
   'Legs',
   'Core / Abs',
 ]);

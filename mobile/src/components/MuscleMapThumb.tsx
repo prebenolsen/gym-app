@@ -36,6 +36,7 @@ function getViewAndPaths(muscleGroup: MuscleGroup): { useBack: boolean; paths: s
     Shoulders: { useBack: false, paths: ['shoulder_left', 'shoulder_right'] },
     Biceps: { useBack: false, paths: ['arms_left', 'arms_right'] },
     Triceps: { useBack: false, paths: ['arms_left', 'arms_right'] },
+    Forearms: { useBack: false, paths: ['arms_left', 'arms_right'] },
     'Core / Abs': {
       useBack: false,
       paths: [
@@ -48,9 +49,18 @@ function getViewAndPaths(muscleGroup: MuscleGroup): { useBack: boolean; paths: s
       ],
     },
     'Legs': { useBack: false, paths: ['leg_left', 'leg_right'] },
-    'Hamstrings / Glutes': {
+    Hamstrings: {
       useBack: true,
-      paths: ['glutes_left', 'glutes_right', 'hamstring_left', 'hamstring_right'],
+      paths: [
+        'hamstring_left_middle',
+        'hamstring_left_left',
+        'hamstring_left_right',
+        'hamstring_right_left',
+      ],
+    },
+    Glutes: {
+      useBack: true,
+      paths: ['glutes_left', 'glutes_right'],
     },
     Calves: {
       useBack: true,

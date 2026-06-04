@@ -102,7 +102,6 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
     updates: {
       sets?: number;
       rest_seconds?: number;
-      custom_muscle_groups?: MuscleGroup[] | null;
     },
   ) => {
     try {
@@ -331,63 +330,6 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                   </View>
 
                   <View style={styles.exerciseControls}>
-                    {exercise.is_custom ? (
-                      <View style={styles.customGroupEditorBox}>
-                        <Text style={styles.customGroupLabel}>Custom muscle group</Text>
-                        <View style={styles.customGroupChipsWrap}>
-                          <TouchableOpacity
-                            style={[
-                              styles.customGroupChip,
-                              (!exercise.custom_muscle_groups ||
-                                exercise.custom_muscle_groups.length === 0) &&
-                                styles.customGroupChipActive,
-                            ]}
-                            onPress={() =>
-                              handleUpdateExercise(exercise.id, {
-                                custom_muscle_groups: null,
-                              })
-                            }
-                          >
-                            <Text
-                              style={[
-                                styles.customGroupChipText,
-                                (!exercise.custom_muscle_groups ||
-                                  exercise.custom_muscle_groups.length === 0) &&
-                                  styles.customGroupChipTextActive,
-                              ]}
-                            >
-                              None
-                            </Text>
-                          </TouchableOpacity>
-                          {muscleGroupOptions.map((group) => (
-                            <TouchableOpacity
-                              key={`${exercise.id}-${group}`}
-                              style={[
-                                styles.customGroupChip,
-                                (exercise.custom_muscle_groups ?? []).includes(group) &&
-                                  styles.customGroupChipActive,
-                              ]}
-                              onPress={() =>
-                                handleUpdateExercise(exercise.id, {
-                                  custom_muscle_groups:
-                                    toggleGroupSelection(exercise.custom_muscle_groups, group),
-                                })
-                              }
-                            >
-                              <Text
-                                style={[
-                                  styles.customGroupChipText,
-                                  (exercise.custom_muscle_groups ?? []).includes(group) &&
-                                    styles.customGroupChipTextActive,
-                                ]}
-                              >
-                                {group}
-                              </Text>
-                            </TouchableOpacity>
-                          ))}
-                        </View>
-                      </View>
-                    ) : null}
                     <View style={styles.exerciseControlsRow}>
                       <View style={{ flex: 1 }}>
                         <NumberSpinner
@@ -443,7 +385,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
           </TouchableOpacity>
         </View>
 
-          {newExerciseName.trim().length > 0 ? (
+          {newExerciseName.trim().length > 0 && !isAddingExercise ? (
             <View style={styles.customGroupCreateBox}>
               <Text style={styles.customGroupLabel}>
                 Optional muscle groups for custom exercise
@@ -459,7 +401,8 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                     styles.customGroupChip,
                     autoMappedGroups.length === 0 && styles.customGroupChipActive,
                   ]}
-                  onPress={() => setNewExerciseMuscleGroups([])}
+                    onPress={() => setNewExerciseMuscleGroups([])}
+                    disabled={isAddingExercise}
                 >
                   <Text
                     style={[
@@ -482,6 +425,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                         toggleGroupSelection(prev ?? [], group),
                       )
                     }
+                    disabled={isAddingExercise}
                   >
                     <Text
                       style={[
@@ -701,14 +645,6 @@ const createStyles = (themeColors: typeof colors) =>
     },
     exerciseControls: {
       gap: 12,
-    },
-    customGroupEditorBox: {
-      padding: 10,
-      borderWidth: 1,
-      borderColor: themeColors.border,
-      borderRadius: radius.sm,
-      backgroundColor: themeColors.background,
-      gap: 8,
     },
     customGroupLabel: {
       color: themeColors.textMuted,
