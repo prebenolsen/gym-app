@@ -329,7 +329,7 @@ const HomeScreen = ({ navigation }: any) => {
 
         <View style={styles.statsGrid}>
           <TouchableOpacity
-            style={[styles.statCard, styles.statCardWide, styles.statCardHorizontal]}
+            style={styles.statCard}
             onPress={() =>
               navigation.navigate('ProgramsStack', { screen: 'ProgramsList' })
             }
@@ -338,14 +338,28 @@ const HomeScreen = ({ navigation }: any) => {
               name="clipboard-outline"
               size={28}
               color={themeColors.accent}
-              style={{ marginRight: 12 }}
+              style={{ marginBottom: 6 }}
             />
-            <View style={styles.statCardTextWrap}>
-              <Text style={styles.statValue}>{stats.total_programs}</Text>
-              <Text style={styles.statLabel}>
-                {getCountLabel(stats.total_programs, 'Program', 'Programs')}
-              </Text>
-            </View>
+            <Text style={styles.statValue}>{stats.total_programs}</Text>
+            <Text style={styles.statLabel}>
+              {getCountLabel(stats.total_programs, 'Program', 'Programs')}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.statCard}
+            onPress={() =>
+              navigation.navigate('WeightTrackerStack', { screen: 'WeightTracker' })
+            }
+          >
+            <Ionicons
+              name="body-outline"
+              size={28}
+              color={themeColors.accent}
+              style={{ marginBottom: 6 }}
+            />
+            <Text style={[styles.statValue, styles.statValuePlaceholder]}>0</Text>
+            <Text style={styles.statLabel} numberOfLines={1}>Weight Tracker</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -571,22 +585,15 @@ const createStyles = (themeColors: typeof colors) =>
       borderColor: themeColors.border,
       ...shadow.card,
     },
-    statCardWide: {
-      width: '100%',
-    },
-    statCardHorizontal: {
-      flexDirection: 'row',
-      justifyContent: 'flex-start',
-      alignItems: 'center',
-    },
-    statCardTextWrap: {
-      alignItems: 'flex-start',
-    },
+
     statValue: {
       fontSize: 24,
       fontWeight: 'bold',
       color: themeColors.accent,
       
+    },
+    statValuePlaceholder: {
+      opacity: 0,
     },
     statLabel: {
       fontSize: 12,

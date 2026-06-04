@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { type Workout, type Exercise, type Program } from '@gym-app/shared';
-import { colors, radius, shadow } from '../theme';
+import { colors, getButtonStyles, radius, shadow } from '../theme';
 import { useApi } from '../hooks/useApi';
 import { usePreferences } from '../context/PreferencesContext';
 
@@ -421,18 +421,11 @@ const createStyles = (themeColors: typeof colors) =>
       
     },
     deleteButton: {
-      backgroundColor: themeColors.danger,
-      borderRadius: radius.sm,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      alignItems: 'center',
+      ...getButtonStyles(themeColors).deleteButton,
     },
     
     deleteButtonText: {
-      color: '#fff',
-      fontWeight: '700',
-      fontSize: 13,
-      
+      ...getButtonStyles(themeColors).deleteButtonText,
     },
     section: {
       flex: 1,
@@ -452,19 +445,12 @@ const createStyles = (themeColors: typeof colors) =>
       
     },
     addWorkoutButton: {
-      backgroundColor: themeColors.accent,
+      ...getButtonStyles(themeColors).mainButton,
       width: '100%',
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderRadius: radius.sm,
-      alignItems: 'center',
       marginTop: 8,
     },
     btnText: {
-      color: '#fff',
-      fontWeight: '700',
-      fontSize: 14,
-      
+      ...getButtonStyles(themeColors).mainButtonText,
     },
     list: {
       flex: 1,

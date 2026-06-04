@@ -11,6 +11,40 @@ type ToneConfig =
   | { hz: number; durationMs: number }
   | { lowHz: number; highHz: number; durationMs: number };
 
+type SoundVariant = {
+  id: string;
+  name: string;
+  config: ToneConfig;
+  isSingleTone: boolean;
+};
+
+// Sound variations for each category
+export const COMPLETION_SOUNDS: SoundVariant[] = [
+  { id: 'completion-classic', name: 'Classic Bell', config: { hz: 1250, durationMs: 360 }, isSingleTone: true },
+  { id: 'completion-bright', name: 'Bright Chime', config: { hz: 1500, durationMs: 280 }, isSingleTone: true },
+  { id: 'completion-deep', name: 'Deep Gong', config: { hz: 880, durationMs: 450 }, isSingleTone: true },
+  { id: 'completion-crisp', name: 'Crisp Ping', config: { hz: 1800, durationMs: 200 }, isSingleTone: true },
+  { id: 'completion-warm', name: 'Warm Tone', config: { hz: 1000, durationMs: 400 }, isSingleTone: true },
+];
+
+export const COUNTDOWN_SOUNDS: SoundVariant[] = [
+  { id: 'countdown-beep', name: 'Quick Beep', config: { hz: 720, durationMs: 110 }, isSingleTone: true },
+  { id: 'countdown-high', name: 'High Tick', config: { hz: 900, durationMs: 100 }, isSingleTone: true },
+  { id: 'countdown-low', name: 'Low Tick', config: { hz: 550, durationMs: 120 }, isSingleTone: true },
+  { id: 'countdown-bright', name: 'Bright Pip', config: { hz: 1100, durationMs: 90 }, isSingleTone: true },
+  { id: 'countdown-soft', name: 'Soft Chirp', config: { hz: 650, durationMs: 130 }, isSingleTone: true },
+];
+
+export const PREPARE_SOUNDS: SoundVariant[] = [
+  { id: 'prepare-double', name: 'Double Beep', config: { lowHz: 520, highHz: 760, durationMs: 90 }, isSingleTone: false },
+  { id: 'prepare-alert', name: 'Alert Surge', config: { lowHz: 400, highHz: 950, durationMs: 86 }, isSingleTone: false },
+  { id: 'prepare-gentle', name: 'Gentle Rise', config: { lowHz: 600, highHz: 800, durationMs: 100 }, isSingleTone: false },
+  { id: 'prepare-dramatic', name: 'Dramatic Climb', config: { lowHz: 350, highHz: 1100, durationMs: 92 }, isSingleTone: false },
+  { id: 'prepare-sprint', name: 'Sprint Pulse', config: { lowHz: 700, highHz: 1100, durationMs: 70 }, isSingleTone: false },
+  { id: 'prepare-snap', name: 'Snap Up', config: { lowHz: 820, highHz: 1400, durationMs: 60 }, isSingleTone: false },
+  { id: 'prepare-rocket', name: 'Rocket Lift', config: { lowHz: 500, highHz: 1500, durationMs: 58 }, isSingleTone: false },
+];
+
 const toneConfig: Record<ToneKind, ToneConfig> = {
   countdown: { hz: 720, durationMs: 110 },
 
@@ -154,3 +188,78 @@ const playTone = async (kind: ToneKind) => {
 export const playCountdownBeep = () => playTone('countdown');
 export const playCompletionBeep = () => playTone('complete');
 export const playPrepareBeep = () => playTone('prepare');
+
+// Play a specific sound by ID
+export const playSoundById = async (soundId: string) => {
+  try {
+    await Audio.setAudioModeAsync({
+      playsInSilentModeIOS: true,
+      staysActiveInBackground: false,
+    });
+
+    // Find the sound in all categories
+    const allSounds = [
+      ...COMPLETION_SOUNDS,
+      ...COUNTDOWN_SOUNDS,
+      ...PREPARE_SOUNDS,
+    ];
+    
+    const sound = allSounds.find((s) => s.id === soundId);
+    if (!sound) {
+      console.warn(`Sound with id ${soundId} not found`);
+      return;
+    }
+
+    const config = sound.config;
+
+    // Handle double beep (prepare sounds)
+    if (!sound.isSingleTone && 'lowHz' in config) {
+      const firstUri = getToneDataUri('sound-low', config.lowHz, config.durationMs);
+      const secondUri = getToneDataUri('sound-high', config.highHz, config.durationMs);
+
+      const play = async (uri: string) => {
+        const { sound: audioSound } = await Audio.Sound.createAsync({ uri });
+
+        await new Promise<void>((resolve) => {
+          audioSound.setOnPlaybackStatusUpdate(async (status) => {
+            if (status.isLoaded && status.didJustFinish) {
+              await audioSound.unloadAsync().catch(() => {});
+              resolve();
+            }
+          });
+          audioSound.playAsync();
+        });
+      };
+
+      await play(firstUri);
+      await sleep(90);
+      await play(secondUri);
+      return;
+    }
+
+    // Handle single tone sounds
+    if (sound.isSingleTone && 'hz' in config) {
+      const uri = getToneDataUri(soundId, config.hz, config.durationMs);
+      const { sound: audioSound } = await Audio.Sound.createAsync({ uri });
+
+      audioSound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          audioSound.unloadAsync().catch(() => {});
+        }
+      });
+
+      await audioSound.playAsync();
+    }
+  } catch {
+    Vibration.vibrate(soundId.includes('completion') ? 150 : 80);
+  }
+};
+
+export const playCountdownPreviewById = async (soundId: string) => {
+  for (let i = 0; i < 3; i += 1) {
+    await playSoundById(soundId);
+    if (i < 2) {
+      await sleep(1000);
+    }
+  }
+};

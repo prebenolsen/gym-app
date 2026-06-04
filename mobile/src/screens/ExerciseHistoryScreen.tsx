@@ -21,7 +21,7 @@ type GroupedByDate = {
 const ExerciseHistoryScreen = ({ route, navigation }: any) => {
   const { exerciseId, exerciseName } = route.params;
   const api = useApi();
-  const { colors: themeColors, unit, convertFromKg } = usePreferences();
+  const { colors: themeColors, unit, convertFromKg, formatDateOnly } = usePreferences();
   const styles = createStyles(themeColors);
 
   const [loading, setLoading] = useState(true);
@@ -39,9 +39,8 @@ const ExerciseHistoryScreen = ({ route, navigation }: any) => {
 
       // Collect all sets for this exercise, grouped by date
       for (const session of sessions) {
-        const date = new Date(
-          session.ended_at || session.started_at,
-        ).toLocaleDateString('en-CA');
+        const isoDate = (session.ended_at || session.started_at);
+        const date = isoDate.split('T')[0]; // Extract YYYY-MM-DD for grouping
         const sets = await api.getSessionSets(session.id, exerciseId);
 
         if (sets.length > 0) {
@@ -92,7 +91,7 @@ const ExerciseHistoryScreen = ({ route, navigation }: any) => {
         <ScrollView style={styles.content}>
           {history.map((group) => (
             <View key={group.date} style={styles.dateGroup}>
-              <Text style={styles.dateHeader}>{group.date}</Text>
+              <Text style={styles.dateHeader}>{formatDateOnly(`${group.date}T00:00:00Z`)}</Text>
               <View style={styles.setsTable}>
                 <View style={styles.tableHeader}>
                   <Text style={[styles.tableCell, styles.setNumber]}>Set</Text>

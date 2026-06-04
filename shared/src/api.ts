@@ -21,6 +21,16 @@ import type {
   ExerciseLastPerformance,
   ExerciseHistorySummary,
   ExerciseProgressHistory,
+  WeightTrackerProfile,
+  WeightTrackerGoalProject,
+  WeightTrackerEntry,
+  WeightTrackerCustomMetric,
+  WeightTrackerCustomMetricValue,
+  UpsertWeightTrackerProfileRequest,
+  UpsertWeightTrackerEntryRequest,
+  CreateWeightTrackerGoalProjectRequest,
+  CreateWeightTrackerCustomMetricRequest,
+  UpsertCustomMetricValueRequest,
 } from './types';
 
 type TokenProvider = () => string | null | Promise<string | null>;
@@ -368,6 +378,90 @@ class ApiClient {
 
   async saveExerciseNotes(exerciseId: string, notes: string): Promise<void> {
     return this.request('PATCH', `/exercises/${exerciseId}/notes`, { notes });
+  }
+
+  /* === WEIGHT TRACKER === */
+
+  async getWeightTrackerProfile(): Promise<WeightTrackerProfile | null> {
+    return this.request('GET', '/weight-tracker/profile');
+  }
+
+  async upsertWeightTrackerProfile(
+    req: UpsertWeightTrackerProfileRequest,
+  ): Promise<WeightTrackerProfile> {
+    return this.request('POST', '/weight-tracker/profile', req);
+  }
+
+  async getWeightTrackerGoals(): Promise<WeightTrackerGoalProject[]> {
+    return this.request('GET', '/weight-tracker/goals');
+  }
+
+  async createWeightTrackerGoal(
+    req: CreateWeightTrackerGoalProjectRequest,
+  ): Promise<WeightTrackerGoalProject> {
+    return this.request('POST', '/weight-tracker/goals', req);
+  }
+
+  async activateWeightTrackerGoal(goalId: string): Promise<WeightTrackerGoalProject> {
+    return this.request('POST', `/weight-tracker/goals/${encodeURIComponent(goalId)}/activate`);
+  }
+
+  async getWeightTrackerEntries(days?: number, goalId?: string): Promise<WeightTrackerEntry[]> {
+    const params = new URLSearchParams();
+    if (days) params.append('days', String(days));
+    if (goalId) params.append('goalId', goalId);
+    const path = params.size > 0
+      ? `/weight-tracker/entries?${params.toString()}`
+      : '/weight-tracker/entries';
+    return this.request('GET', path);
+  }
+
+  async upsertWeightTrackerEntry(
+    req: UpsertWeightTrackerEntryRequest,
+  ): Promise<WeightTrackerEntry> {
+    return this.request('POST', '/weight-tracker/entries', req);
+  }
+
+  async deleteWeightTrackerEntry(entryDate: string, goalId?: string): Promise<void> {
+    const encodedDate = encodeURIComponent(entryDate);
+    const path = goalId
+      ? `/weight-tracker/entries/${encodedDate}?goalId=${encodeURIComponent(goalId)}`
+      : `/weight-tracker/entries/${encodedDate}`;
+    return this.request('DELETE', path);
+  }
+
+  async resetWeightTracker(): Promise<void> {
+    return this.request('DELETE', '/weight-tracker/reset');
+  }
+
+  async getCustomMetrics(): Promise<WeightTrackerCustomMetric[]> {
+    return this.request('GET', '/weight-tracker/custom-metrics');
+  }
+
+  async createCustomMetric(
+    req: CreateWeightTrackerCustomMetricRequest,
+  ): Promise<WeightTrackerCustomMetric> {
+    return this.request('POST', '/weight-tracker/custom-metrics', req);
+  }
+
+  async deleteCustomMetric(id: string): Promise<void> {
+    return this.request('DELETE', `/weight-tracker/custom-metrics/${encodeURIComponent(id)}`);
+  }
+
+  async getCustomMetricValues(days?: number, goalId?: string): Promise<WeightTrackerCustomMetricValue[]> {
+    const params = new URLSearchParams();
+    if (days) params.append('days', String(days));
+    if (goalId) params.append('goalId', goalId);
+    const path = params.size > 0
+      ? `/weight-tracker/custom-metric-values?${params.toString()}`
+      : '/weight-tracker/custom-metric-values';
+    return this.request('GET', path);
+  }
+
+  async upsertCustomMetricValue(
+    req: UpsertCustomMetricValueRequest,
+  ): Promise<WeightTrackerCustomMetricValue> {
+    return this.request('POST', '/weight-tracker/custom-metric-values', req);
   }
 }
 

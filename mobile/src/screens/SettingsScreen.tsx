@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,14 +8,23 @@ import {
   Alert,
   Switch,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
+import type { WeightTrackerGender } from '@gym-app/shared';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { usePreferences } from '../context/PreferencesContext';
 import { useApi } from '../hooks/useApi';
-import { colors, radius, shadow } from '../theme';
+import { colors, getButtonStyles, radius, shadow } from '../theme';
 import BrandLogo from '../components/BrandLogo';
 import { APP_INFO } from '../constants/appInfo';
+import {
+  COMPLETION_SOUNDS,
+  COUNTDOWN_SOUNDS,
+  PREPARE_SOUNDS,
+  playCountdownPreviewById,
+  playSoundById,
+} from '../lib/restTimerSounds';
 
 const SettingsScreen = () => {
   const { signOut, user } = useAuth();
@@ -26,6 +35,13 @@ const SettingsScreen = () => {
     setAccent,
     unit,
     setUnit,
+    heightUnit,
+    convertFromKg,
+    convertToKg,
+    convertFromCm,
+    convertToCm,
+    dateFormat,
+    setDateFormat,
     showFileDisplay,
     setShowFileDisplay,
     completionCueEnabled,
@@ -36,15 +52,85 @@ const SettingsScreen = () => {
     setCustomCueEnabled,
     customCueSeconds,
     setCustomCueSeconds,
+    completionSoundId,
+    setCompletionSoundId,
+    countdownSoundId,
+    setCountdownSoundId,
+    prepareSoundId,
+    setPrepareSoundId,
     colors: themeColors,
   } = usePreferences();
   const api = useApi();
   const styles = createStyles(themeColors);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [dateFormatOpen, setDateFormatOpen] = useState(false);
+  const [completionSoundOpen, setCompletionSoundOpen] = useState(false);
+  const [countdownSoundOpen, setCountdownSoundOpen] = useState(false);
+  const [prepareSoundOpen, setPrepareSoundOpen] = useState(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [savingPersonalMetrics, setSavingPersonalMetrics] = useState(false);
+  const [personalWeight, setPersonalWeight] = useState('');
+  const [personalHeight, setPersonalHeight] = useState('');
+  const [personalAgeMode, setPersonalAgeMode] = useState<'age' | 'birthdate'>('age');
+  const [personalAge, setPersonalAge] = useState('');
+  const [personalBirthdate, setPersonalBirthdate] = useState('');
+  const [personalGender, setPersonalGender] = useState<WeightTrackerGender | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadProfile = async () => {
+      try {
+        const profile = await api.getWeightTrackerProfile();
+        if (!active || !profile) return;
+
+        setPersonalWeight(
+          profile.default_weight_kg != null
+            ? String(parseFloat(convertFromKg(profile.default_weight_kg).toFixed(1)))
+            : '',
+        );
+        setPersonalHeight(
+          profile.height_cm != null
+            ? String(parseFloat(convertFromCm(profile.height_cm).toFixed(1)))
+            : '',
+        );
+        setPersonalGender(profile.gender);
+        setPersonalAge(profile.age != null ? String(profile.age) : '');
+        setPersonalBirthdate(profile.birthdate ?? '');
+        setPersonalAgeMode(profile.birthdate ? 'birthdate' : 'age');
+      } finally {
+        if (active) setProfileLoading(false);
+      }
+    };
+
+    loadProfile();
+    return () => {
+      active = false;
+    };
+  }, [api, convertFromCm, convertFromKg]);
+
+  const handleSavePersonalMetrics = async () => {
+    setSavingPersonalMetrics(true);
+    try {
+      await api.upsertWeightTrackerProfile({
+        default_weight_kg: personalWeight.trim() ? convertToKg(parseFloat(personalWeight.replace(',', '.'))) : null,
+        height_cm: personalHeight.trim() ? convertToCm(parseFloat(personalHeight.replace(',', '.'))) : null,
+        age: personalAgeMode === 'age' && personalAge.trim() ? parseInt(personalAge, 10) : null,
+        birthdate: personalAgeMode === 'birthdate' && personalBirthdate.trim() ? personalBirthdate.trim() : null,
+        gender: personalGender,
+      });
+      Alert.alert('Saved', 'Personal metrics were updated.');
+    } catch {
+      Alert.alert('Error', 'Could not save personal metrics.');
+    } finally {
+      setSavingPersonalMetrics(false);
+    }
+  };
 
   const handleChangePassword = async () => {
     if (newPassword.length < 8) {
@@ -146,14 +232,14 @@ const SettingsScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.section}>Weight Unit</Text>
+        <Text style={styles.section}>Unit System</Text>
         <View style={styles.chipRow}>
           <TouchableOpacity
             style={[styles.chip, unit === 'kg' && styles.chipActive]}
             onPress={() => setUnit('kg')}
           >
             <Text style={[styles.chipText, unit === 'kg' && styles.chipTextActive]}>
-              kg
+              Metric (kg · cm)
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -161,10 +247,51 @@ const SettingsScreen = () => {
             onPress={() => setUnit('lb')}
           >
             <Text style={[styles.chipText, unit === 'lb' && styles.chipTextActive]}>
-              lb
+              US Units (lb · ft)
             </Text>
           </TouchableOpacity>
         </View>
+
+        <Text style={styles.section}>Date Format</Text>
+        {(() => {
+          const DATE_FORMAT_OPTIONS = [
+            { key: 'iso', label: 'ISO 8601',   example: '2026-01-31' },
+            { key: 'eu',  label: 'DD/MM/YYYY', example: '31/01/2026' },
+            { key: 'us',  label: 'MM/DD/YYYY', example: '01/31/2026' },
+          ] as const;
+          const selected = DATE_FORMAT_OPTIONS.find((o) => o.key === dateFormat)!;
+          return (
+            <View style={styles.dateFormatList}>
+              {/* Trigger row — always visible */}
+              <TouchableOpacity
+                style={styles.dateFormatTrigger}
+                onPress={() => setDateFormatOpen((v) => !v)}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.dateFormatLabel}>{selected.label}</Text>
+                  <Text style={styles.dateFormatExample}>{selected.example}</Text>
+                </View>
+                <Text style={styles.dateFormatChevron}>
+                  {dateFormatOpen ? '▲' : '▼'}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Options — visible only when open */}
+              {dateFormatOpen && DATE_FORMAT_OPTIONS.filter((o) => o.key !== dateFormat).map(({ key, label, example }) => (
+                <TouchableOpacity
+                  key={key}
+                  style={styles.dateFormatRow}
+                  onPress={() => { setDateFormat(key); setDateFormatOpen(false); }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.dateFormatLabel}>{label}</Text>
+                    <Text style={styles.dateFormatExample}>{example}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          );
+        })()}
 
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
@@ -181,9 +308,104 @@ const SettingsScreen = () => {
       </View>
 
       <View style={styles.card}>
+        <Text style={styles.title}>Personal Metrics</Text>
+        <Text style={styles.settingHelp}>
+          These values are used as defaults in Weight Tracker and for calorie calculations.
+        </Text>
+
+        {profileLoading ? (
+          <ActivityIndicator color={themeColors.accent} style={{ marginTop: 12 }} />
+        ) : (
+          <>
+            <Text style={styles.section}>Default Weight ({unit})</Text>
+            <TextInput
+              style={styles.input}
+              value={personalWeight}
+              onChangeText={setPersonalWeight}
+              keyboardType="decimal-pad"
+              placeholder={unit === 'kg' ? 'e.g. 80.0' : 'e.g. 176.4'}
+              placeholderTextColor={themeColors.textMuted}
+            />
+
+            <Text style={styles.section}>Height ({heightUnit === 'ft' ? 'ft' : 'cm'})</Text>
+            <TextInput
+              style={styles.input}
+              value={personalHeight}
+              onChangeText={setPersonalHeight}
+              keyboardType="decimal-pad"
+              placeholder={heightUnit === 'ft' ? 'e.g. 5.9' : 'e.g. 180'}
+              placeholderTextColor={themeColors.textMuted}
+            />
+
+            <Text style={styles.section}>Age / Birthdate</Text>
+            <View style={styles.chipRow}>
+              <TouchableOpacity
+                style={[styles.chip, personalAgeMode === 'age' && styles.chipActive]}
+                onPress={() => setPersonalAgeMode('age')}
+              >
+                <Text style={[styles.chipText, personalAgeMode === 'age' && styles.chipTextActive]}>Age</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.chip, personalAgeMode === 'birthdate' && styles.chipActive]}
+                onPress={() => setPersonalAgeMode('birthdate')}
+              >
+                <Text style={[styles.chipText, personalAgeMode === 'birthdate' && styles.chipTextActive]}>
+                  Birthdate
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {personalAgeMode === 'age' ? (
+              <TextInput
+                style={styles.input}
+                value={personalAge}
+                onChangeText={setPersonalAge}
+                keyboardType="number-pad"
+                placeholder="e.g. 30"
+                placeholderTextColor={themeColors.textMuted}
+              />
+            ) : (
+              <TextInput
+                style={styles.input}
+                value={personalBirthdate}
+                onChangeText={setPersonalBirthdate}
+                autoCapitalize="none"
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={themeColors.textMuted}
+              />
+            )}
+
+            <Text style={styles.section}>Gender</Text>
+            <View style={styles.chipRow}>
+              {(['male', 'female'] as WeightTrackerGender[]).map((gender) => (
+                <TouchableOpacity
+                  key={gender}
+                  style={[styles.chip, personalGender === gender && styles.chipActive]}
+                  onPress={() => setPersonalGender(personalGender === gender ? null : gender)}
+                >
+                  <Text style={[styles.chipText, personalGender === gender && styles.chipTextActive]}>
+                    {gender.charAt(0).toUpperCase() + gender.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {savingPersonalMetrics ? (
+              <ActivityIndicator color={themeColors.accent} style={{ marginTop: 12 }} />
+            ) : (
+              <TouchableOpacity style={[styles.primaryButton, { marginTop: 10 }]} onPress={handleSavePersonalMetrics}>
+                <Text style={styles.primaryButtonText}>Save Personal Metrics</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+      </View>
+
+      <View style={styles.card}>
         <Text style={styles.title}>Sounds</Text>
 
-        <View style={styles.settingRow}>
+        {/* Rest Timer Completed */}
+        <View style={styles.soundSectionContainer}>
           <View style={styles.settingInfo}>
             <Text style={styles.settingLabel}>Rest Timer Completed</Text>
             <Text style={styles.settingHelp}>
@@ -198,7 +420,51 @@ const SettingsScreen = () => {
           />
         </View>
 
-        <View style={styles.settingRow}>
+        {completionCueEnabled && (
+          <View style={styles.soundDropdownContainer}>
+            <TouchableOpacity
+              style={styles.soundDropdownTrigger}
+              onPress={() => setCompletionSoundOpen((v) => !v)}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.soundDropdownLabel}>
+                  {COMPLETION_SOUNDS.find((s) => s.id === completionSoundId)?.name || 'Select sound'}
+                </Text>
+              </View>
+              <Text style={styles.soundDropdownChevron}>
+                {completionSoundOpen ? '▲' : '▼'}
+              </Text>
+            </TouchableOpacity>
+
+            {completionSoundOpen && (
+              <View style={styles.soundDropdownOptions}>
+                {COMPLETION_SOUNDS.map(({ id, name }) => (
+                  <TouchableOpacity
+                    key={id}
+                    style={styles.soundDropdownRow}
+                    onPress={() => {
+                      setCompletionSoundId(id);
+                      setCompletionSoundOpen(false);
+                      playSoundById(id);
+                    }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.soundDropdownLabel}>{name}</Text>
+                    </View>
+                    {completionSoundId === id && (
+                      <Text style={styles.soundDropdownCheckmark}>✓</Text>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        <View style={styles.soundSectionSpacer} />
+
+        {/* Countdown Cues */}
+        <View style={styles.soundSectionContainer}>
           <View style={styles.settingInfo}>
             <Text style={styles.settingLabel}>Countdown Cues (3, 2, 1)</Text>
             <Text style={styles.settingHelp}>
@@ -213,9 +479,53 @@ const SettingsScreen = () => {
           />
         </View>
 
-        <View style={styles.settingRow}>
+        {countdownCueEnabled && (
+          <View style={styles.soundDropdownContainer}>
+            <TouchableOpacity
+              style={styles.soundDropdownTrigger}
+              onPress={() => setCountdownSoundOpen((v) => !v)}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.soundDropdownLabel}>
+                  {COUNTDOWN_SOUNDS.find((s) => s.id === countdownSoundId)?.name || 'Select sound'}
+                </Text>
+              </View>
+              <Text style={styles.soundDropdownChevron}>
+                {countdownSoundOpen ? '▲' : '▼'}
+              </Text>
+            </TouchableOpacity>
+
+            {countdownSoundOpen && (
+              <View style={styles.soundDropdownOptions}>
+                {COUNTDOWN_SOUNDS.map(({ id, name }) => (
+                  <TouchableOpacity
+                    key={id}
+                    style={styles.soundDropdownRow}
+                    onPress={() => {
+                      setCountdownSoundId(id);
+                      setCountdownSoundOpen(false);
+                      playCountdownPreviewById(id);
+                    }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.soundDropdownLabel}>{name}</Text>
+                    </View>
+                    {countdownSoundId === id && (
+                      <Text style={styles.soundDropdownCheckmark}>✓</Text>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        <View style={styles.soundSectionSpacer} />
+
+        {/* Prepare Cue */}
+        <View style={styles.soundSectionContainer}>
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Custom Cue (X Seconds)</Text>
+            <Text style={styles.settingLabel}>Prepare Cue (Custom)</Text>
             <Text style={styles.settingHelp}>
               Play a sound at n-seconds before the rest timer ends.
             </Text>
@@ -228,24 +538,65 @@ const SettingsScreen = () => {
           />
         </View>
 
-        {customCueEnabled ? (
-          <View style={styles.prepareInputWrap}>
-            <Text style={styles.prepareInputLabel}>Custom Cue At (seconds)</Text>
-            <TextInput
-              style={styles.prepareInput}
-              value={String(customCueSeconds)}
-              onChangeText={(value) => {
-                const parsed = Number(value);
-                if (Number.isInteger(parsed) && parsed >= 1) {
-                  setCustomCueSeconds(parsed);
-                }
-              }}
-              keyboardType="number-pad"
-              placeholder="10"
-              placeholderTextColor={themeColors.textMuted}
-            />
-          </View>
-        ) : null}
+        {customCueEnabled && (
+          <>
+            <View style={styles.soundDropdownContainer}>
+              <TouchableOpacity
+                style={styles.soundDropdownTrigger}
+                onPress={() => setPrepareSoundOpen((v) => !v)}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.soundDropdownLabel}>
+                    {PREPARE_SOUNDS.find((s) => s.id === prepareSoundId)?.name || 'Select sound'}
+                  </Text>
+                </View>
+                <Text style={styles.soundDropdownChevron}>
+                  {prepareSoundOpen ? '▲' : '▼'}
+                </Text>
+              </TouchableOpacity>
+
+              {prepareSoundOpen && (
+                <View style={styles.soundDropdownOptions}>
+                  {PREPARE_SOUNDS.map(({ id, name }) => (
+                    <TouchableOpacity
+                      key={id}
+                      style={styles.soundDropdownRow}
+                      onPress={() => {
+                        setPrepareSoundId(id);
+                        setPrepareSoundOpen(false);
+                        playSoundById(id);
+                      }}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.soundDropdownLabel}>{name}</Text>
+                      </View>
+                      {prepareSoundId === id && (
+                        <Text style={styles.soundDropdownCheckmark}>✓</Text>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            <View style={styles.prepareInputWrap}>
+              <Text style={styles.prepareInputLabel}>Custom Cue At (seconds)</Text>
+              <TextInput
+                style={styles.prepareInput}
+                value={String(customCueSeconds)}
+                onChangeText={(value) => {
+                  const parsed = Number(value);
+                  if (Number.isInteger(parsed) && parsed >= 1) {
+                    setCustomCueSeconds(parsed);
+                  }
+                }}
+                keyboardType="number-pad"
+                placeholder="10"
+                placeholderTextColor={themeColors.textMuted}
+              />
+            </View>
+          </>
+        )}
       </View>
 
       <View style={styles.card}>
@@ -277,11 +628,9 @@ const SettingsScreen = () => {
           <Text style={styles.secondaryButtonText}>Update Password</Text>
         </TouchableOpacity>
 
-        <View style={styles.dangerBox}>
-          <TouchableOpacity style={styles.dangerButton} onPress={handleDeleteAccount}>
-            <Text style={styles.dangerButtonText}>Delete Account</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.dangerButton} onPress={handleDeleteAccount}>
+          <Text style={styles.dangerButtonText}>Delete Account</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.card}>
@@ -468,6 +817,56 @@ const createStyles = (themeColors: typeof colors) =>
     chipTextActive: {
       color: themeColors.accent,
     },
+    dateFormatList: {
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: radius.sm,
+      overflow: 'hidden',
+      marginBottom: 8,
+    },
+    dateFormatTrigger: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      backgroundColor: themeColors.surface,
+    },
+    dateFormatRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      backgroundColor: themeColors.background,
+      borderTopWidth: 1,
+      borderTopColor: themeColors.border,
+    },
+    dateFormatRowActive: {
+      backgroundColor: themeColors.accentSoft,
+    },
+    dateFormatLabel: {
+      color: themeColors.textStrong,
+      fontWeight: '600',
+      fontSize: 14,
+    },
+    dateFormatLabelActive: {
+      color: themeColors.accent,
+    },
+    dateFormatExample: {
+      color: themeColors.textMuted,
+      fontSize: 12,
+      marginTop: 1,
+    },
+    dateFormatChevron: {
+      color: themeColors.textMuted,
+      fontSize: 10,
+      marginLeft: 8,
+    },
+    dateFormatCheck: {
+      color: themeColors.accent,
+      fontWeight: '700',
+      fontSize: 16,
+      marginLeft: 8,
+    },
     input: {
       borderWidth: 1,
       borderColor: themeColors.border,
@@ -480,16 +879,11 @@ const createStyles = (themeColors: typeof colors) =>
       
     },
     primaryButton: {
-      backgroundColor: themeColors.accent,
+      ...getButtonStyles(themeColors).mainButton,
       flex: 1,
-      borderRadius: radius.sm,
-      paddingVertical: 12,
-      alignItems: 'center',
     },
     primaryButtonText: {
-      color: '#FFFFFF',
-      fontWeight: '700',
-      
+      ...getButtonStyles(themeColors).mainButtonText,
     },
     secondaryButton: {
       borderColor: themeColors.accent,
@@ -545,30 +939,68 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: '700',
       
     },
-    dangerBox: {
-      marginTop: 18,
-      borderColor: themeColors.danger,
-      borderWidth: 1,
-      borderRadius: radius.sm,
-      padding: 12,
-      backgroundColor: themeColors.accentSoft,
-    },
-    dangerTitle: {
-      color: themeColors.danger,
-      fontWeight: '700',
-      marginBottom: 6,
-      
-    },
     dangerButton: {
-      backgroundColor: themeColors.danger,
-      borderRadius: radius.sm,
-      paddingVertical: 10,
-      alignItems: 'center',
+      ...getButtonStyles(themeColors).deleteButton,
+      marginTop: 18,
     },
     dangerButtonText: {
-      color: '#FFFFFF',
+      ...getButtonStyles(themeColors).deleteButtonText,
+    },
+    soundSectionContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+    },
+    soundSectionSpacer: {
+      height: 8,
+    },
+    soundDropdownContainer: {
+      marginTop: 12,
+      marginBottom: 4,
+      borderRadius: radius.sm,
+      overflow: 'hidden',
+      backgroundColor: themeColors.surface,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+    },
+    soundDropdownTrigger: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      gap: 8,
+    },
+    soundDropdownLabel: {
+      fontSize: 14,
+      color: themeColors.textStrong,
+      fontWeight: '500',
+    },
+    soundDropdownChevron: {
+      fontSize: 14,
+      color: themeColors.textMuted,
+      marginLeft: 4,
+    },
+    soundDropdownOptions: {
+      borderTopWidth: 1,
+      borderTopColor: themeColors.border,
+      backgroundColor: themeColors.background,
+    },
+    soundDropdownRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 11,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+    },
+    soundDropdownCheckmark: {
+      fontSize: 16,
+      color: themeColors.accent,
       fontWeight: '700',
-      
+      marginLeft: 8,
     },
   });
 

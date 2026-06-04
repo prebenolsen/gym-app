@@ -23,6 +23,7 @@ import CalendarScreen from './screens/CalendarScreen';
 import WorkoutHistoryDetailScreen from './screens/WorkoutHistoryDetailScreen';
 import AuthScreen from './screens/AuthScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import WeightTrackerScreen from './screens/WeightTrackerScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { PreferencesProvider, usePreferences } from './context/PreferencesContext';
 import { useApi } from './hooks/useApi';
@@ -69,6 +70,8 @@ const SCREEN_FILE_NAME_BY_ROUTE: Record<string, string> = {
   WorkoutHistoryDetail: 'WorkoutHistoryDetailScreen.tsx',
   Settings: 'SettingsScreen.tsx',
   Auth: 'AuthScreen.tsx',
+  WeightTrackerStack: 'WeightTrackerScreen.tsx',
+  WeightTracker: 'WeightTrackerScreen.tsx',
 };
 
 const getDeepestActiveRouteName = (state: NestedNavigationState): string => {
@@ -118,6 +121,14 @@ const ActiveWorkoutStackNavigator = () => {
       <Stack.Screen name="ActiveWorkout" component={ActiveWorkoutScreen} />
       <Stack.Screen name="ExerciseHistory" component={ExerciseHistoryScreen} />
       <Stack.Screen name="ExerciseNotes" component={ExerciseNotesScreen} />
+    </Stack.Navigator>
+  );
+};
+
+const WeightTrackerStackNavigator = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="WeightTracker" component={WeightTrackerScreen} />
     </Stack.Navigator>
   );
 };
@@ -308,6 +319,13 @@ const AppRoutes = () => {
                   />
                 </View>
               ),
+            }}
+          />
+          <Tab.Screen
+            name="WeightTrackerStack"
+            component={WeightTrackerStackNavigator}
+            options={{
+              tabBarButton: () => null,
             }}
           />
           <Tab.Screen

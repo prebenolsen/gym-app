@@ -15,7 +15,7 @@ import { usePreferences } from '../context/PreferencesContext';
 const ExerciseNotesScreen = ({ route, navigation }: any) => {
   const { exerciseId, exerciseName } = route.params;
   const api = useApi();
-  const { colors: themeColors } = usePreferences();
+  const { colors: themeColors, formatDateOnly } = usePreferences();
   const styles = createStyles(themeColors);
 
   const [loading, setLoading] = useState(true);
@@ -70,7 +70,8 @@ const ExerciseNotesScreen = ({ route, navigation }: any) => {
   };
 
   const insertDate = () => {
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const today = new Date();
+    const formattedDate = formatDateOnly(today.toISOString());
     const currentText = notes;
 
     // Check if current line is empty
@@ -79,10 +80,10 @@ const ExerciseNotesScreen = ({ route, navigation }: any) => {
 
     if (lastLine.trim() === '') {
       // Current line is empty, just insert the date
-      setNotes(currentText + today + '\n');
+      setNotes(currentText + formattedDate + '\n');
     } else {
       // Current line is not empty, insert blank line then date
-      setNotes(currentText + '\n' + today + '\n');
+      setNotes(currentText + '\n' + formattedDate + '\n');
     }
   };
 

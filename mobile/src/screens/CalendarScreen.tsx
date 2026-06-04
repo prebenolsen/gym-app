@@ -74,7 +74,7 @@ const getCalendarCells = (monthDate: Date): CalendarDayCell[] => {
 
 const CalendarScreen = ({ navigation }: any) => {
   const api = useApi();
-  const { colors: themeColors } = usePreferences();
+  const { colors: themeColors, formatDateOnly } = usePreferences();
   const styles = createStyles(themeColors);
   const [monthDate, setMonthDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -216,7 +216,7 @@ const CalendarScreen = ({ navigation }: any) => {
 
           <View style={styles.listHeaderBlock}>
             <Text style={styles.listTitle}>Workouts</Text>
-            <Text style={styles.listSubtitle}>{selectedDayKey}</Text>
+            <Text style={styles.listSubtitle}>{formatDateOnly(selectedDate.toISOString())}</Text>
           </View>
 
           {workoutsForSelectedDay.length === 0 ? (

@@ -1384,6 +1384,507 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// === WEIGHT TRACKER ===
+
+const resolveActiveGoalId = async (userId: string): Promise<string | null> => {
+  const { data: profile } = await supabase
+    .from('weight_tracker_profile')
+    .select('active_goal_id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (profile?.active_goal_id) {
+    return profile.active_goal_id;
+  }
+
+  const { data: activeGoal } = await supabase
+    .from('weight_tracker_goals')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  return activeGoal?.id ?? null;
+};
+
+app.get('/weight-tracker/profile', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('weight_tracker_profile')
+      .select('*')
+      .eq('user_id', req.userId)
+      .maybeSingle();
+
+    if (error) throw error;
+    res.json(data); // null when no profile exists yet
+  } catch (err: unknown) {
+    res.status(500).json({ error: formatError(err) });
+  }
+});
+
+app.post('/weight-tracker/profile', async (req, res) => {
+  try {
+    const ALLOWED = [
+      'gender', 'age', 'birthdate', 'height_cm', 'default_weight_kg',
+      'bmr_formula', 'activity_level',
+      'show_weight', 'show_steps', 'show_calories',
+      'onboarding_complete', 'active_goal_id',
+    ];
+
+    const payload: Record<string, unknown> = {
+      user_id: req.userId,
+      updated_at: new Date().toISOString(),
+    };
+
+    for (const field of ALLOWED) {
+      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+        payload[field] = req.body[field];
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('weight_tracker_profile')
+      .upsert(payload, { onConflict: 'user_id' })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err: unknown) {
+    res.status(500).json({ error: formatError(err) });
+  }
+});
+
+app.get('/weight-tracker/goals', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('weight_tracker_goals')
+      .select('*')
+      .eq('user_id', req.userId)
+      .order('started_on', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err: unknown) {
+    res.status(500).json({ error: formatError(err) });
+  }
+});
+
+app.post('/weight-tracker/goals', async (req, res) => {
+  try {
+    const {
+      goal_type = 'track',
+      weekly_target_kg = null,
+      started_on,
+      start_weight_kg = null,
+    } = req.body;
+
+    if (!['lose', 'gain', 'track'].includes(goal_type)) {
+      res.status(400).json({ error: 'goal_type must be lose, gain, or track' });
+      return;
+    }
+
+    if (!started_on || typeof started_on !== 'string') {
+      res.status(400).json({ error: 'started_on is required' });
+      return;
+    }
+
+    const { error: deactivateError } = await supabase
+      .from('weight_tracker_goals')
+      .update({
+        is_active: false,
+        ended_on: started_on,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', req.userId)
+      .eq('is_active', true);
+
+    if (deactivateError) throw deactivateError;
+
+    const { data: createdGoal, error: createError } = await supabase
+      .from('weight_tracker_goals')
+      .insert({
+        user_id: req.userId,
+        goal_type,
+        weekly_target_kg,
+        started_on,
+        start_weight_kg,
+        is_active: true,
+        updated_at: new Date().toISOString(),
+      })
+      .select('*')
+      .single();
+
+    if (createError) throw createError;
+
+    const { error: profileError } = await supabase
+      .from('weight_tracker_profile')
+      .upsert(
+        {
+          user_id: req.userId,
+          active_goal_id: createdGoal.id,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id' },
+      );
+
+    if (profileError) throw profileError;
+    res.status(201).json(createdGoal);
+  } catch (err: unknown) {
+    res.status(500).json({ error: formatError(err) });
+  }
+});
+
+app.post('/weight-tracker/goals/:goalId/activate', async (req, res) => {
+  try {
+    const { goalId } = req.params;
+
+    const { data: targetGoal, error: targetError } = await supabase
+      .from('weight_tracker_goals')
+      .select('*')
+      .eq('id', goalId)
+      .eq('user_id', req.userId)
+      .single();
+    if (targetError) throw targetError;
+
+    const today = new Date().toISOString().split('T')[0];
+
+    const { error: deactivateError } = await supabase
+      .from('weight_tracker_goals')
+      .update({
+        is_active: false,
+        ended_on: today,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', req.userId)
+      .eq('is_active', true)
+      .neq('id', goalId);
+    if (deactivateError) throw deactivateError;
+
+    const { data: activatedGoal, error: activateError } = await supabase
+      .from('weight_tracker_goals')
+      .update({
+        is_active: true,
+        ended_on: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', goalId)
+      .eq('user_id', req.userId)
+      .select('*')
+      .single();
+    if (activateError) throw activateError;
+
+    const { error: profileError } = await supabase
+      .from('weight_tracker_profile')
+      .upsert(
+        {
+          user_id: req.userId,
+          active_goal_id: activatedGoal.id,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id' },
+      );
+    if (profileError) throw profileError;
+
+    res.json(activatedGoal ?? targetGoal);
+  } catch (err: unknown) {
+    res.status(500).json({ error: formatError(err) });
+  }
+});
+
+app.get('/weight-tracker/entries', async (req, res) => {
+  try {
+    const explicitGoalId = req.query.goalId ? String(req.query.goalId) : null;
+    const resolvedGoalId = explicitGoalId ?? (await resolveActiveGoalId(req.userId));
+    if (!resolvedGoalId) {
+      res.json([]);
+      return;
+    }
+
+    const daysParam = req.query.days ? parseInt(String(req.query.days), 10) : 365;
+    const days = Number.isNaN(daysParam) || daysParam <= 0 ? 365 : daysParam;
+
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const cutoffDate = cutoff.toISOString().split('T')[0];
+
+    const { data, error } = await supabase
+      .from('weight_tracker_entries')
+      .select('*')
+      .eq('user_id', req.userId)
+      .eq('goal_id', resolvedGoalId)
+      .gte('entry_date', cutoffDate)
+      .order('entry_date', { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err: unknown) {
+    res.status(500).json({ error: formatError(err) });
+  }
+});
+
+app.post('/weight-tracker/entries', async (req, res) => {
+  try {
+    const { entry_date, goal_id, weight_kg, steps, calories } = req.body;
+
+    if (!entry_date || typeof entry_date !== 'string') {
+      res.status(400).json({ error: 'entry_date is required' });
+      return;
+    }
+
+    const resolvedGoalId =
+      (typeof goal_id === 'string' && goal_id) || (await resolveActiveGoalId(req.userId));
+    if (!resolvedGoalId) {
+      res.status(400).json({ error: 'No active goal found. Create a goal first.' });
+      return;
+    }
+
+    const payload: Record<string, unknown> = {
+      user_id: req.userId,
+      goal_id: resolvedGoalId,
+      entry_date,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (weight_kg !== undefined) {
+      payload.weight_kg =
+        weight_kg === null || weight_kg === ''
+          ? null
+          : normalizeWeightToDotDecimal(weight_kg);
+    }
+    if (steps !== undefined) payload.steps = steps === '' ? null : steps;
+    if (calories !== undefined) payload.calories = calories === '' ? null : calories;
+
+    const { data, error } = await supabase
+      .from('weight_tracker_entries')
+      .upsert(payload, { onConflict: 'user_id,goal_id,entry_date' })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err: unknown) {
+    res.status(500).json({ error: formatError(err) });
+  }
+});
+
+app.delete('/weight-tracker/entries/:entryDate', async (req, res) => {
+  try {
+    const { entryDate } = req.params;
+    const explicitGoalId = req.query.goalId ? String(req.query.goalId) : null;
+    const resolvedGoalId = explicitGoalId ?? (await resolveActiveGoalId(req.userId));
+    if (!resolvedGoalId) {
+      res.status(400).json({ error: 'No active goal found. Create a goal first.' });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('weight_tracker_entries')
+      .delete()
+      .eq('user_id', req.userId)
+      .eq('goal_id', resolvedGoalId)
+      .eq('entry_date', entryDate);
+
+    if (error) throw error;
+    res.status(204).send();
+  } catch (err: unknown) {
+    res.status(500).json({ error: formatError(err) });
+  }
+});
+
+
+app.delete('/weight-tracker/reset', async (req, res) => {
+  try {
+    const { error: valuesError } = await supabase
+      .from('weight_tracker_custom_metric_values')
+      .delete()
+      .eq('user_id', req.userId);
+    if (valuesError) throw valuesError;
+
+    const { error: metricsError } = await supabase
+      .from('weight_tracker_custom_metrics')
+      .delete()
+      .eq('user_id', req.userId);
+    if (metricsError) throw metricsError;
+
+    const { error: entriesError } = await supabase
+      .from('weight_tracker_entries')
+      .delete()
+      .eq('user_id', req.userId);
+    if (entriesError) throw entriesError;
+
+    const { error: goalsError } = await supabase
+      .from('weight_tracker_goals')
+      .delete()
+      .eq('user_id', req.userId);
+    if (goalsError) throw goalsError;
+
+    const { error: profileError } = await supabase
+      .from('weight_tracker_profile')
+      .delete()
+      .eq('user_id', req.userId);
+    if (profileError) throw profileError;
+
+    res.status(204).send();
+  } catch (err: unknown) {
+    res.status(500).json({ error: formatError(err) });
+  }
+});
+
+// === WEIGHT TRACKER CUSTOM METRICS ===
+
+app.get('/weight-tracker/custom-metrics', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('weight_tracker_custom_metrics')
+      .select('*')
+      .eq('user_id', req.userId)
+      .order('order', { ascending: true });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err: unknown) {
+    res.status(500).json({ error: formatError(err) });
+  }
+});
+
+app.post('/weight-tracker/custom-metrics', async (req, res) => {
+  try {
+    const { name, type } = req.body;
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      res.status(400).json({ error: 'name is required' });
+      return;
+    }
+    if (!['boolean', 'integer', 'decimal'].includes(type)) {
+      res.status(400).json({ error: 'type must be boolean, integer, or decimal' });
+      return;
+    }
+
+    const { count } = await supabase
+      .from('weight_tracker_custom_metrics')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', req.userId);
+
+    if ((count ?? 0) >= 3) {
+      res.status(400).json({ error: 'Maximum 3 custom metrics allowed' });
+      return;
+    }
+
+    const { data: existing } = await supabase
+      .from('weight_tracker_custom_metrics')
+      .select('order')
+      .eq('user_id', req.userId)
+      .order('order', { ascending: false })
+      .limit(1);
+
+    const nextOrder = ((existing && existing[0]?.order) || 0) + 1;
+
+    const { data, error } = await supabase
+      .from('weight_tracker_custom_metrics')
+      .insert({ user_id: req.userId, name: name.trim(), type, order: nextOrder })
+      .select()
+      .single();
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err: unknown) {
+    res.status(500).json({ error: formatError(err) });
+  }
+});
+
+app.delete('/weight-tracker/custom-metrics/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase
+      .from('weight_tracker_custom_metrics')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', req.userId);
+    if (error) throw error;
+    res.status(204).send();
+  } catch (err: unknown) {
+    res.status(500).json({ error: formatError(err) });
+  }
+});
+
+app.get('/weight-tracker/custom-metric-values', async (req, res) => {
+  try {
+    const explicitGoalId = req.query.goalId ? String(req.query.goalId) : null;
+    const resolvedGoalId = explicitGoalId ?? (await resolveActiveGoalId(req.userId));
+    if (!resolvedGoalId) {
+      res.json([]);
+      return;
+    }
+
+    const daysParam = req.query.days ? parseInt(String(req.query.days), 10) : 365;
+    const days = Number.isNaN(daysParam) || daysParam <= 0 ? 365 : daysParam;
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const cutoffDate = cutoff.toISOString().split('T')[0];
+
+    const { data, error } = await supabase
+      .from('weight_tracker_custom_metric_values')
+      .select('*')
+      .eq('user_id', req.userId)
+      .eq('goal_id', resolvedGoalId)
+      .gte('entry_date', cutoffDate)
+      .order('entry_date', { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err: unknown) {
+    res.status(500).json({ error: formatError(err) });
+  }
+});
+
+app.post('/weight-tracker/custom-metric-values', async (req, res) => {
+  try {
+    const {
+      goal_id,
+      entry_date,
+      metric_id,
+      value_boolean,
+      value_integer,
+      value_decimal,
+    } = req.body;
+    if (!entry_date || typeof entry_date !== 'string') {
+      res.status(400).json({ error: 'entry_date is required' });
+      return;
+    }
+    if (!metric_id || typeof metric_id !== 'string') {
+      res.status(400).json({ error: 'metric_id is required' });
+      return;
+    }
+
+    const resolvedGoalId =
+      (typeof goal_id === 'string' && goal_id) || (await resolveActiveGoalId(req.userId));
+    if (!resolvedGoalId) {
+      res.status(400).json({ error: 'No active goal found. Create a goal first.' });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('weight_tracker_custom_metric_values')
+      .upsert(
+        {
+          user_id: req.userId,
+          goal_id: resolvedGoalId,
+          entry_date,
+          metric_id,
+          value_boolean: value_boolean ?? null,
+          value_integer: value_integer ?? null,
+          value_decimal: value_decimal ?? null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id,goal_id,entry_date,metric_id' },
+      )
+      .select()
+      .single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err: unknown) {
+    res.status(500).json({ error: formatError(err) });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`GymApp backend running on port ${PORT}`);

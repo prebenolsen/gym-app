@@ -23,7 +23,7 @@ import {
 } from '@gym-app/shared';
 import NumberSpinner from '../components/NumberSpinner';
 import { useApi } from '../hooks/useApi';
-import { colors, radius, shadow } from '../theme';
+import { colors, getButtonStyles, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
 import MuscleMapThumb from '../components/MuscleMapThumb';
 
@@ -511,17 +511,11 @@ const createStyles = (themeColors: typeof colors) =>
       
     },
     startWorkoutButton: {
-      backgroundColor: themeColors.accent,
-      borderRadius: radius.sm,
+      ...getButtonStyles(themeColors).mainButton,
       width: '100%',
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      alignItems: 'center',
     },
     startWorkoutButtonText: {
-      color: '#fff',
-      fontWeight: '700',
-      fontSize: 14,
+      ...getButtonStyles(themeColors).mainButtonText,
     },
     section: {
       flex: 1,
@@ -558,12 +552,8 @@ const createStyles = (themeColors: typeof colors) =>
       backgroundColor: themeColors.surface,
     },
     btnPrimary: {
-      backgroundColor: themeColors.accent,
+      ...getButtonStyles(themeColors).mainButton,
       paddingHorizontal: 12,
-      paddingVertical: 12,
-      borderRadius: radius.sm,
-      justifyContent: 'center',
-      alignItems: 'center',
     },
     btnPrimaryDisabled: {
       opacity: 0.55,
@@ -573,10 +563,7 @@ const createStyles = (themeColors: typeof colors) =>
       marginBottom: 16,
     },
     btnText: {
-      color: '#fff',
-      fontWeight: '600',
-      fontSize: 12,
-      
+      ...getButtonStyles(themeColors).mainButtonText,
     },
     list: {
       flex: 1,
@@ -688,21 +675,15 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.accent,
     },
     deleteButton: {
-      backgroundColor: themeColors.danger,
+      ...getButtonStyles(themeColors).deleteButton,
       paddingHorizontal: 12,
-      paddingVertical: 12,
-      borderRadius: radius.sm,
-      alignItems: 'center',
     },
     deleteButtonInList: {
       marginTop: 0,
       marginBottom: 20,
     },
     deleteButtonText: {
-      color: '#fff',
-      fontWeight: '700',
-      fontSize: 12,
-      
+      ...getButtonStyles(themeColors).deleteButtonText,
     },
     bottomActions: {
       paddingHorizontal: 16,

@@ -12,18 +12,6 @@ import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
 
-const formatDate = (isoString: string): string => {
-  const date = new Date(isoString);
-  return date
-    .toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-    .toUpperCase();
-};
-
 const formatTime = (isoString: string): string => {
   const date = new Date(isoString);
   return date.toLocaleTimeString('en-US', {
@@ -45,7 +33,7 @@ const formatDuration = (startIso: string, endIso: string | null): string => {
 
 const WorkoutHistoryDetailScreen = ({ route, navigation }: any) => {
   const api = useApi();
-  const { colors: themeColors, unit, convertFromKg } = usePreferences();
+  const { colors: themeColors, unit, convertFromKg, formatDate } = usePreferences();
   const styles = createStyles(themeColors);
   const { sessionId } = route.params;
   const [loading, setLoading] = useState(true);

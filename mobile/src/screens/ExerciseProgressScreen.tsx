@@ -28,7 +28,7 @@ const RANGE_OPTIONS: { key: RangeKey; label: string; days?: number }[] = [
 
 const ExerciseProgressScreen = ({ route, navigation }: any) => {
   const { exerciseId } = route.params;
-  const { unit, convertFromKg, formatWeight, colors: themeColors } = usePreferences();
+  const { unit, convertFromKg, formatWeight, colors: themeColors, formatDateOnly, dateFormat } = usePreferences();
   const styles = createStyles(themeColors);
   const api = useApi();
   const [data, setData] = useState<ExerciseProgressHistory | null>(null);
@@ -64,6 +64,23 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
   const chartData = useMemo(() => {
     if (!hasHistory) return [];
 
+    const formatDateCompact = (dateStr: string): string => {
+      // dateStr is in format YYYY-MM-DD
+      const parts = dateStr.split('-');
+      const year = parts[0];
+      const month = parts[1];
+      const day = parts[2];
+      
+      if (dateFormat === 'eu') {
+        return `${day}/${month}`;
+      } else if (dateFormat === 'us') {
+        return `${month}/${day}`;
+      } else {
+        // 'iso' format
+        return `${month}-${day}`;
+      }
+    };
+
     const stride = Math.max(1, Math.ceil(history.length / 6));
     return history.map((entry, idx) => {
       const rawValue =
@@ -74,11 +91,11 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
 
       return {
         value: Number(rawValue.toFixed(1)),
-        label: showLabel ? entry.date.slice(5) : '',
+        label: showLabel ? formatDateCompact(entry.date) : '',
         dataPointText: Number(rawValue.toFixed(1)).toString(),
       };
     });
-  }, [hasHistory, history, viewMode, convertFromKg]);
+  }, [hasHistory, history, viewMode, convertFromKg, dateFormat]);
 
   const maxChartValue = useMemo(() => {
     if (chartData.length === 0) return 1;
@@ -288,7 +305,7 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
                   style={[styles.tableRow, idx % 2 === 0 && styles.tableRowEven]}
                 >
                   <Text style={[styles.tableCell, { flex: 1.5 }]}>
-                    {entry.date.slice(5)}
+                    {formatDateOnly(`${entry.date}T00:00:00Z`)}
                   </Text>
                   <Text style={styles.tableCell}>
                     {convertFromKg(entry.max_weight).toFixed(1)}

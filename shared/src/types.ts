@@ -170,3 +170,133 @@ export interface ExerciseProgressHistory {
   exercise_name: string;
   history: ExerciseProgressEntry[];
 }
+
+// ─────────────────────────────────────────────────────────────
+// Weight Tracker
+// ─────────────────────────────────────────────────────────────
+
+export type WeightTrackerGender = 'male' | 'female';
+export type WeightTrackerGoal = 'lose' | 'gain' | 'track';
+export type WeightTrackerBmrFormula = 'mifflin_st_jeor' | 'harris_benedict' | 'katch_mcardle';
+export type WeightTrackerActivityLevel =
+  | 'sedentary'
+  | 'lightly_active'
+  | 'moderately_active'
+  | 'very_active'
+  | 'extremely_active';
+
+export interface WeightTrackerProfile {
+  id: string;
+  user_id: string;
+  gender: WeightTrackerGender | null;
+  age: number | null;
+  birthdate: string | null;
+  height_cm: number | null;
+  default_weight_kg: number | null;
+  bmr_formula: WeightTrackerBmrFormula;
+  activity_level: WeightTrackerActivityLevel | null;
+  show_weight: boolean;
+  show_steps: boolean;
+  show_calories: boolean;
+  onboarding_complete: boolean;
+  active_goal_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WeightTrackerGoalProject {
+  id: string;
+  user_id: string;
+  goal_type: WeightTrackerGoal;
+  weekly_target_kg: number | null;
+  started_on: string;
+  ended_on: string | null;
+  start_weight_kg: number | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WeightTrackerEntry {
+  id: string;
+  user_id: string;
+  goal_id: string;
+  entry_date: string;
+  weight_kg: number | null;
+  steps: number | null;
+  calories: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UpsertWeightTrackerProfileRequest {
+  gender?: WeightTrackerGender | null;
+  age?: number | null;
+  birthdate?: string | null;
+  height_cm?: number | null;
+  default_weight_kg?: number | null;
+  bmr_formula?: WeightTrackerBmrFormula;
+  activity_level?: WeightTrackerActivityLevel | null;
+  show_weight?: boolean;
+  show_steps?: boolean;
+  show_calories?: boolean;
+  onboarding_complete?: boolean;
+  active_goal_id?: string | null;
+}
+
+export interface CreateWeightTrackerGoalProjectRequest {
+  goal_type: WeightTrackerGoal;
+  weekly_target_kg?: number | null;
+  started_on: string;
+  start_weight_kg?: number | null;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Weight Tracker Custom Metrics
+// ─────────────────────────────────────────────────────────────
+
+export type WeightTrackerCustomMetricType = 'boolean' | 'integer' | 'decimal';
+
+export interface WeightTrackerCustomMetric {
+  id: string;
+  user_id: string;
+  name: string;
+  type: WeightTrackerCustomMetricType;
+  order: number;
+  created_at: string;
+}
+
+export interface WeightTrackerCustomMetricValue {
+  id: string;
+  user_id: string;
+  goal_id: string;
+  entry_date: string;
+  metric_id: string;
+  value_boolean: boolean | null;
+  value_integer: number | null;
+  value_decimal: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateWeightTrackerCustomMetricRequest {
+  name: string;
+  type: WeightTrackerCustomMetricType;
+}
+
+export interface UpsertCustomMetricValueRequest {
+  goal_id: string;
+  entry_date: string;
+  metric_id: string;
+  value_boolean?: boolean | null;
+  value_integer?: number | null;
+  value_decimal?: number | null;
+}
+
+export interface UpsertWeightTrackerEntryRequest {
+  goal_id?: string;
+  entry_date: string;
+  weight_kg?: number | null;
+  steps?: number | null;
+  calories?: number | null;
+}

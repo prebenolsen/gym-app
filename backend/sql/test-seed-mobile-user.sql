@@ -24,6 +24,10 @@ begin
 
   -- Delete in child-first order for clean reseeding of this one user.
   delete from exercise_notes where user_id = uid;
+  delete from weight_tracker_custom_metric_values where user_id = uid;
+  delete from weight_tracker_custom_metrics where user_id = uid;
+  delete from weight_tracker_entries where user_id = uid;
+  delete from weight_tracker_profile where user_id = uid;
   delete from workout_session_sets where user_id = uid;
   delete from workout_sessions where user_id = uid;
   delete from exercises where user_id = uid;
@@ -61,6 +65,153 @@ lateral (
     ('Legs', 'Walking Lunge', 3, 60, 3)
 ) as ex(w_name, name, sets, rest, ordering)
 where w.name = ex.w_name;
+
+insert into weight_tracker_profile (user_id, onboarding_complete)
+values (current_setting('app.seed_uid'), true)
+on conflict (user_id)
+do update set
+  onboarding_complete = excluded.onboarding_complete,
+  updated_at = now();
+
+insert into weight_tracker_entries (user_id, entry_date, weight_kg, steps)
+values
+  (current_setting('app.seed_uid'), date '2026-04-12', 82.7, 4400),
+  (current_setting('app.seed_uid'), date '2026-04-13', 82.7, 6200),
+  (current_setting('app.seed_uid'), date '2026-04-14', 82.4, 7800),
+  (current_setting('app.seed_uid'), date '2026-04-15', 81.9, 7600),
+  (current_setting('app.seed_uid'), date '2026-04-16', 81.4, 8300),
+  (current_setting('app.seed_uid'), date '2026-04-17', 82.0, 6200),
+  (current_setting('app.seed_uid'), date '2026-04-18', 81.7, 7100),
+  (current_setting('app.seed_uid'), date '2026-04-19', 82.0, 9000),
+  (current_setting('app.seed_uid'), date '2026-04-20', 82.0, 15000),
+  (current_setting('app.seed_uid'), date '2026-04-21', 81.5, 12000),
+  (current_setting('app.seed_uid'), date '2026-04-22', 81.4, 14000),
+  (current_setting('app.seed_uid'), date '2026-04-23', 81.4, 13800),
+  (current_setting('app.seed_uid'), date '2026-04-24', 80.5, 10000),
+  (current_setting('app.seed_uid'), date '2026-04-25', 80.5, 9200),
+  (current_setting('app.seed_uid'), date '2026-04-26', 80.5, 2600),
+  (current_setting('app.seed_uid'), date '2026-04-27', 81.5, 13000),
+  (current_setting('app.seed_uid'), date '2026-04-28', 81.5, 11800),
+  (current_setting('app.seed_uid'), date '2026-04-29', 81.5, 5800),
+  (current_setting('app.seed_uid'), date '2026-04-30', 81.5, 5200),
+  (current_setting('app.seed_uid'), date '2026-05-01', 81.9, 6200),
+  (current_setting('app.seed_uid'), date '2026-05-02', 81.9, 8000),
+  (current_setting('app.seed_uid'), date '2026-05-03', 81.9, 900),
+  (current_setting('app.seed_uid'), date '2026-05-04', 81.9, 11000),
+  (current_setting('app.seed_uid'), date '2026-05-05', 82.3, 13500),
+  (current_setting('app.seed_uid'), date '2026-05-06', 81.9, 16300),
+  (current_setting('app.seed_uid'), date '2026-05-07', 81.1, 6000),
+  (current_setting('app.seed_uid'), date '2026-05-08', 81.1, 8100),
+  (current_setting('app.seed_uid'), date '2026-05-09', 80.6, 4000),
+  (current_setting('app.seed_uid'), date '2026-05-10', 81.1, 7700),
+  (current_setting('app.seed_uid'), date '2026-05-11', 81.6, 23000),
+  (current_setting('app.seed_uid'), date '2026-05-12', 81.1, 10000),
+  (current_setting('app.seed_uid'), date '2026-05-13', 80.3, 4000),
+  (current_setting('app.seed_uid'), date '2026-05-14', 80.6, 3000),
+  (current_setting('app.seed_uid'), date '2026-05-15', 80.9, 10400),
+  (current_setting('app.seed_uid'), date '2026-05-16', 80.6, 7600),
+  (current_setting('app.seed_uid'), date '2026-05-17', 80.6, 900),
+  (current_setting('app.seed_uid'), date '2026-05-18', 80.6, 6500),
+  (current_setting('app.seed_uid'), date '2026-05-19', 82.3, 12000),
+  (current_setting('app.seed_uid'), date '2026-05-20', 81.1, 9200),
+  (current_setting('app.seed_uid'), date '2026-05-21', 80.5, 9000),
+  (current_setting('app.seed_uid'), date '2026-05-22', 80.5, 8700),
+  (current_setting('app.seed_uid'), date '2026-05-23', 80.8, 7000),
+  (current_setting('app.seed_uid'), date '2026-05-24', 80.8, 6100),
+  (current_setting('app.seed_uid'), date '2026-05-25', 80.4, 5500),
+  (current_setting('app.seed_uid'), date '2026-05-26', 80.4, 14600),
+  (current_setting('app.seed_uid'), date '2026-05-27', 80.0, 16400),
+  (current_setting('app.seed_uid'), date '2026-05-28', 80.0, 13200),
+  (current_setting('app.seed_uid'), date '2026-05-29', 80.0, 12200),
+  (current_setting('app.seed_uid'), date '2026-05-30', 80.5, 7100),
+  (current_setting('app.seed_uid'), date '2026-05-31', 80.3, 8800),
+  (current_setting('app.seed_uid'), date '2026-06-01', 79.7, 5400),
+  (current_setting('app.seed_uid'), date '2026-06-02', 79.2, 9600),
+  (current_setting('app.seed_uid'), date '2026-06-03', 79.8, 7300)
+on conflict (user_id, entry_date)
+do update set
+  weight_kg = excluded.weight_kg,
+  steps = excluded.steps,
+  updated_at = now();
+
+with upsert_metric as (
+  insert into weight_tracker_custom_metrics (user_id, name, type, "order")
+  values (current_setting('app.seed_uid'), 'Good day', 'boolean', 1)
+  on conflict (user_id, name)
+  do update set
+    type = excluded.type,
+    "order" = excluded."order"
+  returning id
+)
+insert into weight_tracker_custom_metric_values (user_id, entry_date, metric_id, value_boolean)
+select
+  current_setting('app.seed_uid'),
+  v.entry_date,
+  m.id,
+  v.value_boolean
+from upsert_metric m
+cross join (
+  values
+    (date '2026-04-12', true),
+    (date '2026-04-13', true),
+    (date '2026-04-14', true),
+    (date '2026-04-15', true),
+    (date '2026-04-16', true),
+    (date '2026-04-17', false),
+    (date '2026-04-18', false),
+    (date '2026-04-19', true),
+    (date '2026-04-20', true),
+    (date '2026-04-21', false),
+    (date '2026-04-22', true),
+    (date '2026-04-23', true),
+    (date '2026-04-24', true),
+    (date '2026-04-25', false),
+    (date '2026-04-26', false),
+    (date '2026-04-27', true),
+    (date '2026-04-28', false),
+    (date '2026-04-29', true),
+    (date '2026-04-30', false),
+    (date '2026-05-01', false),
+    (date '2026-05-02', false),
+    (date '2026-05-03', false),
+    (date '2026-05-04', true),
+    (date '2026-05-05', true),
+    (date '2026-05-06', true),
+    (date '2026-05-07', true),
+    (date '2026-05-08', false),
+    (date '2026-05-09', false),
+    (date '2026-05-10', false),
+    (date '2026-05-11', true),
+    (date '2026-05-12', true),
+    (date '2026-05-13', true),
+    (date '2026-05-14', true),
+    (date '2026-05-15', true),
+    (date '2026-05-16', false),
+    (date '2026-05-17', false),
+    (date '2026-05-18', true),
+    (date '2026-05-19', true),
+    (date '2026-05-20', true),
+    (date '2026-05-21', true),
+    (date '2026-05-22', true),
+    (date '2026-05-23', true),
+    (date '2026-05-24', true),
+    (date '2026-05-25', true),
+    (date '2026-05-26', true),
+    (date '2026-05-27', true),
+    (date '2026-05-28', true),
+    (date '2026-05-29', false),
+    (date '2026-05-30', true),
+    (date '2026-05-31', true),
+    (date '2026-06-01', true),
+    (date '2026-06-02', false),
+    (date '2026-06-03', true)
+) as v(entry_date, value_boolean)
+on conflict (user_id, entry_date, metric_id)
+do update set
+  value_boolean = excluded.value_boolean,
+  value_integer = null,
+  value_decimal = null,
+  updated_at = now();
 
 do $$
 declare
@@ -225,3 +376,4 @@ begin
 end $$;
 
 commit;
+
