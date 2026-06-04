@@ -55,21 +55,20 @@ export const useApi = () => {
   return useMemo(
     () =>
       new ApiClient(API_BASE_URL, async () => {
-        if (session?.access_token) {
-          return session.access_token;
-        }
-
         const { data, error } = await supabase.auth.getSession();
         if (error) {
           console.error('Failed to load mobile auth token for API request:', error);
-          return null;
+          // Fallback to context token if session lookup fails.
+          return session?.access_token ?? null;
         }
 
-        if (!data.session?.access_token) {
+        const freshestToken = data.session?.access_token ?? session?.access_token ?? null;
+
+        if (!freshestToken) {
           console.warn('API request is missing a Supabase access token during startup.');
         }
 
-        return data.session?.access_token ?? null;
+        return freshestToken;
       }),
     [session?.access_token],
   );

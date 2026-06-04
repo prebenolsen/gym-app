@@ -11,12 +11,19 @@ select set_config('app.seed_reset', 'true', false);
 
 do $$
 declare
-  uid uuid := current_setting('app.seed_uid', true)::uuid;
+  uid_raw text := nullif(trim(current_setting('app.seed_uid', true)), '');
+  uid uuid;
   do_reset boolean := coalesce(current_setting('app.seed_reset', true), 'false') = 'true';
 begin
-  if uid is null or uid = '' then
+  if uid_raw is null then
     raise exception 'app.seed_uid is not set';
   end if;
+
+  begin
+    uid := uid_raw::uuid;
+  exception when invalid_text_representation then
+    raise exception 'app.seed_uid must be a valid UUID';
+  end;
 
   if not do_reset then
     return;
@@ -264,7 +271,8 @@ do update set
 
 do $$
 declare
-  uid text := current_setting('app.seed_uid', true);
+  uid_raw text := nullif(trim(current_setting('app.seed_uid', true)), '');
+  uid uuid;
   total_sessions constant int := 52;
 
   session_id uuid;
@@ -296,9 +304,15 @@ declare
   set_num int;
   cur_weight numeric;
 begin
-  if uid is null or uid = '' then
+  if uid_raw is null then
     raise exception 'app.seed_uid is not set';
   end if;
+
+  begin
+    uid := uid_raw::uuid;
+  exception when invalid_text_representation then
+    raise exception 'app.seed_uid must be a valid UUID';
+  end;
 
   for session_num in 0..(total_sessions - 1) loop
     select * into w
