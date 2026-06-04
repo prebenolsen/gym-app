@@ -882,21 +882,36 @@ app.get('/workouts/history/by-date', async (req, res) => {
 
     if (error) throw error;
 
-    // Enrich with workout names
-    const enriched = await Promise.all(
-      (sessions || []).map(async (session: any) => {
-        const { data: workout } = await supabase
-          .from('workouts')
-          .select('name')
-          .eq('id', session.workout_id)
-          .single();
+    const workoutIds = [
+      ...new Set(
+        (sessions || [])
+          .map((session: any) => session.workout_id)
+          .filter((workoutId: unknown): workoutId is string =>
+            typeof workoutId === 'string' && workoutId.length > 0,
+          ),
+      ),
+    ];
 
-        return {
-          ...session,
-          workout_name: workout?.name || 'Unknown',
-        };
-      }),
-    );
+    let workoutNameById = new Map<string, string>();
+
+    if (workoutIds.length > 0) {
+      const { data: workouts, error: workoutsError } = await supabase
+        .from('workouts')
+        .select('id, name')
+        .in('id', workoutIds)
+        .eq('user_id', req.userId);
+
+      if (workoutsError) throw workoutsError;
+
+      workoutNameById = new Map(
+        (workouts || []).map((workout) => [workout.id, workout.name]),
+      );
+    }
+
+    const enriched = (sessions || []).map((session: any) => ({
+      ...session,
+      workout_name: workoutNameById.get(session.workout_id) || 'Unknown',
+    }));
 
     res.json(enriched);
   } catch (err: unknown) {
@@ -935,21 +950,36 @@ app.get('/workouts/history/by-month', async (req, res) => {
 
     if (error) throw error;
 
-    // Enrich with workout names
-    const enriched = await Promise.all(
-      (sessions || []).map(async (session: any) => {
-        const { data: workout } = await supabase
-          .from('workouts')
-          .select('name')
-          .eq('id', session.workout_id)
-          .single();
+    const workoutIds = [
+      ...new Set(
+        (sessions || [])
+          .map((session: any) => session.workout_id)
+          .filter((workoutId: unknown): workoutId is string =>
+            typeof workoutId === 'string' && workoutId.length > 0,
+          ),
+      ),
+    ];
 
-        return {
-          ...session,
-          workout_name: workout?.name || 'Unknown',
-        };
-      }),
-    );
+    let workoutNameById = new Map<string, string>();
+
+    if (workoutIds.length > 0) {
+      const { data: workouts, error: workoutsError } = await supabase
+        .from('workouts')
+        .select('id, name')
+        .in('id', workoutIds)
+        .eq('user_id', req.userId);
+
+      if (workoutsError) throw workoutsError;
+
+      workoutNameById = new Map(
+        (workouts || []).map((workout) => [workout.id, workout.name]),
+      );
+    }
+
+    const enriched = (sessions || []).map((session: any) => ({
+      ...session,
+      workout_name: workoutNameById.get(session.workout_id) || 'Unknown',
+    }));
 
     res.json(enriched);
   } catch (err: unknown) {
@@ -981,26 +1011,42 @@ app.get('/workout-sessions/:sessionId/details', async (req, res) => {
       .from('workout_session_sets')
       .select('*')
       .eq('session_id', sessionId)
+      .eq('user_id', req.userId)
       .eq('is_deleted', false)
       .order('set_number', { ascending: true });
 
     if (setsError) throw setsError;
 
-    // Get exercise names for each set
-    const enrichedSets = await Promise.all(
-      (sets || []).map(async (set: any) => {
-        const { data: exercise } = await supabase
-          .from('exercises')
-          .select('name')
-          .eq('id', set.exercise_id)
-          .single();
+    const exerciseIds = [
+      ...new Set(
+        (sets || [])
+          .map((set: any) => set.exercise_id)
+          .filter((exerciseId: unknown): exerciseId is string =>
+            typeof exerciseId === 'string' && exerciseId.length > 0,
+          ),
+      ),
+    ];
 
-        return {
-          ...set,
-          exercise_name: exercise?.name || 'Unknown',
-        };
-      }),
-    );
+    let exerciseNameById = new Map<string, string>();
+
+    if (exerciseIds.length > 0) {
+      const { data: exercises, error: exercisesError } = await supabase
+        .from('exercises')
+        .select('id, name')
+        .in('id', exerciseIds)
+        .eq('user_id', req.userId);
+
+      if (exercisesError) throw exercisesError;
+
+      exerciseNameById = new Map(
+        (exercises || []).map((exercise) => [exercise.id, exercise.name]),
+      );
+    }
+
+    const enrichedSets = (sets || []).map((set: any) => ({
+      ...set,
+      exercise_name: exerciseNameById.get(set.exercise_id) || 'Unknown',
+    }));
 
     res.json({
       session,

@@ -1,0 +1,425 @@
+# Executive Summary
+
+Top 10 issues ranked by impact
+1. CRITICAL: Sensitive secrets (including Supabase service role keys) are committed in repository-level and workspace .env files.
+2. CRITICAL: Broken object-level authorization in backend destructive/reorder endpoints allows cross-tenant modification/deletion by guessed IDs.
+3. HIGH: Direct dependency vulnerability in axios (high severity advisories) and multiple moderate transitive vulnerabilities in Expo/Express chain.
+4. HIGH: Backend N+1 query patterns in history and detail endpoints create severe scalability bottlenecks.
+5. HIGH: Mobile app performs API fan-out storms (program->workouts->exercises + 18 monthly history calls) on focused screens.
+6. HIGH: No transactional boundaries for multi-step destructive/account operations risks partial data deletion and corruption.
+7. HIGH: Active workout session start is race-prone (check-then-insert without DB uniqueness guard).
+8. HIGH: Large full-table scans in stats/progress paths due missing user filters and in-memory joins.
+9. MEDIUM: Monolithic backend architecture (single ~1900-line file) reduces maintainability and increases regression risk.
+10. MEDIUM: Zero automated tests/CI/lint gates; critical user/auth/data flows are unprotected from regressions.
+
+Biggest security risk
+- Committed Supabase service role secret + backend using service-role privileged client. If exposed, attacker can bypass RLS and read/write/delete all tenant data.
+
+Biggest performance risk
+- Combined server and client N+1 API/database patterns causing multiplicative query growth per user action.
+
+Biggest maintainability risk
+- Backend route, business logic, persistence, validation, and error behavior are centralized in one file with weak typing and repeated patterns.
+
+# Critical Findings
+
+[C-01] Secret leakage in repository (.env files contain live credentials)
+- Category: Security / Infrastructure
+- Severity: Critical
+- Impacted code:
+  - .env (detected by security string search)
+  - backend/.env (detected by security string search)
+  - mobile/.env (detected by security string search)
+- Why this is dangerous:
+  - Service role credentials and anon keys are present in tracked workspace files. Service role credentials grant elevated database/admin capability.
+- Attack scenario:
+  - Any actor with repository/workspace access can exfiltrate keys, then call Supabase admin/data APIs directly.
+- Recommended remediation:
+  - Revoke and rotate all exposed keys immediately.
+  - Remove secrets from history and enforce secret scanning pre-commit/CI.
+  - Keep only .env.example placeholders.
+
+[C-02] Broken object-level authorization in destructive endpoints
+- Category: Security / Authorization
+- Severity: Critical
+- Impacted code:
+  - backend/src/index.ts:227
+  - backend/src/index.ts:239
+  - backend/src/index.ts:242
+  - backend/src/index.ts:343
+  - backend/src/index.ts:360
+  - backend/src/index.ts:365
+  - backend/src/index.ts:516
+  - backend/src/index.ts:521
+- Why this is dangerous:
+  - Mutations are performed by foreign-key/id only, without strict user ownership checks in the mutation itself.
+  - Backend uses service-role client (bypasses RLS), so missing filters are not protected by DB policies.
+- Attack scenario:
+  - Attacker guesses another user workout/program UUID and can reorder or delete child records across tenants.
+- Recommended remediation:
+  - Enforce user_id checks on every update/delete and validate parent ownership before child mutation.
+  - Move multi-row operations to SQL RPC with SECURITY DEFINER and strict ownership constraints.
+  - Replace service-role for normal user requests with user JWT context where possible.
+
+[C-03] Privileged backend model amplifies authorization mistakes
+- Category: Security / Architecture
+- Severity: Critical
+- Impacted code:
+  - backend/src/index.ts:17
+  - backend/src/index.ts:18
+- Why this is dangerous:
+  - Service role key is used for all API requests; any missing WHERE user_id predicate becomes cross-tenant exposure.
+- Attack scenario:
+  - A single missed filter in any endpoint enables unauthorized data modifications globally.
+- Recommended remediation:
+  - Use anon key + user JWT for user-level data paths.
+  - Reserve service-role client only for explicit admin tasks in isolated code paths.
+
+# High Severity Findings
+
+[H-01] High-risk dependency vulnerabilities (axios + ecosystem advisories)
+- Category: Security / Dependency Management
+- Severity: High
+- Impacted code:
+  - mobile/package.json:19 (axios ^1.6.2)
+  - npm audit results (root/mobile/backend)
+- Why this is dangerous:
+  - Known advisories include SSRF/no_proxy bypass and prototype pollution gadgets.
+- Attack scenario:
+  - Crafted request/response edge cases in vulnerable client libs can bypass expected network protections.
+- Recommended remediation:
+  - Upgrade axios to >=1.15.2.
+  - Upgrade Expo stack to a patched supported line (audit suggests expo 56.x path, evaluate migration impact).
+  - Add scheduled dependency audit in CI.
+
+[H-02] Backend N+1 lookups for workout/exercise names
+- Category: Performance / Scalability
+- Severity: High
+- Impacted code:
+  - backend/src/index.ts:797
+  - backend/src/index.ts:840
+  - backend/src/index.ts:893
+- Why it is slow:
+  - Each session/set triggers additional single-row lookups (workout/exercise name), creating O(N) network round-trips on top of base query.
+- Concrete fix:
+  - Fetch related names in one query (join/select with foreign relation) or prefetch map by IDs.
+- Example:
+  - Replace per-session `from('workouts').select('name').eq('id', ...)` with one `in('id', workoutIds)` and map locally.
+
+[H-03] Full-table scan risk due missing user filter on set-history queries
+- Category: Database / Performance / Privacy
+- Severity: High
+- Impacted code:
+  - backend/src/index.ts:1100
+  - backend/src/index.ts:1178
+  - backend/src/index.ts:1103
+  - backend/src/index.ts:1194
+- Why it is slow:
+  - Queries on workout_session_sets do not filter by user_id in initial fetch, then filter in memory via session map.
+  - This scales with total table size, not user-specific slice.
+- Attack scenario:
+  - Large datasets degrade response times and may increase accidental metadata exposure risk in logs/errors.
+- Recommended remediation:
+  - Add `.eq('user_id', req.userId)` to these set queries.
+  - Add composite indexes for frequent predicates.
+
+[H-04] Client fan-out API storms on dashboard/program views
+- Category: Performance / Scalability
+- Severity: High
+- Impacted code:
+  - mobile/src/screens/HomeScreen.tsx:37
+  - mobile/src/screens/HomeScreen.tsx:202
+  - mobile/src/screens/HomeScreen.tsx:204
+  - mobile/src/screens/HomeScreen.tsx:233
+  - mobile/src/screens/HomeScreen.tsx:243
+  - mobile/src/screens/ProgramsScreen.tsx:27
+  - mobile/src/screens/ProgramsScreen.tsx:188
+  - mobile/src/screens/ProgramsScreen.tsx:197
+  - mobile/src/screens/ProgramsScreen.tsx:212
+  - mobile/src/screens/ProgramsScreen.tsx:222
+- Why it is slow:
+  - Multiple nested loops and 18 historical month calls per refresh lead to high latency and battery/network cost.
+- Concrete fix:
+  - Add backend aggregated endpoint(s) for dashboard/program summaries.
+  - Cache monthly history in memory and refetch incrementally.
+
+[H-05] Sequential template creation (program/workout/exercise) causes long import latency
+- Category: Performance
+- Severity: High
+- Impacted code:
+  - shared/src/api.ts:148
+  - shared/src/api.ts:160
+  - shared/src/api.ts:166
+  - shared/src/api.ts:201
+  - shared/src/api.ts:213
+- Why it is slow:
+  - Deeply sequential API calls; latency multiplies by item count.
+- Concrete fix:
+  - Use backend bulk import endpoint with transactional insert.
+
+[H-06] Race condition in active-session start (check-then-insert)
+- Category: Reliability / Data Integrity
+- Severity: High
+- Impacted code:
+  - backend/src/index.ts:576
+  - backend/src/index.ts:595
+  - backend/sql/create-all-tables.sql:85
+- Why this is risky:
+  - Two concurrent start requests can pass active-session check and both insert active rows.
+- Recommended remediation:
+  - Add DB partial unique index for one active session per user.
+  - Enforce in transaction/RPC.
+- Example SQL:
+  - `create unique index ux_active_session_per_user on workout_sessions(user_id) where status='active';`
+
+[H-07] Multi-step destructive operations not wrapped in transactions
+- Category: Reliability / Consistency
+- Severity: High
+- Impacted code:
+  - backend/src/index.ts:1288
+  - backend/src/index.ts:1302
+  - backend/src/index.ts:1305
+  - backend/src/index.ts:1313
+- Why this is risky:
+  - Partial success can leave orphaned state when one step fails (e.g., auth delete fails after data delete).
+- Recommended remediation:
+  - Execute account deletion in a single DB transaction (or atomic RPC), with compensating logic for auth deletion failures.
+
+[H-08] Missing API hardening controls (CORS wide open, body size defaults, no rate limiting)
+- Category: Security / Infrastructure
+- Severity: High
+- Impacted code:
+  - backend/src/index.ts:12
+  - backend/src/index.ts:13
+- Why this is risky:
+  - Increases abuse surface (request flooding, oversized payload stress, permissive origin policy).
+- Recommended remediation:
+  - Restrict CORS origins.
+  - Set JSON body size limits.
+  - Add rate limiting and request timeout middleware.
+
+[H-09] Mobile exercise history loads session sets one-session-at-a-time
+- Category: Performance
+- Severity: High
+- Impacted code:
+  - mobile/src/screens/ExerciseHistoryScreen.tsx:37
+  - mobile/src/screens/ExerciseHistoryScreen.tsx:44
+- Why it is slow:
+  - O(number_of_sessions) network calls and high latency on users with long history.
+- Concrete fix:
+  - Add backend endpoint for exercise history by exercise_id with grouped response.
+
+[H-10] Exercise progress list triggers per-exercise progress API calls
+- Category: Performance
+- Severity: High
+- Impacted code:
+  - mobile/src/screens/ExerciseProgressListScreen.tsx:97
+  - mobile/src/screens/ExerciseProgressListScreen.tsx:108
+- Why it is slow:
+  - N+1 API pattern for list-level stats.
+- Concrete fix:
+  - Add one aggregated endpoint returning monthly stats for all exercises.
+
+[H-11] Active workout context resolution uses nested API loops
+- Category: Performance
+- Severity: High
+- Impacted code:
+  - mobile/src/screens/ActiveWorkoutScreen.tsx:260
+  - mobile/src/screens/ActiveWorkoutScreen.tsx:261
+  - mobile/src/screens/ActiveWorkoutScreen.tsx:263
+  - mobile/src/screens/ActiveWorkoutScreen.tsx:315
+- Why it is slow:
+  - Program/workout traversal and per-exercise set preloads can block screen readiness.
+- Concrete fix:
+  - Add API endpoint returning active session + workout + exercises + set states in one payload.
+
+# Medium Severity Findings
+
+[M-01] Error detail leakage to clients
+- Category: Security / Information Disclosure
+- Severity: Medium
+- Impacted code:
+  - backend/src/index.ts:53
+  - backend/src/index.ts:132 and many similar handlers
+- Why this is risky:
+  - formatError returns detailed DB/system messages to clients, enabling reconnaissance.
+- Recommended remediation:
+  - Log detailed internal errors server-side; return stable generic messages externally.
+
+[M-02] Monolithic backend file harms cohesion and change safety
+- Category: Architecture / Maintainability
+- Severity: Medium
+- Impacted code:
+  - backend/src/index.ts (single file for routes, business rules, persistence)
+- Why this is risky:
+  - High coupling, difficult ownership, larger blast radius per change.
+- Recommended remediation:
+  - Split into modules: middleware, route handlers, services, repositories, validators.
+
+[M-03] Weak request validation and typing across API surface
+- Category: Code Quality / Reliability
+- Severity: Medium
+- Impacted code:
+  - backend/src/index.ts (many req.body assumptions)
+  - mobile/src/screens/AuthScreen.tsx:1
+  - multiple mobile screens using `any` props
+- Why this is risky:
+  - Invalid payloads fall through to DB errors; compile-time protections are bypassed.
+- Recommended remediation:
+  - Introduce schema validation (zod/joi) and typed route contracts.
+  - Remove `@ts-nocheck` and reduce `any` navigation props.
+
+[M-04] Reorder endpoints are sequential and non-batched
+- Category: Performance / DB
+- Severity: Medium
+- Impacted code:
+  - backend/src/index.ts:365
+  - backend/src/index.ts:521
+- Why it is slow:
+  - One DB update per row in loop increases round-trips and lock churn.
+- Concrete fix:
+  - Batch via RPC/upsert with array payload in one statement.
+
+[M-05] Account/program/workout delete paths not consistently checking mutation outcomes
+- Category: Reliability
+- Severity: Medium
+- Impacted code:
+  - backend/src/index.ts:343
+  - backend/src/index.ts:239
+  - backend/src/index.ts:242
+  - backend/src/index.ts:1302
+  - backend/src/index.ts:1305
+- Why this is risky:
+  - Silent partial failures can pass unnoticed and produce stale/orphaned entities.
+- Recommended remediation:
+  - Check every mutation result/error and wrap into transaction.
+
+[M-06] Potential O(n^2) in last-performance dedup reduction
+- Category: Performance
+- Severity: Medium
+- Impacted code:
+  - backend/src/index.ts:1013
+  - backend/src/index.ts:1015
+- Why it is slow:
+  - Uses `acc.some(...)` per element while reducing potentially large set arrays.
+- Concrete fix:
+  - Replace with hash set keyed by exercise_id:set_number.
+
+[M-07] Polling active session every 10 seconds on app shell
+- Category: Performance / Battery / DX
+- Severity: Medium
+- Impacted code:
+  - mobile/src/App.tsx:195
+- Why it is risky:
+  - Continuous polling can drain battery and create unnecessary backend traffic.
+- Recommended remediation:
+  - Use app-state aware polling, exponential backoff, and screen-scope polling only when needed.
+
+[M-08] Missing pagination and bounded query controls
+- Category: Scalability
+- Severity: Medium
+- Impacted code:
+  - backend/src/index.ts endpoints returning full sets/histories (e.g., /workout-sessions, /workouts/history/by-month)
+- Why it is risky:
+  - Large user histories can produce oversized responses and memory pressure.
+- Recommended remediation:
+  - Add cursor/limit-based pagination and maximum limits.
+
+[M-09] Database index strategy incomplete for hot paths
+- Category: Database Performance
+- Severity: Medium
+- Impacted code:
+  - backend/sql/create-all-tables.sql (indexes section)
+- Why it is inefficient:
+  - Queries often filter by combinations not covered by composites.
+- Recommended additions:
+  - workout_sessions(user_id, workout_id, status, ended_at desc)
+  - workout_session_sets(user_id, session_id, exercise_id, is_deleted, set_number)
+  - workout_sessions(user_id, started_at desc) if sorting by started_at is frequent.
+
+[M-10] Inconsistent docs vs implementation increases operational mistakes
+- Category: Maintainability / DX
+- Severity: Medium
+- Impacted code:
+  - README.md (states no auth in Known Limitations while backend enforces bearer auth)
+- Why it matters:
+  - Misleads contributors and setup troubleshooting.
+- Recommended remediation:
+  - Update docs to reflect current auth/session behavior and schema scripts actually present.
+
+[M-11] No automated tests discovered for critical flows
+- Category: Testing
+- Severity: Medium
+- Impacted code:
+  - Repository-wide (no test files/config detected)
+- High-risk untested paths:
+  - Auth/session bootstrap, active workout lifecycle, account deletion, reorder logic, weight tracker goal activation.
+- Recommended remediation:
+  - Add backend integration tests and mobile component/flow tests.
+
+[M-12] Missing CI quality gates (lint, typecheck, audit, tests)
+- Category: Infrastructure / DX
+- Severity: Medium
+- Impacted code:
+  - root package.json (no lint/test scripts)
+- Recommended remediation:
+  - Add scripts and CI workflow for lint, typecheck, test, and dependency audit.
+
+# Low Severity Findings
+
+[L-01] Repeated utility logic duplicated across screens
+- Category: Maintainability
+- Severity: Low
+- Impacted code:
+  - mobile/src/screens/HomeScreen.tsx
+  - mobile/src/screens/ProgramsScreen.tsx
+- Why it matters:
+  - Duplicate time-estimation and muscle-group logic increases drift risk.
+- Suggested fix:
+  - Move shared calculations to a utility module.
+
+[L-02] Root tsconfig is minimal and potentially confusing in monorepo context
+- Category: DX
+- Severity: Low
+- Impacted code:
+  - tsconfig.json:1
+- Suggested fix:
+  - Add explicit workspace references or remove root config if not used.
+
+[L-03] Numerous `any` navigation props reduce type safety
+- Category: Code Quality
+- Severity: Low
+- Impacted code:
+  - multiple files under mobile/src/screens
+- Suggested fix:
+  - Introduce typed navigation param lists and shared route types.
+
+[L-04] Console noise in production paths
+- Category: Reliability / DX
+- Severity: Low
+- Impacted code:
+  - mobile/src/hooks/useApi.ts
+  - backend/src/index.ts:1890
+- Suggested fix:
+  - Introduce environment-aware structured logger.
+
+[L-05] Debug/development artifacts can confuse security posture
+- Category: Infrastructure
+- Severity: Low
+- Impacted code:
+  - mobile/android/app/debug.keystore
+- Suggested fix:
+  - Keep debug artifacts documented and ensure release signing secrets are excluded.
+
+# Quick Wins (
+
+1. Rotate and revoke exposed Supabase keys immediately; purge secrets from git history.
+2. Patch authorization holes in delete/reorder endpoints by enforcing user_id predicates everywhere.
+3. Upgrade axios to >=1.15.2 and re-run `npm audit`.
+4. Add DB unique partial index to enforce one active session per user.
+5. Add user_id filter to set-history queries in /exercises/history and /exercises/:exerciseId/progress.
+6. Replace backend N+1 name lookups with batched `in(...)` queries.
+7. Add a dashboard aggregate endpoint to remove mobile fan-out request storms.
+8. Wrap account deletion in transaction/RPC; fail atomically.
+9. Add request validation middleware (zod/joi) and standardized error responses.
+10. Bootstrap CI with: typecheck, lint, test, and dependency audit.
