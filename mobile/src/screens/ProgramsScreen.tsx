@@ -3,14 +3,11 @@ import {
   View,
   Text,
   TouchableOpacity,
+  ScrollView,
   StyleSheet,
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import {
-  NestableDraggableFlatList,
-  NestableScrollContainer,
-} from 'react-native-draggable-flatlist';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -128,6 +125,23 @@ const getDaysSince = (isoDate: string): number => {
 const formatDaysSince = (days: number | null): string =>
   days === null ? 'Never' : `${days}d`;
 
+const PROGRAM_NAME_PATTERN = /^Program\s+(\d+)$/;
+
+const getNextProgramName = (existingPrograms: Program[]): string => {
+  const maxNumber = existingPrograms.reduce((max, program) => {
+    const match = program.name.trim().match(PROGRAM_NAME_PATTERN);
+    if (!match) return max;
+
+    const parsedNumber = Number.parseInt(match[1], 10);
+    if (Number.isNaN(parsedNumber)) return max;
+
+    return Math.max(max, parsedNumber);
+  }, 0);
+
+  const nextNumber = maxNumber + 1;
+  return `Program ${String(nextNumber).padStart(2, '0')}`;
+};
+
 const ProgramsScreen = ({ navigation }: any) => {
   const { colors: themeColors } = usePreferences();
   const styles = createStyles(themeColors);
@@ -147,7 +161,6 @@ const ProgramsScreen = ({ navigation }: any) => {
   const [daysSinceByWorkout, setDaysSinceByWorkout] = useState<
     Record<string, number | null>
   >({});
-  const [isDraggingWorkout, setIsDraggingWorkout] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showMessage, setShowMessage] = useState(false);
 
@@ -244,7 +257,8 @@ const ProgramsScreen = ({ navigation }: any) => {
 
   const handleCreateProgram = async () => {
     try {
-      const newProgram = await api.createProgram();
+      const nextProgramName = getNextProgramName(programs);
+      const newProgram = await api.createProgram({ name: nextProgramName });
       setPrograms([...programs, newProgram]);
       setShowMessage(true);
     } catch (err) {
@@ -270,32 +284,6 @@ const ProgramsScreen = ({ navigation }: any) => {
         style: 'destructive',
       },
     ]);
-  };
-
-  const handleReorderWorkouts = async (programId: string, reorderedWorkouts: Workout[]) => {
-    const previousWorkouts = workoutsByProgram[programId] ?? [];
-
-    setWorkoutsByProgram((prev) => ({
-      ...prev,
-      [programId]: reorderedWorkouts,
-    }));
-
-    try {
-      await api.reorderWorkouts(
-        programId,
-        reorderedWorkouts.map((workout, index) => ({
-          id: workout.id,
-          order: index + 1,
-        })),
-      );
-    } catch (err) {
-      console.error('Failed to reorder workouts:', err);
-      setWorkoutsByProgram((prev) => ({
-        ...prev,
-        [programId]: previousWorkouts,
-      }));
-      Alert.alert('Error', 'Failed to reorder workouts');
-    }
   };
 
   if (loading) {
@@ -333,9 +321,8 @@ const ProgramsScreen = ({ navigation }: any) => {
         </TouchableOpacity>
       )}
 
-      <NestableScrollContainer
+      <ScrollView
         style={styles.list}
-        scrollEnabled={!isDraggingWorkout}
         nestedScrollEnabled
         keyboardShouldPersistTaps="handled"
       >
@@ -358,28 +345,22 @@ const ProgramsScreen = ({ navigation }: any) => {
                 <View style={styles.programNameArea}>
                   <Text style={styles.programName}>{program.name}</Text>
                 </View>
+                {program.is_favorite_program ? (
+                  <Ionicons name="star" size={18} color={themeColors.accent} />
+                ) : null}
               </View>
 
               <View style={styles.workoutsList}>
                 {(workoutsByProgram[program.id] ?? []).length === 0 ? (
                   <Text style={styles.noWorkouts}>No workouts yet</Text>
                 ) : (
-                  <NestableDraggableFlatList
-                    data={workoutsByProgram[program.id] ?? []}
-                    keyExtractor={(item) => item.id}
-                    scrollEnabled={false}
-                    containerStyle={styles.workoutsDraggableList}
-                    onDragBegin={() => setIsDraggingWorkout(true)}
-                    onDragEnd={({ data }) => {
-                      setIsDraggingWorkout(false);
-                      handleReorderWorkouts(program.id, data);
-                    }}
-                    renderItem={({ item: workout, drag, isActive }) => {
+                  (workoutsByProgram[program.id] ?? []).map((workout) => {
                       const count = exerciseCountByWorkout[workout.id] ?? 0;
 
                       return (
                         <TouchableOpacity
-                          style={[styles.workoutRow, isActive && styles.workoutRowActive]}
+                          key={workout.id}
+                          style={styles.workoutRow}
                           activeOpacity={0.9}
                           onPress={() =>
                             navigation.navigate('WorkoutDetail', {
@@ -390,21 +371,6 @@ const ProgramsScreen = ({ navigation }: any) => {
                           }
                         >
                           <View style={styles.workoutRowContent}>
-                            <TouchableOpacity
-                              onLongPress={drag}
-                              delayLongPress={200}
-                              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                              style={styles.reorderHandle}
-                              accessibilityRole="button"
-                              accessibilityLabel={`Reorder ${workout.name}`}
-                            >
-                              <Ionicons
-                                name="reorder-three-outline"
-                                size={20}
-                                color={themeColors.textMuted}
-                              />
-                            </TouchableOpacity>
-
                             <MuscleMapThumb
                               groups={dominantMuscleGroupsByWorkout[workout.id] ?? []}
                               size={34}
@@ -435,14 +401,13 @@ const ProgramsScreen = ({ navigation }: any) => {
                           </View>
                         </TouchableOpacity>
                       );
-                    }}
-                  />
+                    })
                 )}
               </View>
             </TouchableOpacity>
           ))
         )}
-      </NestableScrollContainer>
+      </ScrollView>
     </View>
   );
 };
@@ -540,9 +505,6 @@ const createStyles = (themeColors: typeof colors) =>
     workoutsList: {
       marginTop: 4,
     },
-    workoutsDraggableList: {
-      flexGrow: 0,
-    },
     workoutRow: {
       alignItems: 'stretch',
       paddingVertical: 10,
@@ -553,20 +515,10 @@ const createStyles = (themeColors: typeof colors) =>
       borderWidth: 1,
       borderColor: themeColors.border,
     },
-    workoutRowActive: {
-      borderColor: themeColors.accent,
-      backgroundColor: themeColors.accentSoft,
-    },
     workoutRowContent: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-    },
-    reorderHandle: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingVertical: 4,
-      paddingRight: 2,
     },
     workoutRowMain: {
       flex: 1,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   type WorkoutStats,
   type Program,
@@ -160,6 +161,9 @@ const getWorkoutMessage = (count: number): string => {
   }
 };
 
+const getCountLabel = (count: number, singular: string, plural: string): string =>
+  count === 1 ? singular : plural;
+
 const HomeScreen = ({ navigation }: any) => {
   const { colors: themeColors } = usePreferences();
   const styles = createStyles(themeColors);
@@ -174,11 +178,7 @@ const HomeScreen = ({ navigation }: any) => {
 
   const api = useApi();
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       const [statsData, programs, session] = await Promise.all([
         api.getStats(),
@@ -268,13 +268,18 @@ const HomeScreen = ({ navigation }: any) => {
       } catch (err) {
         console.error('Failed to fetch 7-day workouts count:', err);
       }
-
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [api]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchDashboardData();
+    }, [fetchDashboardData]),
+  );
 
   if (loading) {
     return (
@@ -324,7 +329,7 @@ const HomeScreen = ({ navigation }: any) => {
 
         <View style={styles.statsGrid}>
           <TouchableOpacity
-            style={styles.statCard}
+            style={[styles.statCard, styles.statCardWide, styles.statCardHorizontal]}
             onPress={() =>
               navigation.navigate('ProgramsStack', { screen: 'ProgramsList' })
             }
@@ -333,26 +338,14 @@ const HomeScreen = ({ navigation }: any) => {
               name="clipboard-outline"
               size={28}
               color={themeColors.accent}
-              style={{ marginBottom: 6 }}
+              style={{ marginRight: 12 }}
             />
-            <Text style={styles.statValue}>{stats.total_programs}</Text>
-            <Text style={styles.statLabel}>Programs</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.statCard}
-            onPress={() =>
-              navigation.navigate('ProgramsStack', { screen: 'ProgramsList' })
-            }
-          >
-            <Ionicons
-              name="body-outline"
-              size={28}
-              color={themeColors.accent}
-              style={{ marginBottom: 6 }}
-            />
-            <Text style={styles.statValue}>{stats.total_workouts}</Text>
-            <Text style={styles.statLabel}>Workouts</Text>
+            <View style={styles.statCardTextWrap}>
+              <Text style={styles.statValue}>{stats.total_programs}</Text>
+              <Text style={styles.statLabel}>
+                {getCountLabel(stats.total_programs, 'Program', 'Programs')}
+              </Text>
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -368,7 +361,9 @@ const HomeScreen = ({ navigation }: any) => {
               style={{ marginBottom: 6 }}
             />
             <Text style={styles.statValue}>{stats.total_exercises}</Text>
-            <Text style={styles.statLabel}>Exercises</Text>
+            <Text style={styles.statLabel}>
+              {getCountLabel(stats.total_exercises, 'Exercise', 'Exercises')}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -414,7 +409,7 @@ const HomeScreen = ({ navigation }: any) => {
                     onPress={() => {
                       navigation.navigate('ProgramsStack', {
                         screen: 'ProgramDetail',
-                        params: { programId: program.id },
+                        params: { programId: program.id, programName: program.name },
                       });
                     }}
                   >
@@ -575,6 +570,17 @@ const createStyles = (themeColors: typeof colors) =>
       borderWidth: 1,
       borderColor: themeColors.border,
       ...shadow.card,
+    },
+    statCardWide: {
+      width: '100%',
+    },
+    statCardHorizontal: {
+      flexDirection: 'row',
+      justifyContent: 'flex-start',
+      alignItems: 'center',
+    },
+    statCardTextWrap: {
+      alignItems: 'flex-start',
     },
     statValue: {
       fontSize: 24,

@@ -56,6 +56,8 @@ function getViewAndPaths(muscleGroup: MuscleGroup): { useBack: boolean; paths: s
         'hamstring_left_left',
         'hamstring_left_right',
         'hamstring_right_left',
+        'hamstring_right_middle',
+        'hamstring_right_right',
       ],
     },
     Glutes: {
