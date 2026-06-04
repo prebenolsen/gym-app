@@ -136,9 +136,26 @@ const goalTypeLabel = (goalType: WeightTrackerGoal): string => {
   return 'Track only';
 };
 
-const truncateMetricHeader = (name: string): string => (
-  name.length > 5 ? `${name.slice(0, 5)}...` : name
-);
+const estimateColumnWidth = (
+  values: Array<string | null | undefined>,
+  options?: {
+    minWidth?: number;
+    maxWidth?: number;
+    charWidth?: number;
+    padding?: number;
+  },
+): number => {
+  const minWidth = options?.minWidth ?? 52;
+  const maxWidth = options?.maxWidth ?? 220;
+  const charWidth = options?.charWidth ?? 8;
+  const padding = options?.padding ?? 24;
+  const longestValueLength = values.reduce(
+    (maxLength, value) => Math.max(maxLength, String(value ?? '').length),
+    0,
+  );
+
+  return Math.min(maxWidth, Math.max(minWidth, longestValueLength * charWidth + padding));
+};
 
 const getComplementaryColor = (hexColor: string): string => {
   const hex = hexColor.trim().replace('#', '');
@@ -1246,9 +1263,6 @@ export default function WeightTrackerScreen() {
       calories: profile?.show_calories ?? true,
     };
 
-    const hasCustomMetricColumns = customMetrics.length > 0;
-    const tableDateColWidth = hasCustomMetricColumns ? 55 : undefined;
-    const tableDataColWidth = hasCustomMetricColumns ? 52 : undefined;
     const shouldRenderBooleanChart = selectedChartMetric.type === 'boolean';
 
     const formatCustomMetricCell = (entryDate: string, metric: WeightTrackerCustomMetric): string => {
@@ -1258,6 +1272,44 @@ export default function WeightTrackerScreen() {
       if (metric.type === 'integer') return value.value_integer != null ? String(value.value_integer) : '–';
       return value.value_decimal != null ? value.value_decimal.toFixed(1) : '–';
     };
+
+    const dateColumnWidth = estimateColumnWidth(
+      ['Date', ...sortedEntries.map((entry) => formatDate(entry.entry_date))],
+      { minWidth: 68, maxWidth: 88 },
+    );
+    const weightColumnWidth = showCols.weight
+      ? estimateColumnWidth(
+          ['Weight', ...sortedEntries.map((entry) => entry.weight_kg != null ? formatWeight(entry.weight_kg, 1) : '–')],
+          { minWidth: 70, maxWidth: 110 },
+        )
+      : 0;
+    const stepsColumnWidth = showCols.steps
+      ? estimateColumnWidth(
+          ['Steps', ...sortedEntries.map((entry) => entry.steps != null ? entry.steps.toLocaleString() : '–')],
+          { minWidth: 68, maxWidth: 128 },
+        )
+      : 0;
+    const caloriesColumnWidth = showCols.calories
+      ? estimateColumnWidth(
+          ['Kcal', ...sortedEntries.map((entry) => entry.calories != null ? String(entry.calories) : '–')],
+          { minWidth: 60, maxWidth: 108 },
+        )
+      : 0;
+    const customMetricColumns = customMetrics.map((metric) => ({
+      id: metric.id,
+      width: estimateColumnWidth(
+        [metric.name, ...sortedEntries.map((entry) => formatCustomMetricCell(entry.entry_date, metric))],
+        { minWidth: 64, maxWidth: 220 },
+      ),
+    }));
+    const customMetricWidthById = new Map(customMetricColumns.map((metric) => [metric.id, metric.width]));
+    const logTableWidth = [
+      dateColumnWidth,
+      showCols.weight ? weightColumnWidth : 0,
+      showCols.steps ? stepsColumnWidth : 0,
+      showCols.calories ? caloriesColumnWidth : 0,
+      ...customMetricColumns.map((metric) => metric.width),
+    ].reduce((total, width) => total + width, 0);
 
     return (
       <View style={styles.screen}>
@@ -1494,18 +1546,18 @@ export default function WeightTrackerScreen() {
               <Text style={styles.sectionTitle}>Log</Text>
 
               <ScrollView
-                horizontal={hasCustomMetricColumns}
-                showsHorizontalScrollIndicator={hasCustomMetricColumns}
+                horizontal
+                showsHorizontalScrollIndicator
                 bounces={false}
               >
-                <View style={hasCustomMetricColumns ? { minWidth: SCREEN_WIDTH - 64 } : undefined}>
+                <View style={{ minWidth: Math.max(logTableWidth, SCREEN_WIDTH - 64) }}>
                   <View style={[styles.tableRow, styles.tableHeader]}>
                     <Text
                       style={[
                         styles.tableCell,
                         styles.tableCellDate,
                         styles.tableHeaderText,
-                        tableDateColWidth != null && { width: tableDateColWidth, flex: undefined },
+                        { width: dateColumnWidth, flex: 0 },
                       ]}
                     >
                       Date
@@ -1515,7 +1567,7 @@ export default function WeightTrackerScreen() {
                         style={[
                           styles.tableCell,
                           styles.tableHeaderText,
-                          tableDataColWidth != null && { width: tableDataColWidth, flex: undefined },
+                          { width: weightColumnWidth, flex: 0 },
                         ]}
                       >
                         Weight
@@ -1526,7 +1578,7 @@ export default function WeightTrackerScreen() {
                         style={[
                           styles.tableCell,
                           styles.tableHeaderText,
-                          tableDataColWidth != null && { width: tableDataColWidth, flex: undefined },
+                          { width: stepsColumnWidth, flex: 0 },
                         ]}
                       >
                         Steps
@@ -1537,7 +1589,7 @@ export default function WeightTrackerScreen() {
                         style={[
                           styles.tableCell,
                           styles.tableHeaderText,
-                          tableDataColWidth != null && { width: tableDataColWidth, flex: undefined },
+                          { width: caloriesColumnWidth, flex: 0 },
                         ]}
                       >
                         Kcal
@@ -1549,10 +1601,10 @@ export default function WeightTrackerScreen() {
                         style={[
                           styles.tableCell,
                           styles.tableHeaderText,
-                          tableDataColWidth != null && { width: tableDataColWidth, flex: undefined },
+                          { width: customMetricWidthById.get(metric.id) ?? 64, flex: 0 },
                         ]}
                       >
-                        {truncateMetricHeader(metric.name)}
+                        {metric.name}
                       </Text>
                     ))}
                   </View>
@@ -1563,7 +1615,7 @@ export default function WeightTrackerScreen() {
                         style={[
                           styles.tableCell,
                           styles.tableCellDate,
-                          tableDateColWidth != null && { width: tableDateColWidth, flex: undefined },
+                          { width: dateColumnWidth, flex: 0 },
                         ]}
                       >
                         <Text style={styles.tableCellDateText}>{formatDate(entry.entry_date)}</Text>
@@ -1572,7 +1624,7 @@ export default function WeightTrackerScreen() {
                         <Text
                           style={[
                             styles.tableCell,
-                            tableDataColWidth != null && { width: tableDataColWidth, flex: undefined },
+                            { width: weightColumnWidth, flex: 0 },
                           ]}
                         >
                           {entry.weight_kg != null ? formatWeight(entry.weight_kg, 1) : '–'}
@@ -1582,7 +1634,7 @@ export default function WeightTrackerScreen() {
                         <Text
                           style={[
                             styles.tableCell,
-                            tableDataColWidth != null && { width: tableDataColWidth, flex: undefined },
+                            { width: stepsColumnWidth, flex: 0 },
                           ]}
                         >
                           {entry.steps != null ? entry.steps.toLocaleString() : '–'}
@@ -1592,7 +1644,7 @@ export default function WeightTrackerScreen() {
                         <Text
                           style={[
                             styles.tableCell,
-                            tableDataColWidth != null && { width: tableDataColWidth, flex: undefined },
+                            { width: caloriesColumnWidth, flex: 0 },
                           ]}
                         >
                           {entry.calories != null ? entry.calories : '–'}
@@ -1603,7 +1655,7 @@ export default function WeightTrackerScreen() {
                           key={`${entry.id}-${metric.id}`}
                           style={[
                             styles.tableCell,
-                            tableDataColWidth != null && { width: tableDataColWidth, flex: undefined },
+                            { width: customMetricWidthById.get(metric.id) ?? 64, flex: 0 },
                           ]}
                         >
                           {formatCustomMetricCell(entry.entry_date, metric)}
