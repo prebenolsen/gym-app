@@ -287,7 +287,6 @@ const HomeScreen = ({ navigation }: any) => {
         ]);
 
         const activeGoal =
-          goals.find((goal) => goal.id === profile?.active_goal_id) ??
           goals.find((goal) => goal.is_active) ??
           null;
 

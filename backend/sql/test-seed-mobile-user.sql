@@ -11,7 +11,7 @@ select set_config('app.seed_reset', 'true', false);
 
 do $$
 declare
-  uid text := current_setting('app.seed_uid', true);
+  uid uuid := current_setting('app.seed_uid', true)::uuid;
   do_reset boolean := coalesce(current_setting('app.seed_reset', true), 'false') = 'true';
 begin
   if uid is null or uid = '' then
@@ -38,20 +38,20 @@ end $$;
 
 with new_program as (
   insert into programs (name, user_id, "order", is_favorite_program)
-  values ('Push Pull Legs', current_setting('app.seed_uid'), 1, true)
+  values ('Push Pull Legs', current_setting('app.seed_uid')::uuid, 1, true)
   returning id
 ),
 new_workouts as (
   insert into workouts (program_id, name, user_id, "order")
-  select id, 'Push', current_setting('app.seed_uid'), 1 from new_program
+  select id, 'Push', current_setting('app.seed_uid')::uuid, 1 from new_program
   union all
-  select id, 'Pull', current_setting('app.seed_uid'), 2 from new_program
+  select id, 'Pull', current_setting('app.seed_uid')::uuid, 2 from new_program
   union all
-  select id, 'Legs', current_setting('app.seed_uid'), 3 from new_program
+  select id, 'Legs', current_setting('app.seed_uid')::uuid, 3 from new_program
   returning id, name
 )
 insert into exercises (workout_id, name, sets, rest_seconds, user_id, "order")
-select w.id, ex.name, ex.sets, ex.rest, current_setting('app.seed_uid'), ex.ordering
+select w.id, ex.name, ex.sets, ex.rest, current_setting('app.seed_uid')::uuid, ex.ordering
 from new_workouts w,
 lateral (
   values
@@ -77,7 +77,7 @@ insert into weight_tracker_goals (
   is_active
 )
 values (
-  current_setting('app.seed_uid'),
+  current_setting('app.seed_uid')::uuid,
   'lose',
   0.50,
   date '2026-04-12',
@@ -94,33 +94,25 @@ do update set
   start_weight_kg = excluded.start_weight_kg,
   updated_at = now();
 
-insert into weight_tracker_profile (user_id, onboarding_complete, active_goal_id)
+insert into weight_tracker_profile (user_id, onboarding_complete)
 values (
-  current_setting('app.seed_uid'),
-  true,
-  (
-    select id
-    from weight_tracker_goals
-    where user_id = current_setting('app.seed_uid') and is_active = true
-    order by started_on desc, created_at desc
-    limit 1
-  )
+  current_setting('app.seed_uid')::uuid,
+  true
 )
 on conflict (user_id)
 do update set
   onboarding_complete = excluded.onboarding_complete,
-  active_goal_id = excluded.active_goal_id,
   updated_at = now();
 
 with active_goal as (
   select id
   from weight_tracker_goals
-  where user_id = current_setting('app.seed_uid') and is_active = true
+  where user_id = current_setting('app.seed_uid')::uuid and is_active = true
   order by started_on desc, created_at desc
   limit 1
 )
 insert into weight_tracker_entries (user_id, goal_id, entry_date, weight_kg, steps)
-select current_setting('app.seed_uid'), g.id, v.entry_date, v.weight_kg, v.steps
+select current_setting('app.seed_uid')::uuid, g.id, v.entry_date, v.weight_kg, v.steps
 from active_goal g
 cross join (
   values
@@ -186,7 +178,7 @@ do update set
 
 with upsert_metric as (
   insert into weight_tracker_custom_metrics (user_id, name, type, "order")
-  values (current_setting('app.seed_uid'), 'Good day', 'boolean', 1)
+  values (current_setting('app.seed_uid')::uuid, 'Good day', 'boolean', 1)
   on conflict (user_id, name)
   do update set
     type = excluded.type,
@@ -195,11 +187,11 @@ with upsert_metric as (
 )
 insert into weight_tracker_custom_metric_values (user_id, goal_id, entry_date, metric_id, value_boolean)
 select
-  current_setting('app.seed_uid'),
+  current_setting('app.seed_uid')::uuid,
   (
     select id
     from weight_tracker_goals
-    where user_id = current_setting('app.seed_uid') and is_active = true
+    where user_id = current_setting('app.seed_uid')::uuid and is_active = true
     order by started_on desc, created_at desc
     limit 1
   ),

@@ -1502,16 +1502,6 @@ app.get('/health', (req, res) => {
 // === WEIGHT TRACKER ===
 
 const resolveActiveGoalId = async (userId: string): Promise<string | null> => {
-  const { data: profile } = await supabase
-    .from('weight_tracker_profile')
-    .select('active_goal_id')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (profile?.active_goal_id) {
-    return profile.active_goal_id;
-  }
-
   const { data: activeGoal } = await supabase
     .from('weight_tracker_goals')
     .select('id')
@@ -1543,7 +1533,7 @@ app.post('/weight-tracker/profile', async (req, res) => {
       'gender', 'age', 'birthdate', 'height_cm', 'default_weight_kg',
       'bmr_formula', 'activity_level',
       'show_weight', 'show_steps', 'show_calories',
-      'onboarding_complete', 'active_goal_id',
+      'onboarding_complete',
     ];
 
     const payload: Record<string, unknown> = {
@@ -1633,18 +1623,6 @@ app.post('/weight-tracker/goals', async (req, res) => {
 
     if (createError) throw createError;
 
-    const { error: profileError } = await supabase
-      .from('weight_tracker_profile')
-      .upsert(
-        {
-          user_id: req.userId,
-          active_goal_id: createdGoal.id,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'user_id' },
-      );
-
-    if (profileError) throw profileError;
     res.status(201).json(createdGoal);
   } catch (err: unknown) {
     res.status(500).json({ error: formatError(err) });
@@ -1689,18 +1667,6 @@ app.post('/weight-tracker/goals/:goalId/activate', async (req, res) => {
       .select('*')
       .single();
     if (activateError) throw activateError;
-
-    const { error: profileError } = await supabase
-      .from('weight_tracker_profile')
-      .upsert(
-        {
-          user_id: req.userId,
-          active_goal_id: activatedGoal.id,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'user_id' },
-      );
-    if (profileError) throw profileError;
 
     res.json(activatedGoal ?? targetGoal);
   } catch (err: unknown) {

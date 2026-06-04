@@ -1,5 +1,5 @@
 -- Drop all tables completely.
--- Run this to wipe the schema, then recreate everything with create-all-tables.sql.
+-- Run this to wipe the schema, then recreate everything with launch-schema-optimization.sql.
 -- Tables are dropped in child-first order to respect foreign key constraints.
 -- CASCADE is included as a safety net for any remaining dependent objects.
 

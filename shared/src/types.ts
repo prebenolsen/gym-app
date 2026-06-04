@@ -199,7 +199,6 @@ export interface WeightTrackerProfile {
   show_steps: boolean;
   show_calories: boolean;
   onboarding_complete: boolean;
-  active_goal_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -241,7 +240,6 @@ export interface UpsertWeightTrackerProfileRequest {
   show_steps?: boolean;
   show_calories?: boolean;
   onboarding_complete?: boolean;
-  active_goal_id?: string | null;
 }
 
 export interface CreateWeightTrackerGoalProjectRequest {

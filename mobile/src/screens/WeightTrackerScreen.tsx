@@ -459,7 +459,6 @@ export default function WeightTrackerScreen() {
 
           const goalsList = goalsData ?? [];
           const resolvedGoalId =
-            profileData?.active_goal_id ??
             goalsList.find((g) => g.is_active)?.id ??
             goalsList[0]?.id ??
             null;
@@ -1026,7 +1025,6 @@ export default function WeightTrackerScreen() {
         ),
       );
       setSelectedGoalId(activated.id);
-      setProfile((prev) => (prev ? { ...prev, active_goal_id: activated.id } : prev));
     } catch {
       Alert.alert('Error', 'Could not switch goal.');
     }
@@ -1054,7 +1052,6 @@ export default function WeightTrackerScreen() {
         ),
       ]);
       setSelectedGoalId(createdGoal.id);
-      setProfile((prev) => (prev ? { ...prev, active_goal_id: createdGoal.id } : prev));
       setShowNewGoalModal(false);
       setShowGoalDropdown(false);
     } catch {
@@ -1124,11 +1121,6 @@ export default function WeightTrackerScreen() {
         start_weight_kg: weightKgValue,
       });
 
-      const savedWithGoal = await api.upsertWeightTrackerProfile({
-        active_goal_id: goal.id,
-        default_weight_kg: weightKgValue,
-      });
-
       // Log starting weight as first entry (today)
       const today = todayString();
       const entry = await api.upsertWeightTrackerEntry({
@@ -1137,11 +1129,11 @@ export default function WeightTrackerScreen() {
         weight_kg:  weightKgValue,
       });
 
-      setProfile(savedWithGoal ?? saved);
+      setProfile(saved);
       setGoals([goal]);
       setSelectedGoalId(goal.id);
       setEntries([entry]);
-      seedSettingsMirrors(savedWithGoal ?? saved, goal);
+      seedSettingsMirrors(saved, goal);
       setView('main');
     } catch {
       Alert.alert('Error', 'Could not save profile. Please try again.');
