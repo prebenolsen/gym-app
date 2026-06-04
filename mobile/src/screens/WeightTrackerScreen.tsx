@@ -811,6 +811,99 @@ export default function WeightTrackerScreen() {
     return { barWidth, spacing };
   }, [booleanBarData.length, chartWidth]);
 
+  const metricTiles = useMemo(() => {
+    const average = (values: number[]) => {
+      if (values.length === 0) return null;
+      return values.reduce((total, value) => total + value, 0) / values.length;
+    };
+
+    const buildNumericTile = (
+      key: string,
+      label: string,
+      values: number[],
+      formatter: (value: number) => string,
+    ) => {
+      const avg = average(values);
+      return {
+        key,
+        label,
+        value: avg == null ? '–' : formatter(avg),
+        detail: 'Avg daily',
+      };
+    };
+
+    const buildBooleanTile = (key: string, label: string, values: Array<boolean | null>) => {
+      const filtered = values.filter((value): value is boolean => value != null);
+      const trueCount = filtered.filter(Boolean).length;
+      const pct = filtered.length === 0 ? null : Math.round((trueCount / filtered.length) * 100);
+      return {
+        key,
+        label,
+        value: pct == null ? '–' : `${pct}%`,
+        detail: '% True',
+      };
+    };
+
+    const tiles: Array<{ key: string; label: string; value: string; detail: string }> = [];
+
+    if (profile?.show_steps) {
+      tiles.push(
+        buildNumericTile(
+          'steps',
+          'Steps',
+          entries.map((entry) => entry.steps).filter((value): value is number => value != null),
+          (value) => Math.round(value).toLocaleString(),
+        ),
+      );
+    }
+
+    if (profile?.show_calories) {
+      tiles.push(
+        buildNumericTile(
+          'calories',
+          'Calories',
+          entries.map((entry) => entry.calories).filter((value): value is number => value != null),
+          (value) => Math.round(value).toLocaleString(),
+        ),
+      );
+    }
+
+    for (const metric of customMetrics) {
+      const values = entries
+        .map((entry) => metricValueByMetricAndDate.get(metric.id)?.get(entry.entry_date))
+        .map((value) => {
+          if (!value) return null;
+          if (metric.type === 'boolean') return value.value_boolean;
+          if (metric.type === 'integer') return value.value_integer;
+          return value.value_decimal;
+        });
+
+      if (metric.type === 'boolean') {
+        tiles.push(buildBooleanTile(metric.id, metric.name, values as Array<boolean | null>));
+      } else if (metric.type === 'integer') {
+        tiles.push(
+          buildNumericTile(
+            metric.id,
+            metric.name,
+            values.filter((value): value is number => value != null),
+            (value) => Math.round(value).toLocaleString(),
+          ),
+        );
+      } else {
+        tiles.push(
+          buildNumericTile(
+            metric.id,
+            metric.name,
+            values.filter((value): value is number => value != null),
+            (value) => value.toFixed(1),
+          ),
+        );
+      }
+    }
+
+    return tiles.slice(0, 3);
+  }, [customMetrics, entries, metricValueByMetricAndDate, profile?.show_calories, profile?.show_steps]);
+
   const chartRange = useMemo(() => {
     if (lineChartData.length === 0) return null;
     const values = lineChartData.map((point) => point.value);
@@ -1028,6 +1121,39 @@ export default function WeightTrackerScreen() {
     } catch {
       Alert.alert('Error', 'Could not switch goal.');
     }
+  };
+
+  const handleDeleteGoal = (goal: GoalProject) => {
+    Alert.alert(
+      'Delete Goal',
+      `Delete this goal? All entries and custom metric values for ${goalTypeLabel(goal.goal_type)} will be removed.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.deleteWeightTrackerGoal(goal.id);
+
+              const remainingGoals = goals.filter((item) => item.id !== goal.id);
+              const nextSelectedGoalId =
+                selectedGoalId === goal.id
+                  ? remainingGoals.find((item) => item.is_active)?.id ?? remainingGoals[0]?.id ?? null
+                  : selectedGoalId;
+
+              setGoals(remainingGoals);
+              setSelectedGoalId(nextSelectedGoalId);
+              setEntries((prev) => prev.filter((entry) => entry.goal_id !== goal.id));
+              setCustomMetricValues((prev) => prev.filter((value) => value.goal_id !== goal.id));
+              setShowGoalDropdown(false);
+            } catch {
+              Alert.alert('Error', 'Could not delete goal.');
+            }
+          },
+        },
+      ],
+    );
   };
 
   const handleCreateNewGoal = async () => {
@@ -1606,23 +1732,39 @@ export default function WeightTrackerScreen() {
 
               {showGoalDropdown && (
                 <View style={styles.goalDropdownMenu}>
-                  <Text style={styles.goalDropdownLabel}>Previously set goals</Text>
-                  {goals
-                    .filter((goal) => goal.id !== activeGoal.id)
-                    .map((goal) => (
-                      <TouchableOpacity
-                        key={goal.id}
-                        style={styles.goalDropdownItem}
-                        onPress={async () => {
-                          setShowGoalDropdown(false);
-                          await handleSelectGoal(goal.id);
-                        }}
+                  <Text style={styles.goalDropdownLabel}>Goals</Text>
+                  {goals.map((goal) => {
+                    const isSelected = goal.id === activeGoal.id;
+                    return (
+                      <View key={goal.id} style={styles.goalDropdownItem}
                       >
-                        <Text style={styles.goalDropdownItemText}>
-                          {goalTypeLabel(goal.goal_type)} (started {formatDateLong(goal.started_on)})
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+                        <TouchableOpacity
+                          style={styles.goalDropdownItemMain}
+                          onPress={async () => {
+                            setShowGoalDropdown(false);
+                            await handleSelectGoal(goal.id);
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.goalDropdownItemText,
+                              isSelected && { color: C.accent, fontWeight: '700' },
+                            ]}
+                          >
+                            {goalTypeLabel(goal.goal_type)} (started {formatDateLong(goal.started_on)})
+                          </Text>
+                          {isSelected && <Text style={styles.goalDropdownItemMeta}>Current</Text>}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.goalDropdownDeleteButton}
+                          onPress={() => handleDeleteGoal(goal)}
+                        >
+                          <Ionicons name="trash-outline" size={16} color={C.textMuted} />
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
 
                   <TouchableOpacity
                     style={styles.goalStartAction}
@@ -1796,6 +1938,18 @@ export default function WeightTrackerScreen() {
               <Text style={styles.emptyNote}>Log more entries to see your progress chart.</Text>
             </View>
           ) : null}
+
+          {metricTiles.length > 0 && (
+            <View style={styles.metricTilesRow}>
+              {metricTiles.map((tile) => (
+                <View key={tile.key} style={styles.metricTile}>
+                  <Text style={styles.metricTileLabel}>{tile.label}</Text>
+                  <Text style={styles.metricTileValue}>{tile.value}</Text>
+                  <Text style={styles.metricTileDetail}>{tile.detail}</Text>
+                </View>
+              ))}
+            </View>
+          )}
 
           {/* ── Entry Table ── */}
           {sortedEntries.length > 0 && (
@@ -2647,11 +2801,27 @@ const createStyles = (C: ReturnType<typeof usePreferences>['colors']) =>
       textTransform: 'uppercase',
     },
     goalDropdownItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 10,
       paddingVertical: 8,
+    },
+    goalDropdownItemMain: {
+      flex: 1,
+      gap: 3,
     },
     goalDropdownItemText: {
       fontSize: 13,
       color: C.textStrong,
+    },
+    goalDropdownItemMeta: {
+      fontSize: 11,
+      color: C.textMuted,
+      fontWeight: '600',
+    },
+    goalDropdownDeleteButton: {
+      padding: 4,
     },
     goalStartAction: {
       marginTop: 6,
@@ -2691,6 +2861,45 @@ const createStyles = (C: ReturnType<typeof usePreferences>['colors']) =>
       fontSize: 11,
       color: C.textMuted,
       marginTop: 4,
+    },
+
+    metricTilesRow: {
+      flexDirection: 'row',
+      gap: 8,
+      marginBottom: 16,
+    },
+    metricTile: {
+      flex: 1,
+      backgroundColor: C.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: C.border,
+      padding: 12,
+      minHeight: 92,
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      ...shadow.card,
+    },
+    metricTileLabel: {
+      fontSize: 11,
+      color: C.textMuted,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      textAlign: 'center',
+    },
+    metricTileValue: {
+      fontSize: 20,
+      lineHeight: 24,
+      fontWeight: '800',
+      color: C.textStrong,
+      marginTop: 8,
+      textAlign: 'center',
+    },
+    metricTileDetail: {
+      fontSize: 12,
+      color: C.textMuted,
+      marginTop: 6,
+      textAlign: 'center',
     },
 
     // ── Chart ──

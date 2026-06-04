@@ -1674,6 +1674,31 @@ app.post('/weight-tracker/goals/:goalId/activate', async (req, res) => {
   }
 });
 
+app.delete('/weight-tracker/goals/:goalId', async (req, res) => {
+  try {
+    const { goalId } = req.params;
+
+    const { data: targetGoal, error: targetError } = await supabase
+      .from('weight_tracker_goals')
+      .select('id')
+      .eq('id', goalId)
+      .eq('user_id', req.userId)
+      .single();
+    if (targetError) throw targetError;
+
+    const { error: deleteError } = await supabase
+      .from('weight_tracker_goals')
+      .delete()
+      .eq('id', targetGoal.id)
+      .eq('user_id', req.userId);
+    if (deleteError) throw deleteError;
+
+    res.status(204).send();
+  } catch (err: unknown) {
+    res.status(500).json({ error: formatError(err) });
+  }
+});
+
 app.get('/weight-tracker/entries', async (req, res) => {
   try {
     const explicitGoalId = req.query.goalId ? String(req.query.goalId) : null;

@@ -406,6 +406,10 @@ class ApiClient {
     return this.request('POST', `/weight-tracker/goals/${encodeURIComponent(goalId)}/activate`);
   }
 
+  async deleteWeightTrackerGoal(goalId: string): Promise<void> {
+    return this.request('DELETE', `/weight-tracker/goals/${encodeURIComponent(goalId)}`);
+  }
+
   async getWeightTrackerEntries(days?: number, goalId?: string): Promise<WeightTrackerEntry[]> {
     const params = new URLSearchParams();
     if (days) params.append('days', String(days));
