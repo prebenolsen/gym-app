@@ -17,6 +17,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { BarChart, LineChart } from 'react-native-gifted-charts';
 import { usePreferences } from '../context/PreferencesContext';
+import type { DateFormat } from '../context/PreferencesContext';
 import { useApi } from '../hooks/useApi';
 import { getButtonStyles, radius, shadow } from '../theme';
 import type {
@@ -53,6 +54,12 @@ const MONTH_NAMES = [
   'November',
   'December',
 ] as const;
+
+const DATE_FORMAT_OPTIONS: ReadonlyArray<{ key: DateFormat; label: string }> = [
+  { key: 'eu', label: 'DD/MM/YYYY' },
+  { key: 'iso', label: 'YYYY/MM/DD' },
+  { key: 'us', label: 'MM/DD/YYYY' },
+];
 
 const ACTIVITY_LEVELS: {
   key: WeightTrackerActivityLevel;
@@ -124,6 +131,83 @@ const dateLabel = (isoDate: string): string => {
 };
 
 const formatDate = (isoDate: string): string => isoDate.slice(5).replace('-', '/');
+
+const getDateFormatConfig = (format: DateFormat) => {
+  if (format === 'eu') {
+    return { separator: '/', segmentLengths: [2, 2, 4] as const, order: 'dmy' as const };
+  }
+  if (format === 'us') {
+    return { separator: '/', segmentLengths: [2, 2, 4] as const, order: 'mdy' as const };
+  }
+  return { separator: '/', segmentLengths: [4, 2, 2] as const, order: 'ymd' as const };
+};
+
+const formatBirthdateInput = (rawText: string, format: DateFormat) => {
+  const { separator, segmentLengths } = getDateFormatConfig(format);
+  const maxDigits = segmentLengths.reduce((sum, length) => sum + length, 0);
+  const digits = rawText.replace(/\D/g, '').slice(0, maxDigits);
+  const parts: string[] = [];
+
+  let cursor = 0;
+  for (const length of segmentLengths) {
+    if (cursor >= digits.length) break;
+    const part = digits.slice(cursor, cursor + length);
+    if (!part) break;
+    parts.push(part);
+    cursor += length;
+  }
+
+  return parts.join(separator);
+};
+
+const parseBirthdateToIso = (inputText: string, format: DateFormat): string | null => {
+  const digits = inputText.replace(/\D/g, '');
+  if (digits.length !== 8) return null;
+
+  const { order } = getDateFormatConfig(format);
+  let year = 0;
+  let month = 0;
+  let day = 0;
+
+  if (order === 'ymd') {
+    year = Number(digits.slice(0, 4));
+    month = Number(digits.slice(4, 6));
+    day = Number(digits.slice(6, 8));
+  } else if (order === 'dmy') {
+    day = Number(digits.slice(0, 2));
+    month = Number(digits.slice(2, 4));
+    year = Number(digits.slice(4, 8));
+  } else {
+    month = Number(digits.slice(0, 2));
+    day = Number(digits.slice(2, 4));
+    year = Number(digits.slice(4, 8));
+  }
+
+  if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
+    return null;
+  }
+
+  const candidate = new Date(Date.UTC(year, month - 1, day));
+  if (
+    candidate.getUTCFullYear() !== year ||
+    candidate.getUTCMonth() !== month - 1 ||
+    candidate.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+};
+
+const formatIsoBirthdateForInput = (isoDate: string, format: DateFormat): string => {
+  const parts = isoDate.split('-');
+  if (parts.length !== 3) return isoDate;
+  const [year, month, day] = parts;
+
+  if (format === 'eu') return `${day}/${month}/${year}`;
+  if (format === 'us') return `${month}/${day}/${year}`;
+  return `${year}/${month}/${day}`;
+};
 
 const formatDateForAxis = (
   isoDate: string,
@@ -297,6 +381,7 @@ export default function WeightTrackerScreen() {
   const navigation = useNavigation();
   const styles = useMemo(() => createStyles(C), [C]);
   const logDateWheelRef = useRef<FlatList<LogDateOption>>(null);
+  const previousObDateFormatRef = useRef<DateFormat>(dateFormat);
 
   // ── core data ──────────────────────────────────────────────
   const [profile, setProfile]           = useState<WeightTrackerProfile | null>(null);
@@ -312,7 +397,7 @@ export default function WeightTrackerScreen() {
   const [obHeight,          setObHeight]          = useState('');
   const [obGender,          setObGender]          = useState<WeightTrackerGender | null>(null);
   const [obAge,             setObAge]             = useState('');
-  const [obAgeMode,         setObAgeMode]         = useState<'age' | 'birthdate'>('age');
+  const [obAgeMode,         setObAgeMode]         = useState<'age' | 'birthdate'>('birthdate');
   const [obBirthdateInput,  setObBirthdateInput]  = useState('');
   const [obShowWeight,      setObShowWeight]      = useState(true);
   const [obShowSteps,       setObShowSteps]       = useState(true);
@@ -401,9 +486,10 @@ export default function WeightTrackerScreen() {
               setObGender(profileData.gender);
               if (profileData.birthdate) {
                 setObAgeMode('birthdate');
-                setObBirthdateInput(profileData.birthdate);
+                setObBirthdateInput(formatIsoBirthdateForInput(profileData.birthdate, dateFormat));
               } else {
                 setObAge(profileData.age ? String(profileData.age) : '');
+                setObAgeMode(profileData.age != null ? 'age' : 'birthdate');
               }
               setObWeight(
                 profileData.default_weight_kg != null
@@ -430,7 +516,7 @@ export default function WeightTrackerScreen() {
 
       load();
       return () => { mounted = false; };
-    }, [api, convertFromCm, convertFromKg]),
+    }, [api, convertFromCm, convertFromKg, dateFormat]),
   );
 
   const seedSettingsMirrors = (p: WeightTrackerProfile, _activeGoal: GoalProject | null) => {
@@ -438,6 +524,27 @@ export default function WeightTrackerScreen() {
     setEditSSteps(p.show_steps);
     setEditSCal(p.show_calories);
   };
+
+  useEffect(() => {
+    if (!obBirthdateInput.trim()) {
+      previousObDateFormatRef.current = dateFormat;
+      return;
+    }
+
+    const previousFormat = previousObDateFormatRef.current;
+    if (previousFormat === dateFormat) {
+      return;
+    }
+
+    const isoBirthdate = parseBirthdateToIso(obBirthdateInput, previousFormat);
+    if (isoBirthdate) {
+      setObBirthdateInput(formatIsoBirthdateForInput(isoBirthdate, dateFormat));
+    } else {
+      setObBirthdateInput((current) => formatBirthdateInput(current, dateFormat));
+    }
+
+    previousObDateFormatRef.current = dateFormat;
+  }, [dateFormat, obBirthdateInput]);
 
   // ─── derived values ────────────────────────────────────────
   const activeGoal = useMemo(
@@ -984,12 +1091,22 @@ export default function WeightTrackerScreen() {
     setObSaving(true);
     try {
       const weightKgValue = convertToKg(parseFloat(obWeight.replace(',', '.')));
-      const ageValue   = obAgeMode === 'age'       && obAge.trim()          ? parseInt(obAge, 10)          : null;
-      const bdayValue  = obAgeMode === 'birthdate' && obBirthdateInput.trim() ? obBirthdateInput.trim() : null;
+      const normalizedBirthdate =
+        obAgeMode === 'birthdate' && obBirthdateInput.trim()
+          ? parseBirthdateToIso(obBirthdateInput, dateFormat)
+          : null;
+
+      if (obAgeMode === 'birthdate' && obBirthdateInput.trim() && !normalizedBirthdate) {
+        const activeDateFormat = DATE_FORMAT_OPTIONS.find((option) => option.key === dateFormat)?.label;
+        Alert.alert('Invalid birthdate', `Please use a valid date in ${activeDateFormat} format.`);
+        return;
+      }
+
+      const ageValue = obAgeMode === 'age' && obAge.trim() ? parseInt(obAge, 10) : null;
       const saved = await api.upsertWeightTrackerProfile({
         gender:              obGender,
         age:                 ageValue,
-        birthdate:           bdayValue,
+        birthdate:           normalizedBirthdate,
         height_cm:           obHeight.trim() ? convertToCm(parseFloat(obHeight)) : null,
         default_weight_kg:   weightKgValue,
         bmr_formula:         'mifflin_st_jeor',
@@ -1055,6 +1172,8 @@ export default function WeightTrackerScreen() {
   // ───────────────────────────────────────────────────────────
   function renderOnboarding1() {
     const unitLabel = unit === 'kg' ? 'kg' : 'lb';
+    const activeDateFormatLabel =
+      DATE_FORMAT_OPTIONS.find((option) => option.key === dateFormat)?.label ?? 'YYYY/MM/DD';
     return (
       <ScrollView
         style={styles.screen}
@@ -1090,22 +1209,32 @@ export default function WeightTrackerScreen() {
           keyboardType="decimal-pad"
         />
 
-        <Text style={styles.fieldLabel}>Age / Birthdate — optional</Text>
+        <Text style={styles.fieldLabel}>Birthdate / Age — optional</Text>
         <View style={[styles.pillRow, { marginBottom: 8 }]}>
-          <TouchableOpacity
-            style={[styles.pill, obAgeMode === 'age' && styles.pillActive]}
-            onPress={() => setObAgeMode('age')}
-          >
-            <Text style={[styles.pillText, obAgeMode === 'age' && styles.pillTextActive]}>Enter Age</Text>
-          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.pill, obAgeMode === 'birthdate' && styles.pillActive]}
             onPress={() => setObAgeMode('birthdate')}
           >
             <Text style={[styles.pillText, obAgeMode === 'birthdate' && styles.pillTextActive]}>Enter Birthdate</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.pill, obAgeMode === 'age' && styles.pillActive]}
+            onPress={() => setObAgeMode('age')}
+          >
+            <Text style={[styles.pillText, obAgeMode === 'age' && styles.pillTextActive]}>Enter Age</Text>
+          </TouchableOpacity>
         </View>
-        {obAgeMode === 'age' ? (
+        {obAgeMode === 'birthdate' ? (
+          <TextInput
+            style={styles.input}
+            value={obBirthdateInput}
+            onChangeText={(value) => setObBirthdateInput(formatBirthdateInput(value, dateFormat))}
+            placeholder={activeDateFormatLabel}
+            placeholderTextColor={C.textMuted}
+            autoCapitalize="none"
+            keyboardType="number-pad"
+          />
+        ) : (
           <TextInput
             style={styles.input}
             value={obAge}
@@ -1113,15 +1242,6 @@ export default function WeightTrackerScreen() {
             placeholder="e.g. 30"
             placeholderTextColor={C.textMuted}
             keyboardType="number-pad"
-          />
-        ) : (
-          <TextInput
-            style={styles.input}
-            value={obBirthdateInput}
-            onChangeText={setObBirthdateInput}
-            placeholder="YYYY-MM-DD"
-            placeholderTextColor={C.textMuted}
-            autoCapitalize="none"
           />
         )}
 
@@ -1141,8 +1261,8 @@ export default function WeightTrackerScreen() {
         </View>
 
         <Text style={styles.obNote}>
-          Height, age and gender unlock calorie estimates based on your BMR. They are stored
-          privately and never shared.
+          Height, birthdate/age and gender unlock calorie estimates based on your BMR. They are
+          stored privately and never shared.
         </Text>
 
         <TouchableOpacity style={styles.primaryBtn} onPress={handleOb1Next}>
