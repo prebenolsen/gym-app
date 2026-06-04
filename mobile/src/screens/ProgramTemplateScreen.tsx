@@ -187,17 +187,6 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
             ))}
           </View>
         ))}
-
-        {/* Bottom import button */}
-        <TouchableOpacity
-          style={[styles.btnImportBottom, importing && styles.btnImportDisabled]}
-          onPress={handleImport}
-          disabled={importing}
-        >
-          <Text style={styles.btnImportText}>
-            {importing ? 'Importing...' : 'Import Program'}
-          </Text>
-        </TouchableOpacity>
       </ScrollView>
     </View>
   );
