@@ -1,4 +1,4 @@
-﻿import { useState, useCallback, useMemo, useRef } from 'react';
+﻿import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,13 +15,12 @@ import {
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { LineChart } from 'react-native-gifted-charts';
+import { BarChart, LineChart } from 'react-native-gifted-charts';
 import { usePreferences } from '../context/PreferencesContext';
 import { useApi } from '../hooks/useApi';
 import { getButtonStyles, radius, shadow } from '../theme';
 import type {
   WeightTrackerProfile,
-  WeightTrackerGoalProject,
   WeightTrackerEntry,
   WeightTrackerCustomMetric,
   WeightTrackerCustomMetricValue,
@@ -124,24 +123,71 @@ const dateLabel = (isoDate: string): string => {
   return `${WEEKDAY_SHORT[d.getDay()]} ${d.getDate()}. ${MONTH_NAMES[d.getMonth()]}`;
 };
 
-const compactDateForFormat = (isoDate: string, dateFormat: 'iso' | 'eu' | 'us'): string => {
-  const [, month, day] = isoDate.split('-');
-  if (dateFormat === 'eu') return `${day}/${month}`;
-  if (dateFormat === 'us') return `${month}/${day}`;
-  return `${month}/${day}`;
+const formatDate = (isoDate: string): string => isoDate.slice(5).replace('-', '/');
+
+const formatDateLong = (isoDate: string): string => {
+  const d = parseIsoDateLocal(isoDate);
+  return `${d.getDate()}. ${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
 };
 
-const fullDateForFormat = (isoDate: string, dateFormat: 'iso' | 'eu' | 'us'): string => {
-  const [year, month, day] = isoDate.split('-');
-  if (dateFormat === 'eu') return `${day}/${month}/${year}`;
-  if (dateFormat === 'us') return `${month}/${day}/${year}`;
-  return `${year}-${month}-${day}`;
+const goalTypeLabel = (goalType: WeightTrackerGoal): string => {
+  if (goalType === 'lose') return 'Weight loss';
+  if (goalType === 'gain') return 'Weight gain';
+  return 'Track only';
 };
 
-const GOAL_TYPE_LABEL: Record<WeightTrackerGoal, string> = {
-  lose: 'Weight Loss',
-  gain: 'Weight Gain',
-  track: 'Weight Tracking',
+const truncateMetricHeader = (name: string): string => (
+  name.length > 5 ? `${name.slice(0, 5)}...` : name
+);
+
+const getComplementaryColor = (hexColor: string): string => {
+  const hex = hexColor.trim().replace('#', '');
+  const normalized =
+    hex.length === 3
+      ? `${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`
+      : hex.slice(0, 6);
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return '#78909C';
+
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const delta = max - min;
+
+  let h = 0;
+  if (delta !== 0) {
+    if (max === r) h = ((g - b) / delta) % 6;
+    else if (max === g) h = (b - r) / delta + 2;
+    else h = (r - g) / delta + 4;
+  }
+  h = Math.round((h * 60 + 360) % 360);
+  h = (h + 180) % 360;
+
+  const l = (max + min) / 510;
+  const s = delta === 0 ? 0 : delta / (255 - Math.abs(max + min - 255));
+
+  const chroma = (1 - Math.abs(2 * l - 1)) * s;
+  const x = chroma * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - chroma / 2;
+
+  let rr = 0;
+  let gg = 0;
+  let bb = 0;
+
+  if (h < 60) [rr, gg, bb] = [chroma, x, 0];
+  else if (h < 120) [rr, gg, bb] = [x, chroma, 0];
+  else if (h < 180) [rr, gg, bb] = [0, chroma, x];
+  else if (h < 240) [rr, gg, bb] = [0, x, chroma];
+  else if (h < 300) [rr, gg, bb] = [x, 0, chroma];
+  else [rr, gg, bb] = [chroma, 0, x];
+
+  const toHex = (v: number) =>
+    Math.round((v + m) * 255)
+      .toString(16)
+      .padStart(2, '0');
+
+  return `#${toHex(rr)}${toHex(gg)}${toHex(bb)}`;
 };
 
 const calcBMR = (
@@ -190,6 +236,15 @@ const ageFromBirthdate = (birthdate: string): number | null => {
 // ─────────────────────────────────────────────────────────────
 
 type ScreenView = 'loading' | 'ob-1' | 'ob-2' | 'ob-3' | 'ob-4' | 'ob-5' | 'main';
+type GoalProject = {
+  id: string;
+  goal_type: WeightTrackerGoal;
+  weekly_target_kg: number | null;
+  started_on: string;
+  ended_on: string | null;
+  start_weight_kg: number | null;
+  is_active: boolean;
+};
 type LogDateOption = {
   iso: string;
   label: string;
@@ -197,17 +252,7 @@ type LogDateOption = {
 };
 
 export default function WeightTrackerScreen() {
-  const {
-    colors: C,
-    formatWeight,
-    dateFormat,
-    convertFromKg,
-    convertToKg,
-    unit,
-    heightUnit,
-    convertFromCm,
-    convertToCm,
-  } = usePreferences();
+  const { colors: C, formatWeight, convertFromKg, convertToKg, unit, heightUnit, convertFromCm, convertToCm } = usePreferences();
   const api = useApi();
   const navigation = useNavigation();
   const styles = useMemo(() => createStyles(C), [C]);
@@ -215,19 +260,12 @@ export default function WeightTrackerScreen() {
 
   // ── core data ──────────────────────────────────────────────
   const [profile, setProfile]           = useState<WeightTrackerProfile | null>(null);
-  const [goals, setGoals]               = useState<WeightTrackerGoalProject[]>([]);
+  const [goals, setGoals]               = useState<GoalProject[]>([]);
+  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [entries, setEntries]           = useState<WeightTrackerEntry[]>([]);
   const [customMetrics, setCustomMetrics]     = useState<WeightTrackerCustomMetric[]>([]);
   const [customMetricValues, setCustomMetricValues] = useState<WeightTrackerCustomMetricValue[]>([]);
   const [view, setView]                 = useState<ScreenView>('loading');
-  const [showGoalDropdown, setShowGoalDropdown] = useState(false);
-
-  // ── new goal modal ─────────────────────────────────────────
-  const [showNewGoalModal, setShowNewGoalModal] = useState(false);
-  const [newGoalType, setNewGoalType] = useState<WeightTrackerGoal>('lose');
-  const [newGoalWeeklyTarget, setNewGoalWeeklyTarget] = useState<number | null>(0.5);
-  const [newGoalStartWeight, setNewGoalStartWeight] = useState('');
-  const [savingNewGoal, setSavingNewGoal] = useState(false);
 
   // ── onboarding state ───────────────────────────────────────
   const [obWeight,          setObWeight]          = useState('');
@@ -259,6 +297,15 @@ export default function WeightTrackerScreen() {
   const [showSettings,    setShowSettings]    = useState(false);
 
   // ── inline settings edit mirrors ──────────────────────────
+  const [editGender,       setEditGender]       = useState<WeightTrackerGender | null>(null);
+  const [editAge,          setEditAge]          = useState('');
+  const [editAgeMode,      setEditAgeMode]      = useState<'age' | 'birthdate'>('age');
+  const [editBirthdate,    setEditBirthdate]    = useState('');
+  const [editHeight,       setEditHeight]       = useState('');
+  const [editGoal,         setEditGoal]         = useState<WeightTrackerGoal | null>(null);
+  const [editWeeklyTarget, setEditWeeklyTarget] = useState<number | null>(null);
+  const [editFormula,      setEditFormula]      = useState<WeightTrackerBmrFormula>('mifflin_st_jeor');
+  const [editActivity,     setEditActivity]     = useState<WeightTrackerActivityLevel | null>(null);
   const [editSWeight,      setEditSWeight]      = useState(true);
   const [editSSteps,       setEditSSteps]       = useState(true);
   const [editSCal,         setEditSCal]         = useState(true);
@@ -269,6 +316,17 @@ export default function WeightTrackerScreen() {
   const [newMetricName,       setNewMetricName]       = useState('');
   const [newMetricType,       setNewMetricType]       = useState<WeightTrackerCustomMetricType>('boolean');
   const [savingNewMetric,     setSavingNewMetric]     = useState(false);
+
+  // ── goal controls ──────────────────────────────────────────
+  const [showGoalDropdown, setShowGoalDropdown] = useState(false);
+  const [showNewGoalModal, setShowNewGoalModal] = useState(false);
+  const [creatingGoal, setCreatingGoal] = useState(false);
+  const [newGoalType, setNewGoalType] = useState<WeightTrackerGoal>('track');
+  const [newGoalWeeklyTarget, setNewGoalWeeklyTarget] = useState<number | null>(0.5);
+
+  // ── chart metric picker ────────────────────────────────────
+  const [showChartMetricDropdown, setShowChartMetricDropdown] = useState(false);
+  const [selectedChartMetricKey, setSelectedChartMetricKey] = useState<string>('weight');
 
   // ── data loading ───────────────────────────────────────────
   useFocusEffect(
@@ -283,23 +341,30 @@ export default function WeightTrackerScreen() {
             api.getCustomMetrics(),
           ]);
 
-          const resolvedActiveGoalId =
-            profileData?.active_goal_id ?? goalsData.find((g) => g.is_active)?.id ?? null;
+          const goalsList = goalsData ?? [];
+          const resolvedGoalId =
+            profileData?.active_goal_id ??
+            goalsList.find((g) => g.is_active)?.id ??
+            goalsList[0]?.id ??
+            null;
 
           const [entriesData, metricValuesData] = await Promise.all([
-            api.getWeightTrackerEntries(365, resolvedActiveGoalId ?? undefined),
-            api.getCustomMetricValues(365, resolvedActiveGoalId ?? undefined),
+            api.getWeightTrackerEntries(365, resolvedGoalId ?? undefined),
+            api.getCustomMetricValues(365, resolvedGoalId ?? undefined),
           ]);
 
           if (!mounted) return;
 
           setProfile(profileData);
-          setGoals(goalsData ?? []);
+          setGoals(goalsList);
+          setSelectedGoalId(resolvedGoalId);
           setEntries(entriesData ?? []);
           setCustomMetrics(metricsData ?? []);
           setCustomMetricValues(metricValuesData ?? []);
 
-          if (!profileData || !profileData.onboarding_complete || !resolvedActiveGoalId) {
+          const activeGoal = goalsList.find((g) => g.id === resolvedGoalId) ?? null;
+
+          if (!profileData || !profileData.onboarding_complete) {
             if (profileData) {
               // pre-fill from existing partial profile
               setObGender(profileData.gender);
@@ -309,20 +374,17 @@ export default function WeightTrackerScreen() {
               } else {
                 setObAge(profileData.age ? String(profileData.age) : '');
               }
-              setObWeight(
-                profileData.default_weight_kg != null
-                  ? String(parseFloat(convertFromKg(profileData.default_weight_kg).toFixed(1)))
-                  : '',
-              );
               setObHeight(profileData.height_cm ? String(parseFloat(convertFromCm(profileData.height_cm).toFixed(1))) : '');
               setObShowWeight(profileData.show_weight);
               setObShowSteps(profileData.show_steps);
               setObShowCal(profileData.show_calories);
+              setObGoal(activeGoal?.goal_type ?? null);
+              setObWeeklyTarget(activeGoal?.weekly_target_kg ?? null);
               setObActivity(profileData.activity_level);
             }
             setView('ob-1');
           } else {
-            seedSettingsMirrors(profileData);
+            seedSettingsMirrors(profileData, activeGoal);
             setView('main');
           }
         } catch {
@@ -332,16 +394,72 @@ export default function WeightTrackerScreen() {
 
       load();
       return () => { mounted = false; };
-    }, [api, convertFromCm, convertFromKg]),
+    }, [api, convertFromCm]),
   );
 
-  const seedSettingsMirrors = (p: WeightTrackerProfile) => {
+  const seedSettingsMirrors = (p: WeightTrackerProfile, activeGoal: GoalProject | null) => {
+    setEditGender(p.gender);
+    setEditAge(p.age ? String(p.age) : '');
+    setEditBirthdate(p.birthdate ?? '');
+    setEditAgeMode(p.birthdate ? 'birthdate' : 'age');
+    setEditHeight(p.height_cm ? String(parseFloat(convertFromCm(p.height_cm).toFixed(1))) : '');
+    setEditGoal(activeGoal?.goal_type ?? null);
+    setEditWeeklyTarget(activeGoal?.weekly_target_kg ?? null);
+    setEditFormula(p.bmr_formula);
+    setEditActivity(p.activity_level);
     setEditSWeight(p.show_weight);
     setEditSSteps(p.show_steps);
     setEditSCal(p.show_calories);
   };
 
   // ─── derived values ────────────────────────────────────────
+  const activeGoal = useMemo(
+    () => goals.find((g) => g.id === selectedGoalId) ?? goals.find((g) => g.is_active) ?? null,
+    [goals, selectedGoalId],
+  );
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadGoalData = async () => {
+      if (!selectedGoalId) {
+        setEntries([]);
+        setCustomMetricValues([]);
+        return;
+      }
+
+      try {
+        const [entriesData, metricValuesData] = await Promise.all([
+          api.getWeightTrackerEntries(365, selectedGoalId),
+          api.getCustomMetricValues(365, selectedGoalId),
+        ]);
+
+        if (!mounted) return;
+        setEntries(entriesData ?? []);
+        setCustomMetricValues(metricValuesData ?? []);
+      } catch {
+        if (!mounted) return;
+        setEntries([]);
+        setCustomMetricValues([]);
+      }
+    };
+
+    loadGoalData();
+    return () => {
+      mounted = false;
+    };
+  }, [api, selectedGoalId]);
+
+  const metricValueByMetricAndDate = useMemo(() => {
+    const map = new Map<string, Map<string, WeightTrackerCustomMetricValue>>();
+    for (const value of customMetricValues) {
+      const byDate = map.get(value.metric_id) ?? new Map<string, WeightTrackerCustomMetricValue>();
+      byDate.set(value.entry_date, value);
+      map.set(value.metric_id, byDate);
+    }
+    return map;
+  }, [customMetricValues]);
+
   const weightEntries = useMemo(
     () =>
       entries
@@ -352,11 +470,6 @@ export default function WeightTrackerScreen() {
 
   const latestWeightEntry = weightEntries[weightEntries.length - 1] ?? null;
   const currentWeightKg   = latestWeightEntry?.weight_kg ?? null;
-
-  const activeGoal = useMemo(
-    () => goals.find((g) => g.id === profile?.active_goal_id) ?? goals.find((g) => g.is_active) ?? null,
-    [goals, profile?.active_goal_id],
-  );
 
   const profileAge = useMemo(() => {
     if (profile?.age) return profile.age;
@@ -385,35 +498,110 @@ export default function WeightTrackerScreen() {
 
   const tdee = bmrValue ? Math.round(bmrValue * activityMultiplier) : null;
 
-  // chart data — show in user's preferred unit
-  const chartData = useMemo(() => {
-    const pts = weightEntries.map((e, idx) => {
-      const displayVal = parseFloat(convertFromKg(e.weight_kg!).toFixed(1));
-      const totalPts   = weightEntries.length;
-      // label only at first, last, and every ~7th point
-      const showLabel  = idx === 0 || idx === totalPts - 1 || idx % 7 === 0;
+  const chartMetricOptions = useMemo(
+    () => [
+      { key: 'weight', label: `Weight (${unit})`, type: 'weight' as const, metricId: null },
+      ...customMetrics.map((metric) => ({
+        key: `custom:${metric.id}`,
+        label: metric.name,
+        type: metric.type,
+        metricId: metric.id,
+      })),
+    ],
+    [customMetrics, unit],
+  );
+
+  useEffect(() => {
+    const hasSelected = chartMetricOptions.some((option) => option.key === selectedChartMetricKey);
+    if (!hasSelected) setSelectedChartMetricKey('weight');
+  }, [chartMetricOptions, selectedChartMetricKey]);
+
+  const selectedChartMetric =
+    chartMetricOptions.find((option) => option.key === selectedChartMetricKey) ?? chartMetricOptions[0];
+
+  const falseMetricColor = useMemo(() => getComplementaryColor(C.accent), [C.accent]);
+
+  const lineChartData = useMemo(() => {
+    if (selectedChartMetric.key === 'weight') {
+      return weightEntries.map((entry, idx) => {
+        const displayVal = parseFloat(convertFromKg(entry.weight_kg!).toFixed(1));
+        const totalPts = weightEntries.length;
+        const showLabel = idx === 0 || idx === totalPts - 1 || idx % 7 === 0;
+        return {
+          value: displayVal,
+          label: showLabel ? formatDate(entry.entry_date) : '',
+          dataPointText: '',
+        };
+      });
+    }
+
+    if (selectedChartMetric.type === 'boolean' || !selectedChartMetric.metricId) return [];
+
+    const ordered = [...entries].sort((a, b) => a.entry_date.localeCompare(b.entry_date));
+    const metricValuesByDate = metricValueByMetricAndDate.get(selectedChartMetric.metricId) ?? new Map();
+
+    const points = ordered
+      .map((entry) => {
+        const value = metricValuesByDate.get(entry.entry_date);
+        if (!value) return null;
+        if (selectedChartMetric.type === 'integer' && value.value_integer != null) {
+          return { date: entry.entry_date, numeric: value.value_integer };
+        }
+        if (selectedChartMetric.type === 'decimal' && value.value_decimal != null) {
+          return { date: entry.entry_date, numeric: value.value_decimal };
+        }
+        return null;
+      })
+      .filter((point): point is { date: string; numeric: number } => point !== null);
+
+    return points.map((point, idx) => {
+      const totalPts = points.length;
+      const showLabel = idx === 0 || idx === totalPts - 1 || idx % 7 === 0;
       return {
-        value:         displayVal,
-        label:         showLabel ? compactDateForFormat(e.entry_date, dateFormat) : '',
+        value: parseFloat(point.numeric.toFixed(1)),
+        label: showLabel ? formatDate(point.date) : '',
         dataPointText: '',
       };
     });
-    return pts;
-  }, [weightEntries, convertFromKg, dateFormat]);
+  }, [selectedChartMetric, weightEntries, entries, metricValueByMetricAndDate, convertFromKg]);
+
+  const booleanBarData = useMemo(() => {
+    if (selectedChartMetric.type !== 'boolean' || !selectedChartMetric.metricId) return [];
+
+    const ordered = [...entries].sort((a, b) => a.entry_date.localeCompare(b.entry_date));
+    const metricValuesByDate = metricValueByMetricAndDate.get(selectedChartMetric.metricId) ?? new Map();
+
+    return ordered
+      .map((entry, idx) => {
+        const value = metricValuesByDate.get(entry.entry_date);
+        if (value?.value_boolean == null) return null;
+        const totalPts = ordered.length;
+        const showLabel = idx === 0 || idx === totalPts - 1 || idx % 7 === 0;
+        return {
+          value: 1,
+          label: showLabel ? formatDate(entry.entry_date) : '',
+          frontColor: value.value_boolean ? C.accent : falseMetricColor,
+          spacing: 4,
+        };
+      })
+      .filter((bar): bar is { value: number; label: string; frontColor: string; spacing: number } => bar !== null);
+  }, [selectedChartMetric, entries, metricValueByMetricAndDate, C.accent, falseMetricColor]);
 
   const chartRange = useMemo(() => {
-    if (weightEntries.length === 0) return null;
-    const values = weightEntries.map((e) => convertFromKg(e.weight_kg!));
-    const minWeight = Math.min(...values);
-    const maxWeight = Math.max(...values);
-    const bufferInDisplayUnit = convertFromKg(2);
-    const minValue = parseFloat((minWeight - bufferInDisplayUnit).toFixed(1));
-    const maxValue = parseFloat((maxWeight + bufferInDisplayUnit).toFixed(1));
+    if (lineChartData.length === 0) return null;
+    const values = lineChartData.map((point) => point.value);
+    const minVal = Math.min(...values);
+    const maxVal = Math.max(...values);
+    const span = maxVal - minVal;
+    const buffer = span < 1 ? 0.5 : Math.max(0.5, span * 0.1);
+    const minValue = parseFloat((minVal - buffer).toFixed(1));
+    const maxValue = parseFloat((maxVal + buffer).toFixed(1));
+
     return {
       yAxisOffset: minValue,
       maxValue: parseFloat((maxValue - minValue).toFixed(1)),
     };
-  }, [weightEntries, convertFromKg]);
+  }, [lineChartData]);
 
   const logDateOptions = useMemo<LogDateOption[]>(() => {
     return buildPastDates(LOG_WHEEL_LOOKBACK_DAYS).map((iso) => {
@@ -472,8 +660,8 @@ export default function WeightTrackerScreen() {
 
   // ─── save log entry ────────────────────────────────────────
   const handleSaveLog = async () => {
-    if (!activeGoal) {
-      Alert.alert('No active goal', 'Start a goal project before logging entries.');
+    if (!selectedGoalId) {
+      Alert.alert('Goal required', 'Please create or select a goal before logging entries.');
       return;
     }
 
@@ -485,7 +673,7 @@ export default function WeightTrackerScreen() {
           : null;
 
       const saved = await api.upsertWeightTrackerEntry({
-        goal_id:    activeGoal.id,
+        goal_id:   selectedGoalId,
         entry_date: logDate,
         weight_kg:  weightKg,
         steps:      logSteps.trim()    !== '' ? parseInt(logSteps, 10)    : null,
@@ -502,7 +690,7 @@ export default function WeightTrackerScreen() {
       for (const m of customMetrics) {
         const raw = logCustomValues[m.id];
         const req: Parameters<typeof api.upsertCustomMetricValue>[0] = {
-          goal_id:    activeGoal.id,
+          goal_id: selectedGoalId,
           entry_date: logDate,
           metric_id:  m.id,
         };
@@ -515,11 +703,7 @@ export default function WeightTrackerScreen() {
       if (savedCustomValues.length > 0) {
         setCustomMetricValues((prev) => {
           const filtered = prev.filter(
-            (v) => !(
-              v.goal_id === activeGoal.id &&
-              v.entry_date === logDate &&
-              savedCustomValues.some((sv) => sv.metric_id === v.metric_id)
-            ),
+            (v) => !(v.entry_date === logDate && savedCustomValues.some((sv) => sv.metric_id === v.metric_id)),
           );
           return [...filtered, ...savedCustomValues];
         });
@@ -535,8 +719,6 @@ export default function WeightTrackerScreen() {
 
   // ─── delete entry ──────────────────────────────────────────
   const handleDeleteEntry = (entry: WeightTrackerEntry) => {
-    if (!activeGoal) return;
-
     Alert.alert(
       'Delete Entry',
       `Remove the entry for ${dateLabel(entry.entry_date)}?`,
@@ -547,7 +729,7 @@ export default function WeightTrackerScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await api.deleteWeightTrackerEntry(entry.entry_date, activeGoal.id);
+              await api.deleteWeightTrackerEntry(entry.entry_date, selectedGoalId ?? undefined);
               setEntries((prev) => prev.filter((e) => e.id !== entry.id));
             } catch {
               Alert.alert('Error', 'Could not delete entry.');
@@ -563,10 +745,43 @@ export default function WeightTrackerScreen() {
     setSavingSettings(true);
     try {
       const updated = await api.upsertWeightTrackerProfile({
-        show_weight:   editSWeight,
-        show_steps:    editSSteps,
-        show_calories: editSCal,
+        gender:           editGender,
+        age:              editAgeMode === 'age' && editAge.trim() ? parseInt(editAge, 10) : null,
+        birthdate:        editAgeMode === 'birthdate' && editBirthdate.trim() ? editBirthdate.trim() : null,
+        height_cm:        editHeight.trim() ? convertToCm(parseFloat(editHeight)) : null,
+        bmr_formula:      editFormula,
+        activity_level:   editActivity,
+        show_weight:      editSWeight,
+        show_steps:       editSSteps,
+        show_calories:    editSCal,
       });
+
+      const activeGoalType = activeGoal?.goal_type ?? null;
+      const activeTarget = activeGoal?.weekly_target_kg ?? null;
+      const goalChanged = editGoal !== activeGoalType || editWeeklyTarget !== activeTarget;
+
+      if (goalChanged) {
+        const startedOn = todayString();
+        const newGoal = await api.createWeightTrackerGoal({
+          goal_type: editGoal ?? 'track',
+          weekly_target_kg: editGoal === 'lose' || editGoal === 'gain' ? editWeeklyTarget : null,
+          started_on: startedOn,
+          start_weight_kg: currentWeightKg,
+        });
+
+        setGoals((prev) => [
+          newGoal,
+          ...prev.map((goal) =>
+            goal.id === newGoal.id
+              ? newGoal
+              : goal.is_active
+                ? { ...goal, is_active: false, ended_on: startedOn }
+                : goal,
+          ),
+        ]);
+        setSelectedGoalId(newGoal.id);
+      }
+
       setProfile(updated);
       Alert.alert('Saved', 'Your profile has been updated.');
     } catch {
@@ -591,7 +806,10 @@ export default function WeightTrackerScreen() {
             try {
               await api.resetWeightTracker();
               setProfile(null);
+              setGoals([]);
+              setSelectedGoalId(null);
               setEntries([]);
+              setCustomMetricValues([]);
               (navigation as any).navigate('Home');
             } catch {
               Alert.alert('Error', 'Could not reset data. Please try again.');
@@ -602,94 +820,54 @@ export default function WeightTrackerScreen() {
     );
   };
 
-  const loadGoalScopedData = useCallback(
-    async (goalId: string) => {
-      const [entriesData, metricValuesData] = await Promise.all([
-        api.getWeightTrackerEntries(365, goalId),
-        api.getCustomMetricValues(365, goalId),
-      ]);
-      setEntries(entriesData ?? []);
-      setCustomMetricValues(metricValuesData ?? []);
-    },
-    [api],
-  );
-
-  const handleActivateGoal = async (goalId: string) => {
-    if (goalId === activeGoal?.id) {
-      setShowGoalDropdown(false);
-      return;
-    }
-
+  const handleSelectGoal = async (goalId: string) => {
     try {
-      const activatedGoal = await api.activateWeightTrackerGoal(goalId);
+      const activated = await api.activateWeightTrackerGoal(goalId);
       setGoals((prev) =>
-        prev.map((g) => ({
-          ...g,
-          is_active: g.id === activatedGoal.id,
-          ended_on: g.id === activatedGoal.id ? null : g.ended_on,
-        })),
+        prev.map((goal) =>
+          goal.id === activated.id
+            ? activated
+            : goal.is_active
+              ? { ...goal, is_active: false, ended_on: todayString() }
+              : goal,
+        ),
       );
-      const updatedProfile = await api.upsertWeightTrackerProfile({ active_goal_id: activatedGoal.id });
-      setProfile(updatedProfile);
-      await loadGoalScopedData(activatedGoal.id);
-      setShowGoalDropdown(false);
+      setSelectedGoalId(activated.id);
+      setProfile((prev) => (prev ? { ...prev, active_goal_id: activated.id } : prev));
     } catch {
-      Alert.alert('Error', 'Could not switch goal project.');
+      Alert.alert('Error', 'Could not switch goal.');
     }
   };
 
-  const openNewGoalModal = () => {
-    setNewGoalType('lose');
-    setNewGoalWeeklyTarget(0.5);
-    setNewGoalStartWeight(
-      currentWeightKg != null
-        ? String(parseFloat(convertFromKg(currentWeightKg).toFixed(1)))
-        : profile?.default_weight_kg != null
-          ? String(parseFloat(convertFromKg(profile.default_weight_kg).toFixed(1)))
-          : '',
-    );
-    setShowGoalDropdown(false);
-    setShowNewGoalModal(true);
-  };
-
-  const handleStartNewGoal = async () => {
-    if (!newGoalStartWeight.trim()) {
-      Alert.alert('Weight required', 'Please enter a starting weight for this goal.');
-      return;
-    }
-
-    setSavingNewGoal(true);
+  const handleCreateNewGoal = async () => {
+    setCreatingGoal(true);
     try {
-      const today = todayString();
-      const startWeightKg = convertToKg(parseFloat(newGoalStartWeight.replace(',', '.')));
+      const startedOn = todayString();
       const createdGoal = await api.createWeightTrackerGoal({
         goal_type: newGoalType,
-        weekly_target_kg: newGoalType === 'track' ? null : newGoalWeeklyTarget,
-        started_on: today,
-        start_weight_kg: startWeightKg,
+        weekly_target_kg: newGoalType === 'lose' || newGoalType === 'gain' ? newGoalWeeklyTarget : null,
+        started_on: startedOn,
+        start_weight_kg: currentWeightKg,
       });
 
-      await api.upsertWeightTrackerEntry({
-        goal_id: createdGoal.id,
-        entry_date: today,
-        weight_kg: startWeightKg,
-      });
-
-      const updatedProfile = await api.upsertWeightTrackerProfile({
-        active_goal_id: createdGoal.id,
-        default_weight_kg: startWeightKg,
-        onboarding_complete: true,
-      });
-
-      const refreshedGoals = await api.getWeightTrackerGoals();
-      setGoals(refreshedGoals);
-      setProfile(updatedProfile);
-      await loadGoalScopedData(createdGoal.id);
+      setGoals((prev) => [
+        createdGoal,
+        ...prev.map((goal) =>
+          goal.id === createdGoal.id
+            ? createdGoal
+            : goal.is_active
+              ? { ...goal, is_active: false, ended_on: startedOn }
+              : goal,
+        ),
+      ]);
+      setSelectedGoalId(createdGoal.id);
+      setProfile((prev) => (prev ? { ...prev, active_goal_id: createdGoal.id } : prev));
       setShowNewGoalModal(false);
+      setShowGoalDropdown(false);
     } catch {
       Alert.alert('Error', 'Could not start a new goal.');
     } finally {
-      setSavingNewGoal(false);
+      setCreatingGoal(false);
     }
   };
 
@@ -719,44 +897,42 @@ export default function WeightTrackerScreen() {
   const handleFinishOnboarding = async () => {
     setObSaving(true);
     try {
-      const today = todayString();
       const weightKgValue = convertToKg(parseFloat(obWeight.replace(',', '.')));
       const ageValue   = obAgeMode === 'age'       && obAge.trim()          ? parseInt(obAge, 10)          : null;
       const bdayValue  = obAgeMode === 'birthdate' && obBirthdateInput.trim() ? obBirthdateInput.trim() : null;
-
-      const createdGoal = await api.createWeightTrackerGoal({
-        goal_type:        obGoal ?? 'track',
-        weekly_target_kg: obGoal === 'lose' || obGoal === 'gain' ? obWeeklyTarget : null,
-        started_on:       today,
-        start_weight_kg:  weightKgValue,
-      });
-
       const saved = await api.upsertWeightTrackerProfile({
         gender:              obGender,
         age:                 ageValue,
         birthdate:           bdayValue,
         height_cm:           obHeight.trim() ? convertToCm(parseFloat(obHeight)) : null,
-        default_weight_kg:   weightKgValue,
         bmr_formula:         'mifflin_st_jeor',
         activity_level:      obActivity,
         show_weight:         obShowWeight,
         show_steps:          obShowSteps,
         show_calories:       obShowCal,
-        active_goal_id:      createdGoal.id,
         onboarding_complete: true,
       });
 
+      const goal = await api.createWeightTrackerGoal({
+        goal_type: obGoal ?? 'track',
+        weekly_target_kg: obGoal === 'lose' || obGoal === 'gain' ? obWeeklyTarget : null,
+        started_on: todayString(),
+        start_weight_kg: weightKgValue,
+      });
+
       // Log starting weight as first entry (today)
+      const today = todayString();
       const entry = await api.upsertWeightTrackerEntry({
-        goal_id:    createdGoal.id,
+        goal_id: goal.id,
         entry_date: today,
         weight_kg:  weightKgValue,
       });
 
       setProfile(saved);
-      setGoals([createdGoal]);
+      setGoals([goal]);
+      setSelectedGoalId(goal.id);
       setEntries([entry]);
-      seedSettingsMirrors(saved);
+      seedSettingsMirrors(saved, goal);
       setView('main');
     } catch {
       Alert.alert('Error', 'Could not save profile. Please try again.');
@@ -917,7 +1093,7 @@ export default function WeightTrackerScreen() {
         ))}
 
         <Text style={[styles.obNote, { marginTop: 16 }]}>
-          You can add up to 3 custom metrics (e.g. Sleep Score, Creatine, or Alcohol) under Metric Settings after setup.
+          You can add up to 3 custom metrics (e.g. Sleep Score, Creatine, or Alcohol) under Profile Settings after setup.
         </Text>
 
         <TouchableOpacity style={styles.primaryBtn} onPress={handleOb2Next}>
@@ -1092,16 +1268,12 @@ export default function WeightTrackerScreen() {
 
   // ───────────────────────────────────────────────────────────
   function renderMain() {
-    const startKg    = activeGoal?.start_weight_kg ?? null;
+    const startKg = activeGoal?.start_weight_kg ?? null;
     const deltaKg    = startKg && currentWeightKg ? currentWeightKg - startKg : null;
     const deltaLabel =
       deltaKg !== null
         ? `${deltaKg >= 0 ? '+' : ''}${formatWeight(Math.abs(deltaKg), 1)} ${unit}`
         : null;
-
-    const activeGoalLabel = activeGoal
-      ? `${GOAL_TYPE_LABEL[activeGoal.goal_type]} (started ${fullDateForFormat(activeGoal.started_on, dateFormat)})`
-      : 'Select goal project';
 
     const sortedEntries = [...entries].sort((a, b) =>
       b.entry_date.localeCompare(a.entry_date),
@@ -1113,50 +1285,24 @@ export default function WeightTrackerScreen() {
       calories: profile?.show_calories ?? true,
     };
 
+    const hasCustomMetricColumns = customMetrics.length > 0;
+    const tableDateColWidth = hasCustomMetricColumns ? 55 : undefined;
+    const tableDataColWidth = hasCustomMetricColumns ? 52 : undefined;
+    const shouldRenderBooleanChart = selectedChartMetric.type === 'boolean';
+
+    const formatCustomMetricCell = (entryDate: string, metric: WeightTrackerCustomMetric): string => {
+      const value = metricValueByMetricAndDate.get(metric.id)?.get(entryDate);
+      if (!value) return '–';
+      if (metric.type === 'boolean') return value.value_boolean ? '✓' : '✗';
+      if (metric.type === 'integer') return value.value_integer != null ? String(value.value_integer) : '–';
+      return value.value_decimal != null ? value.value_decimal.toFixed(1) : '–';
+    };
+
     return (
       <View style={styles.screen}>
         {/* ── Header ── */}
         <View style={styles.header}>
-          <View style={styles.goalDropdownWrap}>
-            <TouchableOpacity
-              style={styles.goalDropdownTrigger}
-              onPress={() => setShowGoalDropdown((v) => !v)}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={styles.goalDropdownTitle}>{activeGoalLabel}</Text>
-                <Text style={styles.goalDropdownSub}>Goal Project</Text>
-              </View>
-              <Text style={styles.goalDropdownChevron}>{showGoalDropdown ? '▲' : '▼'}</Text>
-            </TouchableOpacity>
-
-            {showGoalDropdown && (
-              <View style={styles.goalDropdownOptions}>
-                {goals
-                  .filter((g) => g.id !== activeGoal?.id)
-                  .map((g) => (
-                    <TouchableOpacity
-                      key={g.id}
-                      style={styles.goalDropdownRow}
-                      onPress={() => handleActivateGoal(g.id)}
-                    >
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.goalDropdownTitle}>{GOAL_TYPE_LABEL[g.goal_type]}</Text>
-                        <Text style={styles.goalDropdownSub}>
-                          Started {fullDateForFormat(g.started_on, dateFormat)}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-
-                <TouchableOpacity style={styles.goalDropdownRow} onPress={openNewGoalModal}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.goalDropdownTitle, { color: C.accent }]}>Start new goal</Text>
-                    <Text style={styles.goalDropdownSub}>Create a new goal project</Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
+          <Text style={styles.headerTitle}>Weight Tracker</Text>
         </View>
 
         <ScrollView
@@ -1164,6 +1310,68 @@ export default function WeightTrackerScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.mainContent}
         >
+          {/* ── Goal summary and selector ── */}
+          {activeGoal && (
+            <View style={styles.goalSummaryCard}>
+              <TouchableOpacity
+                style={styles.goalSummaryHeader}
+                onPress={() => setShowGoalDropdown((v) => !v)}
+                activeOpacity={0.8}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.goalSummaryTitle}>
+                    {goalTypeLabel(activeGoal.goal_type)} (started {formatDateLong(activeGoal.started_on)})
+                  </Text>
+                  <Text style={styles.goalSummarySubtle}>
+                    {activeGoal.goal_type === 'track'
+                      ? 'Tracking only'
+                      : `${activeGoal.weekly_target_kg ?? 0.5} kg/week target`}
+                  </Text>
+                </View>
+                <Ionicons
+                  name={showGoalDropdown ? 'chevron-up' : 'chevron-down'}
+                  size={18}
+                  color={C.textMuted}
+                />
+              </TouchableOpacity>
+
+              {showGoalDropdown && (
+                <View style={styles.goalDropdownMenu}>
+                  <Text style={styles.goalDropdownLabel}>Previously set goals</Text>
+                  {goals
+                    .filter((goal) => goal.id !== activeGoal.id)
+                    .map((goal) => (
+                      <TouchableOpacity
+                        key={goal.id}
+                        style={styles.goalDropdownItem}
+                        onPress={async () => {
+                          setShowGoalDropdown(false);
+                          await handleSelectGoal(goal.id);
+                        }}
+                      >
+                        <Text style={styles.goalDropdownItemText}>
+                          {goalTypeLabel(goal.goal_type)} (started {formatDateLong(goal.started_on)})
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+
+                  <TouchableOpacity
+                    style={styles.goalStartAction}
+                    onPress={() => {
+                      setShowGoalDropdown(false);
+                      setNewGoalType('track');
+                      setNewGoalWeeklyTarget(0.5);
+                      setShowNewGoalModal(true);
+                    }}
+                  >
+                    <Ionicons name="add-circle-outline" size={17} color={C.accent} />
+                    <Text style={styles.goalStartActionText}>Start new goal</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+
           {/* ── Summary tiles ── */}
           <View style={styles.summaryRow}>
             <View style={styles.summaryTile}>
@@ -1194,39 +1402,127 @@ export default function WeightTrackerScreen() {
           </View>
 
           {/* ── Weight Chart ── */}
-          {chartData.length >= 2 ? (
+          {lineChartData.length >= 2 || booleanBarData.length >= 1 ? (
             <View style={styles.chartCard}>
-              <Text style={styles.sectionTitle}>Weight History</Text>
-              <LineChart
-                data={chartData}
-                width={SCREEN_WIDTH - 72}
-                height={180}
-                color={C.accent}
-                thickness={2}
-                curved
-                noOfSections={4}
-                yAxisOffset={chartRange?.yAxisOffset}
-                maxValue={chartRange?.maxValue}
-                initialSpacing={10}
-                endSpacing={20}
-                roundToDigits={1}
-                yAxisTextStyle={{ color: C.textMuted, fontSize: 10 }}
-                xAxisLabelTextStyle={{ color: C.textMuted, fontSize: 9 }}
-                hideRules={false}
-                rulesColor={C.border}
-                yAxisColor={C.border}
-                xAxisColor={C.border}
-                isAnimated
-                scrollToEnd
-                showScrollIndicator={chartData.length > 20}
-                dataPointsColor={C.accent}
-                dataPointsRadius={chartData.length > 30 ? 0 : 3}
-                yAxisLabelSuffix={` ${unit}`}
-              />
+              <View style={styles.chartTitleRow}>
+                <TouchableOpacity
+                  style={styles.chartMetricButton}
+                  onPress={() => setShowChartMetricDropdown((v) => !v)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.sectionTitle, styles.sectionTitleNoMargin]}>
+                    Weight History: {selectedChartMetric.label}
+                  </Text>
+                  <Ionicons
+                    name={showChartMetricDropdown ? 'chevron-up' : 'chevron-down'}
+                    size={16}
+                    color={C.textMuted}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {showChartMetricDropdown && (
+                <View style={styles.chartMetricDropdown}>
+                  {chartMetricOptions.map((option) => (
+                    <TouchableOpacity
+                      key={option.key}
+                      style={styles.chartMetricItem}
+                      onPress={() => {
+                        setSelectedChartMetricKey(option.key);
+                        setShowChartMetricDropdown(false);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.chartMetricItemText,
+                          option.key === selectedChartMetricKey && { color: C.accent, fontWeight: '700' },
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {shouldRenderBooleanChart ? (
+                <>
+                  <View style={styles.booleanLegendRow}>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: C.accent }]} />
+                      <Text style={styles.legendLabel}>True</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: falseMetricColor }]} />
+                      <Text style={styles.legendLabel}>False</Text>
+                    </View>
+                  </View>
+                  <BarChart
+                    data={booleanBarData}
+                    width={SCREEN_WIDTH - 72}
+                    height={180}
+                    barWidth={10}
+                    spacing={4}
+                    roundedTop
+                    hideRules={false}
+                    rulesColor={C.border}
+                    yAxisColor={C.border}
+                    xAxisColor={C.border}
+                    yAxisTextStyle={{ color: C.textMuted, fontSize: 10 }}
+                    xAxisLabelTextStyle={{ color: C.textMuted, fontSize: 9 }}
+                    noOfSections={1}
+                    maxValue={1.2}
+                    yAxisLabelTexts={['', '']}
+                    isAnimated
+                  />
+                </>
+              ) : (
+                <LineChart
+                  data={lineChartData}
+                  width={SCREEN_WIDTH - 72}
+                  height={180}
+                  color={C.accent}
+                  thickness={2}
+                  curved
+                  noOfSections={4}
+                  yAxisOffset={chartRange?.yAxisOffset}
+                  maxValue={chartRange?.maxValue}
+                  initialSpacing={10}
+                  endSpacing={20}
+                  roundToDigits={1}
+                  yAxisTextStyle={{ color: C.textMuted, fontSize: 10 }}
+                  xAxisLabelTextStyle={{ color: C.textMuted, fontSize: 9 }}
+                  hideRules={false}
+                  rulesColor={C.border}
+                  yAxisColor={C.border}
+                  xAxisColor={C.border}
+                  isAnimated
+                  scrollToEnd
+                  showScrollIndicator={lineChartData.length > 20}
+                  dataPointsColor={C.accent}
+                  dataPointsRadius={lineChartData.length > 30 ? 0 : 3}
+                  yAxisLabelSuffix={selectedChartMetric.key === 'weight' ? ` ${unit}` : ''}
+                />
+              )}
             </View>
-          ) : chartData.length === 1 ? (
+          ) : lineChartData.length === 1 ? (
             <View style={styles.chartCard}>
-              <Text style={styles.sectionTitle}>Weight History</Text>
+              <View style={styles.chartTitleRow}>
+                <TouchableOpacity
+                  style={styles.chartMetricButton}
+                  onPress={() => setShowChartMetricDropdown((v) => !v)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.sectionTitle, styles.sectionTitleNoMargin]}>
+                    Weight History: {selectedChartMetric.label}
+                  </Text>
+                  <Ionicons
+                    name={showChartMetricDropdown ? 'chevron-up' : 'chevron-down'}
+                    size={16}
+                    color={C.textMuted}
+                  />
+                </TouchableOpacity>
+              </View>
               <Text style={styles.emptyNote}>Log more entries to see your progress chart.</Text>
             </View>
           ) : null}
@@ -1235,38 +1531,127 @@ export default function WeightTrackerScreen() {
           {sortedEntries.length > 0 && (
             <View style={styles.tableCard}>
               <Text style={styles.sectionTitle}>Log</Text>
-              {/* Table header */}
-              <View style={[styles.tableRow, styles.tableHeader]}>
-                <Text style={[styles.tableCell, styles.tableCellDate, styles.tableHeaderText]}>
-                  Date
-                </Text>
-                {showCols.weight   && <Text style={[styles.tableCell, styles.tableHeaderText]}>Weight</Text>}
-                {showCols.steps    && <Text style={[styles.tableCell, styles.tableHeaderText]}>Steps</Text>}
-                {showCols.calories && <Text style={[styles.tableCell, styles.tableHeaderText]}>Kcal</Text>}
-              </View>
 
-              {sortedEntries.map((entry) => (
-                <TouchableOpacity key={entry.id} style={styles.tableRow} onPress={() => openLogModal(entry.entry_date)}>
-                  <View style={[styles.tableCell, styles.tableCellDate]}>
-                    <Text style={styles.tableCellDateText}>{fullDateForFormat(entry.entry_date, dateFormat)}</Text>
+              <ScrollView
+                horizontal={hasCustomMetricColumns}
+                showsHorizontalScrollIndicator={hasCustomMetricColumns}
+                bounces={false}
+              >
+                <View style={hasCustomMetricColumns ? { minWidth: SCREEN_WIDTH - 64 } : undefined}>
+                  <View style={[styles.tableRow, styles.tableHeader]}>
+                    <Text
+                      style={[
+                        styles.tableCell,
+                        styles.tableCellDate,
+                        styles.tableHeaderText,
+                        tableDateColWidth != null && { width: tableDateColWidth, flex: undefined },
+                      ]}
+                    >
+                      Date
+                    </Text>
+                    {showCols.weight && (
+                      <Text
+                        style={[
+                          styles.tableCell,
+                          styles.tableHeaderText,
+                          tableDataColWidth != null && { width: tableDataColWidth, flex: undefined },
+                        ]}
+                      >
+                        Weight
+                      </Text>
+                    )}
+                    {showCols.steps && (
+                      <Text
+                        style={[
+                          styles.tableCell,
+                          styles.tableHeaderText,
+                          tableDataColWidth != null && { width: tableDataColWidth, flex: undefined },
+                        ]}
+                      >
+                        Steps
+                      </Text>
+                    )}
+                    {showCols.calories && (
+                      <Text
+                        style={[
+                          styles.tableCell,
+                          styles.tableHeaderText,
+                          tableDataColWidth != null && { width: tableDataColWidth, flex: undefined },
+                        ]}
+                      >
+                        Kcal
+                      </Text>
+                    )}
+                    {customMetrics.map((metric) => (
+                      <Text
+                        key={metric.id}
+                        style={[
+                          styles.tableCell,
+                          styles.tableHeaderText,
+                          tableDataColWidth != null && { width: tableDataColWidth, flex: undefined },
+                        ]}
+                      >
+                        {truncateMetricHeader(metric.name)}
+                      </Text>
+                    ))}
                   </View>
-                  {showCols.weight && (
-                    <Text style={styles.tableCell}>
-                      {entry.weight_kg != null ? formatWeight(entry.weight_kg, 1) : '–'}
-                    </Text>
-                  )}
-                  {showCols.steps && (
-                    <Text style={styles.tableCell}>
-                      {entry.steps != null ? entry.steps.toLocaleString() : '–'}
-                    </Text>
-                  )}
-                  {showCols.calories && (
-                    <Text style={styles.tableCell}>
-                      {entry.calories != null ? entry.calories : '–'}
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              ))}
+
+                  {sortedEntries.map((entry) => (
+                    <TouchableOpacity key={entry.id} style={styles.tableRow} onPress={() => openLogModal(entry.entry_date)}>
+                      <View
+                        style={[
+                          styles.tableCell,
+                          styles.tableCellDate,
+                          tableDateColWidth != null && { width: tableDateColWidth, flex: undefined },
+                        ]}
+                      >
+                        <Text style={styles.tableCellDateText}>{formatDate(entry.entry_date)}</Text>
+                      </View>
+                      {showCols.weight && (
+                        <Text
+                          style={[
+                            styles.tableCell,
+                            tableDataColWidth != null && { width: tableDataColWidth, flex: undefined },
+                          ]}
+                        >
+                          {entry.weight_kg != null ? formatWeight(entry.weight_kg, 1) : '–'}
+                        </Text>
+                      )}
+                      {showCols.steps && (
+                        <Text
+                          style={[
+                            styles.tableCell,
+                            tableDataColWidth != null && { width: tableDataColWidth, flex: undefined },
+                          ]}
+                        >
+                          {entry.steps != null ? entry.steps.toLocaleString() : '–'}
+                        </Text>
+                      )}
+                      {showCols.calories && (
+                        <Text
+                          style={[
+                            styles.tableCell,
+                            tableDataColWidth != null && { width: tableDataColWidth, flex: undefined },
+                          ]}
+                        >
+                          {entry.calories != null ? entry.calories : '–'}
+                        </Text>
+                      )}
+                      {customMetrics.map((metric) => (
+                        <Text
+                          key={`${entry.id}-${metric.id}`}
+                          style={[
+                            styles.tableCell,
+                            tableDataColWidth != null && { width: tableDataColWidth, flex: undefined },
+                          ]}
+                        >
+                          {formatCustomMetricCell(entry.entry_date, metric)}
+                        </Text>
+                      ))}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
             </View>
           )}
 
@@ -1333,6 +1718,7 @@ export default function WeightTrackerScreen() {
                       onPress={async () => {
                         const updated = await api.upsertWeightTrackerProfile({ activity_level: a.key });
                         setProfile(updated);
+                        setEditActivity(a.key);
                       }}
                     >
                       <View style={{ flex: 1 }}>
@@ -1431,15 +1817,15 @@ export default function WeightTrackerScreen() {
             </View>
           )}
 
-          {/* ── Metric Settings accordion ── */}
+          {/* ── Profile Settings accordion ── */}
           <TouchableOpacity
             style={styles.accordionHeader}
             onPress={() => {
-              if (!showSettings && profile) seedSettingsMirrors(profile);
+              if (!showSettings && profile) seedSettingsMirrors(profile, activeGoal);
               setShowSettings((v) => !v);
             }}
           >
-            <Text style={styles.accordionTitle}>Metric Settings</Text>
+            <Text style={styles.accordionTitle}>Profile Settings</Text>
             <Ionicons
               name={showSettings ? 'chevron-up' : 'chevron-down'}
               size={18}
@@ -1449,6 +1835,104 @@ export default function WeightTrackerScreen() {
 
           {showSettings && (
             <View style={styles.accordionBody}>
+              <Text style={styles.fieldLabel}>Height ({heightUnit === 'ft' ? 'ft' : 'cm'})</Text>
+              <TextInput
+                style={styles.input}
+                value={editHeight}
+                onChangeText={setEditHeight}
+                placeholder={heightUnit === 'ft' ? 'e.g. 5.8' : 'e.g. 178'}
+                placeholderTextColor={C.textMuted}
+                keyboardType="decimal-pad"
+              />
+
+              <Text style={styles.fieldLabel}>Age / Birthdate</Text>
+              <View style={[styles.pillRow, { marginBottom: 8 }]}>
+                <TouchableOpacity
+                  style={[styles.pill, editAgeMode === 'age' && styles.pillActive]}
+                  onPress={() => setEditAgeMode('age')}
+                >
+                  <Text style={[styles.pillText, editAgeMode === 'age' && styles.pillTextActive]}>Age</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.pill, editAgeMode === 'birthdate' && styles.pillActive]}
+                  onPress={() => setEditAgeMode('birthdate')}
+                >
+                  <Text style={[styles.pillText, editAgeMode === 'birthdate' && styles.pillTextActive]}>Birthdate</Text>
+                </TouchableOpacity>
+              </View>
+              {editAgeMode === 'age' ? (
+                <TextInput
+                  style={styles.input}
+                  value={editAge}
+                  onChangeText={setEditAge}
+                  placeholder="e.g. 30"
+                  placeholderTextColor={C.textMuted}
+                  keyboardType="number-pad"
+                />
+              ) : (
+                <TextInput
+                  style={styles.input}
+                  value={editBirthdate}
+                  onChangeText={setEditBirthdate}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={C.textMuted}
+                  autoCapitalize="none"
+                />
+              )}
+
+              <Text style={styles.fieldLabel}>Gender</Text>
+              <View style={styles.pillRow}>
+                {(['male', 'female'] as WeightTrackerGender[]).map((g) => (
+                  <TouchableOpacity
+                    key={g}
+                    style={[styles.pill, editGender === g && styles.pillActive]}
+                    onPress={() => setEditGender(editGender === g ? null : g)}
+                  >
+                    <Text style={[styles.pillText, editGender === g && styles.pillTextActive]}>
+                      {g.charAt(0).toUpperCase() + g.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Goal</Text>
+              <View style={styles.pillRow}>
+                {([
+                  { v: 'lose' as WeightTrackerGoal, l: 'Lose' },
+                  { v: 'gain' as WeightTrackerGoal, l: 'Gain' },
+                  { v: null, l: 'Track only' },
+                ]).map(({ v, l }) => (
+                  <TouchableOpacity
+                    key={l}
+                    style={[styles.pill, editGoal === v && styles.pillActive]}
+                    onPress={() => setEditGoal(v)}
+                  >
+                    <Text style={[styles.pillText, editGoal === v && styles.pillTextActive]}>
+                      {l}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {(editGoal === 'lose' || editGoal === 'gain') && (
+                <>
+                  <Text style={[styles.fieldLabel, { marginTop: 4 }]}>Weekly Target</Text>
+                  <View style={styles.pillRow}>
+                    {([0.25, 0.5, 0.75, 1.0] as const).map((r) => (
+                      <TouchableOpacity
+                        key={r}
+                        style={[styles.pill, editWeeklyTarget === r && styles.pillActive]}
+                        onPress={() => setEditWeeklyTarget(editWeeklyTarget === r ? null : r)}
+                      >
+                        <Text style={[styles.pillText, editWeeklyTarget === r && styles.pillTextActive]}>
+                          {r} kg/wk
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </>
+              )}
+
               <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Tracked Metrics</Text>
               {([
                 { key: 'weight',   label: 'Weight',   val: editSWeight, set: setEditSWeight },
@@ -1557,7 +2041,7 @@ export default function WeightTrackerScreen() {
         {/* ── Add Custom Metric Modal ── */}
         {renderAddMetricModal()}
 
-        {/* ── New Goal Modal ── */}
+        {/* ── Start New Goal Modal ── */}
         {renderNewGoalModal()}
       </View>
     );
@@ -1850,27 +2334,19 @@ export default function WeightTrackerScreen() {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.fieldLabel}>Goal Type</Text>
+            <Text style={styles.fieldLabel}>Goal</Text>
             <View style={styles.pillRow}>
               {([
-                { value: 'lose' as WeightTrackerGoal, label: 'Lose Weight' },
-                { value: 'gain' as WeightTrackerGoal, label: 'Gain Weight' },
-                { value: 'track' as WeightTrackerGoal, label: 'Track Only' },
-              ]).map(({ value, label }) => (
+                { v: 'lose' as WeightTrackerGoal, l: 'Weight Loss' },
+                { v: 'gain' as WeightTrackerGoal, l: 'Weight Gain' },
+                { v: 'track' as WeightTrackerGoal, l: 'Track Only' },
+              ]).map(({ v, l }) => (
                 <TouchableOpacity
-                  key={value}
-                  style={[styles.pill, newGoalType === value && styles.pillActive]}
-                  onPress={() => {
-                    setNewGoalType(value);
-                    if (value === 'track') setNewGoalWeeklyTarget(null);
-                    if (value === 'lose' || value === 'gain') {
-                      setNewGoalWeeklyTarget((prev) => prev ?? 0.5);
-                    }
-                  }}
+                  key={v}
+                  style={[styles.pill, newGoalType === v && styles.pillActive]}
+                  onPress={() => setNewGoalType(v)}
                 >
-                  <Text style={[styles.pillText, newGoalType === value && styles.pillTextActive]}>
-                    {label}
-                  </Text>
+                  <Text style={[styles.pillText, newGoalType === v && styles.pillTextActive]}>{l}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -1879,16 +2355,14 @@ export default function WeightTrackerScreen() {
               <>
                 <Text style={styles.fieldLabel}>Weekly Target</Text>
                 <View style={styles.pillRow}>
-                  {([0.25, 0.5, 0.75, 1.0] as const).map((value) => (
+                  {([0.25, 0.5, 0.75, 1.0] as const).map((rate) => (
                     <TouchableOpacity
-                      key={value}
-                      style={[styles.pill, newGoalWeeklyTarget === value && styles.pillActive]}
-                      onPress={() => setNewGoalWeeklyTarget(value)}
+                      key={rate}
+                      style={[styles.pill, newGoalWeeklyTarget === rate && styles.pillActive]}
+                      onPress={() => setNewGoalWeeklyTarget(rate)}
                     >
-                      <Text
-                        style={[styles.pillText, newGoalWeeklyTarget === value && styles.pillTextActive]}
-                      >
-                        {value} kg/wk
+                      <Text style={[styles.pillText, newGoalWeeklyTarget === rate && styles.pillTextActive]}>
+                        {rate} kg/wk
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -1896,21 +2370,11 @@ export default function WeightTrackerScreen() {
               </>
             )}
 
-            <Text style={styles.fieldLabel}>Starting Weight ({unit})</Text>
-            <TextInput
-              style={styles.input}
-              value={newGoalStartWeight}
-              onChangeText={setNewGoalStartWeight}
-              placeholder={unit === 'kg' ? 'e.g. 80.0' : 'e.g. 176.4'}
-              placeholderTextColor={C.textMuted}
-              keyboardType="decimal-pad"
-            />
-
-            {savingNewGoal ? (
+            {creatingGoal ? (
               <ActivityIndicator color={C.accent} style={{ marginTop: 16 }} />
             ) : (
-              <TouchableOpacity style={[styles.primaryBtn, { marginTop: 12 }]} onPress={handleStartNewGoal}>
-                <Text style={styles.primaryBtnText}>Start Goal</Text>
+              <TouchableOpacity style={[styles.primaryBtn, { marginTop: 12 }]} onPress={handleCreateNewGoal}>
+                <Text style={styles.primaryBtnText}>Start New Goal</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -1933,6 +2397,9 @@ const createStyles = (C: ReturnType<typeof usePreferences>['colors']) =>
 
     // ── Header ──
     header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       paddingHorizontal: 16,
       paddingTop: 16,
       paddingBottom: 12,
@@ -1940,48 +2407,10 @@ const createStyles = (C: ReturnType<typeof usePreferences>['colors']) =>
       borderBottomWidth: 1,
       borderBottomColor: C.border,
     },
-    goalDropdownWrap: {
-      width: '100%',
-    },
-    goalDropdownTrigger: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: C.surface,
-      borderWidth: 1,
-      borderColor: C.border,
-      borderRadius: radius.md,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      ...shadow.card,
-    },
-    goalDropdownTitle: {
-      fontSize: 15,
-      fontWeight: '700',
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
       color: C.textStrong,
-    },
-    goalDropdownSub: {
-      fontSize: 12,
-      color: C.textMuted,
-      marginTop: 2,
-    },
-    goalDropdownChevron: {
-      color: C.textMuted,
-      fontSize: 11,
-      marginLeft: 8,
-    },
-    goalDropdownOptions: {
-      marginTop: 6,
-      borderWidth: 1,
-      borderColor: C.border,
-      borderRadius: radius.md,
-      overflow: 'hidden',
-      backgroundColor: C.surface,
-    },
-    goalDropdownRow: {
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      borderTopWidth: 1,
-      borderTopColor: C.border,
     },
     logBtn: {
       flexDirection: 'row',
@@ -2000,6 +2429,66 @@ const createStyles = (C: ReturnType<typeof usePreferences>['colors']) =>
 
     mainContent: {
       padding: 16,
+    },
+
+    goalSummaryCard: {
+      backgroundColor: C.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: C.border,
+      marginBottom: 14,
+      ...shadow.card,
+    },
+    goalSummaryHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+    },
+    goalSummaryTitle: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: C.textStrong,
+    },
+    goalSummarySubtle: {
+      fontSize: 12,
+      color: C.textMuted,
+      marginTop: 3,
+    },
+    goalDropdownMenu: {
+      borderTopWidth: 1,
+      borderTopColor: C.border,
+      paddingHorizontal: 12,
+      paddingTop: 10,
+      paddingBottom: 12,
+      gap: 6,
+    },
+    goalDropdownLabel: {
+      fontSize: 11,
+      color: C.textMuted,
+      fontWeight: '600',
+      marginBottom: 4,
+      textTransform: 'uppercase',
+    },
+    goalDropdownItem: {
+      paddingVertical: 8,
+    },
+    goalDropdownItemText: {
+      fontSize: 13,
+      color: C.textStrong,
+    },
+    goalStartAction: {
+      marginTop: 6,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 8,
+    },
+    goalStartActionText: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: C.accent,
     },
 
     // ── Summary ──
@@ -2038,6 +2527,54 @@ const createStyles = (C: ReturnType<typeof usePreferences>['colors']) =>
       padding: 16,
       marginBottom: 16,
       ...shadow.card,
+    },
+    chartTitleRow: {
+      marginBottom: 10,
+    },
+    chartMetricButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 10,
+    },
+    chartMetricDropdown: {
+      borderWidth: 1,
+      borderColor: C.border,
+      borderRadius: radius.sm,
+      marginBottom: 10,
+      overflow: 'hidden',
+    },
+    chartMetricItem: {
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: C.border,
+      backgroundColor: C.background,
+    },
+    chartMetricItemText: {
+      fontSize: 13,
+      color: C.textStrong,
+    },
+    booleanLegendRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 18,
+      marginBottom: 8,
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    legendDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 99,
+    },
+    legendLabel: {
+      fontSize: 12,
+      color: C.textMuted,
+      fontWeight: '600',
     },
 
     // ── Table ──
@@ -2102,6 +2639,9 @@ const createStyles = (C: ReturnType<typeof usePreferences>['colors']) =>
       fontWeight: '600',
       color: C.textStrong,
       marginBottom: 12,
+    },
+    sectionTitleNoMargin: {
+      marginBottom: 0,
     },
 
     // ── Accordions ──
