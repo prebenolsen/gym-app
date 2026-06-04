@@ -272,18 +272,18 @@ const createStyles = (themeColors: typeof colors) =>
       borderBottomWidth: 1,
       borderBottomColor: themeColors.border,
       paddingHorizontal: 16,
-      paddingVertical: 14,
+      paddingVertical: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
     },
     title: {
       fontSize: 20,
       fontWeight: '700',
       color: themeColors.textStrong,
-      
+      flex: 1,
     },
-    backButton: {
-      alignSelf: 'flex-start',
-      marginBottom: 8,
-    },
+    backButton: {},
     content: {
       flex: 1,
       padding: 16,

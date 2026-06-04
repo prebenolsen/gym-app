@@ -330,10 +330,10 @@ const createStyles = (themeColors: typeof colors) =>
       borderBottomColor: themeColors.border,
       paddingHorizontal: 16,
       paddingVertical: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
     },
-    backButton: {
-      alignSelf: 'flex-start',
-    },
+    backButton: {},
     banner: {
       backgroundColor: themeColors.accent,
       paddingVertical: 12,

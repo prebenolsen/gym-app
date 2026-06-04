@@ -120,7 +120,7 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
             <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
           </TouchableOpacity>
           <Text style={styles.title}>Exercise</Text>
-        </View>
+      </View>
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>No data available for this exercise yet.</Text>
         </View>
@@ -140,11 +140,13 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
         </TouchableOpacity>
-        <Text style={styles.title}>{data.exercise_name}</Text>
-        <Text style={styles.personalBest}>
-          Personal Best:{' '}
-          <Text style={styles.personalBestValue}>{formatWeight(personalBest)}</Text>
-        </Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>{data.exercise_name}</Text>
+          <Text style={styles.personalBest}>
+            Personal Best:{' '}
+            <Text style={styles.personalBestValue}>{formatWeight(personalBest)}</Text>
+          </Text>
+        </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -342,14 +344,15 @@ const createStyles = (themeColors: typeof colors) =>
     },
     header: {
       backgroundColor: themeColors.surface,
-      padding: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
       borderBottomWidth: 1,
       borderBottomColor: themeColors.border,
-      gap: 4,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
     },
     backBtn: {
-      alignSelf: 'flex-start',
-      marginBottom: 4,
     },
     title: {
       fontSize: 20,

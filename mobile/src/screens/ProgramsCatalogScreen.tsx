@@ -54,10 +54,12 @@ const ProgramsCatalogScreen = ({ navigation }: any) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
         </TouchableOpacity>
-        <Text style={styles.title}>Program Templates</Text>
-        <Text style={styles.subtitle}>
-          Choose a template to add all workouts and exercises at once
-        </Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>Program Templates</Text>
+          <Text style={styles.subtitle}>
+            Choose a template to add all workouts and exercises at once
+          </Text>
+        </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -126,14 +128,15 @@ const createStyles = (themeColors: typeof colors) =>
     },
     header: {
       backgroundColor: themeColors.surface,
-      padding: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
       borderBottomWidth: 1,
       borderBottomColor: themeColors.border,
-      gap: 4,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
     },
     backBtn: {
-      alignSelf: 'flex-start',
-      marginBottom: 8,
     },
     title: {
       fontSize: 22,

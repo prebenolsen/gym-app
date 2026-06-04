@@ -500,19 +500,20 @@ const createStyles = (themeColors: typeof colors) =>
     },
     header: {
       backgroundColor: themeColors.surface,
-      padding: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
       borderBottomWidth: 1,
       borderBottomColor: themeColors.border,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
     },
-    backButton: {
-      alignSelf: 'flex-start',
-      marginBottom: 8,
-    },
+    backButton: {},
     title: {
       fontSize: 24,
       fontWeight: 'bold',
       color: themeColors.textStrong,
-      
+      flex: 1,
     },
     titleInput: {
       fontSize: 24,

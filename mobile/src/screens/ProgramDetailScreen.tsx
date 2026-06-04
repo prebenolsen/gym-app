@@ -245,7 +245,7 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
         </TouchableOpacity>
-        <View style={styles.titleRow}>
+        <View style={[styles.titleRow, { flex: 1 }]}>
           <TouchableOpacity
             style={styles.favoriteStarButton}
             onPress={handleToggleFavorite}
@@ -377,14 +377,15 @@ const createStyles = (themeColors: typeof colors) =>
     },
     header: {
       backgroundColor: themeColors.surface,
-      padding: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
       borderBottomWidth: 1,
       borderBottomColor: themeColors.border,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
     },
-    backButton: {
-      alignSelf: 'flex-start',
-      marginBottom: 10,
-    },
+    backButton: {},
     titleRow: {
       flexDirection: 'row',
       alignItems: 'center',

@@ -93,17 +93,19 @@ const WorkoutHistoryDetailScreen = ({ route, navigation }: any) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
         </TouchableOpacity>
-        <Text style={styles.title}>Workout Details</Text>
-        <Text style={styles.metaText}>{formatDate(detail.session.started_at)}</Text>
-        <Text style={styles.metaText}>
-          Start: {formatTime(detail.session.started_at)}
-        </Text>
-        {detail.session.ended_at ? (
-          <Text style={styles.metaText}>End: {formatTime(detail.session.ended_at)}</Text>
-        ) : null}
-        <Text style={styles.metaText}>
-          Duration: {formatDuration(detail.session.started_at, detail.session.ended_at)}
-        </Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>Workout Details</Text>
+          <Text style={styles.metaText}>{formatDate(detail.session.started_at)}</Text>
+          <Text style={styles.metaText}>
+            Start: {formatTime(detail.session.started_at)}
+          </Text>
+          {detail.session.ended_at ? (
+            <Text style={styles.metaText}>End: {formatTime(detail.session.ended_at)}</Text>
+          ) : null}
+          <Text style={styles.metaText}>
+            Duration: {formatDuration(detail.session.started_at, detail.session.ended_at)}
+          </Text>
+        </View>
       </View>
 
       <ScrollView style={styles.list}>
@@ -147,12 +149,13 @@ const createStyles = (themeColors: typeof colors) =>
       backgroundColor: themeColors.surface,
       borderBottomWidth: 1,
       borderBottomColor: themeColors.border,
-      padding: 16,
-      gap: 6,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
     },
-    backButton: {
-      alignSelf: 'flex-start',
-    },
+    backButton: {},
     title: {
       color: themeColors.textStrong,
       fontSize: 22,

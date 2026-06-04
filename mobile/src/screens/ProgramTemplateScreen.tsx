@@ -56,10 +56,12 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
   if (!template) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>Template not found.</Text>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
-        </TouchableOpacity>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
+          </TouchableOpacity>
+          <Text style={styles.errorText}>Template not found.</Text>
+        </View>
       </View>
     );
   }
@@ -127,11 +129,15 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
-        </TouchableOpacity>
-        <Text style={styles.title}>{template.name}</Text>
-        <Text style={styles.subtitle}>{template.description}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.title}>{template.name}</Text>
+            <Text style={styles.subtitle}>{template.description}</Text>
+          </View>
+        </View>
         <TouchableOpacity
           style={[styles.btnImport, importing && styles.btnImportDisabled]}
           onPress={handleImport}
@@ -200,14 +206,15 @@ const createStyles = (themeColors: typeof colors) =>
     },
     header: {
       backgroundColor: themeColors.surface,
-      padding: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
       borderBottomWidth: 1,
       borderBottomColor: themeColors.border,
-      gap: 6,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
     },
     backBtn: {
-      alignSelf: 'flex-start',
-      marginBottom: 4,
     },
     title: {
       fontSize: 20,
