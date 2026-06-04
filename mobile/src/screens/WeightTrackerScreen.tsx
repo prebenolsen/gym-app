@@ -426,6 +426,9 @@ export default function WeightTrackerScreen() {
   const [editSSteps,       setEditSSteps]       = useState(true);
   const [editSCal,         setEditSCal]         = useState(true);
   const [savingSettings,   setSavingSettings]   = useState(false);
+  const [showExportModal,  setShowExportModal]  = useState(false);
+  const [exportingData,    setExportingData]    = useState(false);
+  const [exportCsvText,    setExportCsvText]    = useState('');
 
   // ── custom metric creation ─────────────────────────────────
   const [showAddMetricModal,  setShowAddMetricModal]  = useState(false);
@@ -1142,6 +1145,85 @@ export default function WeightTrackerScreen() {
         },
       ],
     );
+  };
+
+  const handleExportData = async () => {
+    setExportingData(true);
+    try {
+      const csvEscape = (raw: string | number | boolean | null | undefined): string => {
+        if (raw == null) return '';
+        const value = String(raw);
+        if (!/[",\n]/.test(value)) return value;
+        return `"${value.replace(/"/g, '""')}"`;
+      };
+
+      const [latestGoals, latestMetrics] = await Promise.all([
+        api.getWeightTrackerGoals(),
+        api.getCustomMetrics(),
+      ]);
+
+      const sortedGoals = [...latestGoals].sort((a, b) => a.started_on.localeCompare(b.started_on));
+      const [entriesByGoal, valuesByGoal] = await Promise.all([
+        Promise.all(sortedGoals.map((goal) => api.getWeightTrackerEntries(3650, goal.id))),
+        Promise.all(sortedGoals.map((goal) => api.getCustomMetricValues(3650, goal.id))),
+      ]);
+
+      const allEntries = entriesByGoal.flat();
+      const allMetricValues = valuesByGoal.flat();
+      const goalTypeById = new Map(sortedGoals.map((goal) => [goal.id, goal.goal_type]));
+      const metricById = new Map(latestMetrics.map((metric) => [metric.id, metric]));
+      const metricValueByEntryMetric = new Map<string, WeightTrackerCustomMetricValue>();
+
+      for (const metricValue of allMetricValues) {
+        metricValueByEntryMetric.set(
+          `${metricValue.goal_id}::${metricValue.entry_date}::${metricValue.metric_id}`,
+          metricValue,
+        );
+      }
+
+      const customMetricColumns = latestMetrics.map((metric) => metric.id);
+      const header = [
+        'entry_date',
+        'goal_type',
+        'weight_kg',
+        'steps',
+        'calories',
+        ...customMetricColumns.map((metricId, index) => {
+          const metricName = metricById.get(metricId)?.name?.trim();
+          return `custom_${metricName && metricName.length > 0 ? metricName : `metric_${index + 1}`}`;
+        }),
+      ];
+
+      const sortedEntries = [...allEntries].sort((a, b) => a.entry_date.localeCompare(b.entry_date));
+      const rows = sortedEntries.map((entry) => {
+        const baseValues: Array<string | number | boolean | null | undefined> = [
+          entry.entry_date,
+          goalTypeById.get(entry.goal_id) ?? '',
+          entry.weight_kg,
+          entry.steps,
+          entry.calories,
+        ];
+
+        const customValues = customMetricColumns.map((metricId) => {
+          const metric = metricById.get(metricId);
+          const value = metricValueByEntryMetric.get(`${entry.goal_id}::${entry.entry_date}::${metricId}`);
+          if (!metric || !value) return null;
+          if (metric.type === 'boolean') return value.value_boolean;
+          if (metric.type === 'integer') return value.value_integer;
+          return value.value_decimal;
+        });
+
+        return [...baseValues, ...customValues].map(csvEscape).join(',');
+      });
+
+      const csv = [header.map(csvEscape).join(','), ...rows].join('\n');
+      setExportCsvText(csv);
+      setShowExportModal(true);
+    } catch {
+      Alert.alert('Error', 'Could not export your data. Please try again.');
+    } finally {
+      setExportingData(false);
+    }
   };
 
   const handleSelectGoal = async (goalId: string) => {
@@ -2386,6 +2468,16 @@ export default function WeightTrackerScreen() {
               >
                 <Text style={styles.destructiveBtnText}>Delete All Data</Text>
               </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.secondaryBtn, { marginTop: 10 }]}
+                onPress={handleExportData}
+                disabled={exportingData}
+              >
+                <Text style={styles.secondaryBtnText}>
+                  {exportingData ? 'Preparing Export...' : 'Export My Data'}
+                </Text>
+              </TouchableOpacity>
             </View>
           )}
 
@@ -2411,6 +2503,9 @@ export default function WeightTrackerScreen() {
 
         {/* ── Start New Goal Modal ── */}
         {renderNewGoalModal()}
+
+        {/* ── Export Data Modal ── */}
+        {renderExportModal()}
       </View>
     );
   }
@@ -2745,6 +2840,51 @@ export default function WeightTrackerScreen() {
                 <Text style={styles.primaryBtnText}>Start New Goal</Text>
               </TouchableOpacity>
             )}
+          </View>
+        </View>
+      </Modal>
+    );
+  }
+
+  function renderExportModal() {
+    return (
+      <Modal
+        visible={showExportModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowExportModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Export My Data</Text>
+              <TouchableOpacity onPress={() => setShowExportModal(false)}>
+                <Ionicons name="close" size={24} color={C.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.formulaNote}>
+              Tap inside the field, then use Select All and Copy on your phone.
+            </Text>
+
+            <View style={styles.exportInput}>
+              <ScrollView
+                style={styles.exportScroll}
+                nestedScrollEnabled
+                showsVerticalScrollIndicator
+              >
+                <Text selectable style={styles.exportText}>
+                  {exportCsvText}
+                </Text>
+              </ScrollView>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.primaryBtn, { marginTop: 12 }]}
+              onPress={() => setShowExportModal(false)}
+            >
+              <Text style={styles.primaryBtnText}>Done</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -3280,6 +3420,21 @@ const createStyles = (C: ReturnType<typeof usePreferences>['colors']) =>
     destructiveBtnText: {
       ...getButtonStyles(C).deleteButtonText,
     },
+    secondaryBtn: {
+      height: 44,
+      borderRadius: radius.sm,
+      borderWidth: 1,
+      borderColor: C.border,
+      backgroundColor: C.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 14,
+    },
+    secondaryBtnText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: C.textStrong,
+    },
     goalCard: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -3344,6 +3499,25 @@ const createStyles = (C: ReturnType<typeof usePreferences>['colors']) =>
       fontSize: 18,
       fontWeight: '700',
       color: C.textStrong,
+    },
+    exportInput: {
+      minHeight: 220,
+      maxHeight: 360,
+      borderRadius: radius.sm,
+      borderWidth: 1,
+      borderColor: C.border,
+      backgroundColor: C.surface,
+      marginTop: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 10,
+    },
+    exportScroll: {
+      flex: 1,
+    },
+    exportText: {
+      color: C.textStrong,
+      fontSize: 12,
+      lineHeight: 18,
     },
     dateWheelWrap: {
       height: LOG_WHEEL_ROW_HEIGHT * 5,
