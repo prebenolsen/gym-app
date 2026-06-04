@@ -131,7 +131,7 @@ const buildPreviousPerformanceLookup = (sets: LastPerformanceSet[]): PreviousPer
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = 60;
 
-const ActiveWorkoutScreen = ({ navigation }: any) => {
+const ActiveWorkoutScreen = ({ navigation, route }: any) => {
   const api = useApi();
   const {
     colors: themeColors,
@@ -179,6 +179,7 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
   const [pendingSetCountPrompt, setPendingSetCountPrompt] =
     useState<PendingSetCountPrompt | null>(null);
   const lastRestSoundSecondRef = useRef<number | null>(null);
+  const consumedInitialSessionFallbackRef = useRef(false);
 
   const currentExercise = exercises[currentIndex] ?? null;
   const currentDrafts = currentExercise
@@ -269,12 +270,24 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
   const loadContext = async () => {
     setLoading(true);
     try {
-      const activeSession = await api.getActiveSession();
+      let activeSession = await api.getActiveSession();
+
+      if (!activeSession && !consumedInitialSessionFallbackRef.current) {
+        const initialSession = route?.params?.initialSession as WorkoutSession | undefined;
+        if (initialSession?.status === 'active') {
+          activeSession = initialSession;
+        }
+        consumedInitialSessionFallbackRef.current = true;
+      }
+
       setSession(activeSession);
 
       if (!activeSession) {
         setWorkout(null);
         setExercises([]);
+        setRestSecondsLeft(0);
+        setPendingDefaultRestSeconds(null);
+        lastRestSoundSecondRef.current = 0;
         setSetDraftsByExercise({});
         setSavedSetsByExercise({});
         setSavedDraftBaselinesByExercise({});
@@ -701,6 +714,9 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
         style: 'destructive',
         onPress: async () => {
           try {
+            setRestSecondsLeft(0);
+            setPendingDefaultRestSeconds(null);
+            lastRestSoundSecondRef.current = 0;
             await api.cancelWorkoutSession(session.id);
             await loadContext();
           } catch (err) {
@@ -721,6 +737,9 @@ const ActiveWorkoutScreen = ({ navigation }: any) => {
         text: 'Finish',
         onPress: async () => {
           try {
+            setRestSecondsLeft(0);
+            setPendingDefaultRestSeconds(null);
+            lastRestSoundSecondRef.current = 0;
             await api.finishWorkoutSession(session.id);
             await loadContext();
           } catch (err) {

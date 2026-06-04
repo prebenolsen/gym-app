@@ -163,10 +163,13 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
 
   const handleStartWorkout = async () => {
     try {
-      await api.startWorkoutSession(workoutId);
+      const startedSession = await api.startWorkoutSession(workoutId);
       const parentNav = navigation.getParent?.();
       if (parentNav?.navigate) {
-        parentNav.navigate('ActiveWorkoutStack', { screen: 'ActiveWorkout' });
+        parentNav.navigate('ActiveWorkoutStack', {
+          screen: 'ActiveWorkout',
+          params: { initialSession: startedSession },
+        });
       }
     } catch (err) {
       const apiErr = err as Error & { status?: number };
@@ -193,10 +196,13 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                   if (activeSession) {
                     await api.cancelWorkoutSession(activeSession.id);
                   }
-                  await api.startWorkoutSession(workoutId);
+                  const startedSession = await api.startWorkoutSession(workoutId);
                   const parentNav = navigation.getParent?.();
                   if (parentNav?.navigate) {
-                    parentNav.navigate('ActiveWorkoutStack', { screen: 'ActiveWorkout' });
+                    parentNav.navigate('ActiveWorkoutStack', {
+                      screen: 'ActiveWorkout',
+                      params: { initialSession: startedSession },
+                    });
                   }
                 } catch (replaceErr) {
                   console.error('Failed to replace active workout session:', replaceErr);
