@@ -242,6 +242,9 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
+        </TouchableOpacity>
         <View style={styles.titleRow}>
           <TouchableOpacity
             style={styles.favoriteStarButton}
@@ -377,6 +380,10 @@ const createStyles = (themeColors: typeof colors) =>
       padding: 16,
       borderBottomWidth: 1,
       borderBottomColor: themeColors.border,
+    },
+    backButton: {
+      alignSelf: 'flex-start',
+      marginBottom: 10,
     },
     titleRow: {
       flexDirection: 'row',

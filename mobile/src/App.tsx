@@ -244,6 +244,12 @@ const AppRoutes = () => {
           <Tab.Screen
             name="Home"
             component={HomeScreen}
+            listeners={({ navigation }) => ({
+              tabPress: (event) => {
+                event.preventDefault();
+                navigation.navigate('Home');
+              },
+            })}
             options={{
               tabBarIcon: ({ color, focused }) => (
                 <View style={createTabIconWrapperStyle(focused, colors.accent)}>
@@ -280,6 +286,17 @@ const AppRoutes = () => {
           <Tab.Screen
             name="ActiveWorkoutStack"
             component={ActiveWorkoutStackNavigator}
+            listeners={({ navigation }) => ({
+              tabPress: (event) => {
+                if (!isActiveWorkoutEnabled) {
+                  event.preventDefault();
+                  return;
+                }
+
+                event.preventDefault();
+                navigation.navigate('ActiveWorkoutStack', { screen: 'ActiveWorkout' });
+              },
+            })}
             options={{
               tabBarIcon: ({ color, focused }) => (
                 <View style={createTabIconWrapperStyle(focused, colors.accent)}>
@@ -309,6 +326,12 @@ const AppRoutes = () => {
           <Tab.Screen
             name="CalendarStack"
             component={CalendarStackNavigator}
+            listeners={({ navigation }) => ({
+              tabPress: (event) => {
+                event.preventDefault();
+                navigation.navigate('CalendarStack', { screen: 'Calendar' });
+              },
+            })}
             options={{
               tabBarIcon: ({ color, focused }) => (
                 <View style={createTabIconWrapperStyle(focused, colors.accent)}>
@@ -331,6 +354,12 @@ const AppRoutes = () => {
           <Tab.Screen
             name="Settings"
             component={SettingsScreen}
+            listeners={({ navigation }) => ({
+              tabPress: (event) => {
+                event.preventDefault();
+                navigation.navigate('Settings');
+              },
+            })}
             options={{
               tabBarIcon: ({ color, focused }) => (
                 <View style={createTabIconWrapperStyle(focused, colors.accent)}>

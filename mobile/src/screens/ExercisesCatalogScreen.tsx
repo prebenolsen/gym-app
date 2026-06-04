@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import {
   exercises,
   getMuscleGroups,
@@ -118,6 +119,12 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
+        </TouchableOpacity>
+      </View>
+
       {/* Active Workout Banner */}
       <View style={styles.banner}>
         <Text style={styles.bannerText}>
@@ -316,6 +323,16 @@ const createStyles = (themeColors: typeof colors) =>
     container: {
       flex: 1,
       backgroundColor: themeColors.background,
+    },
+    header: {
+      backgroundColor: themeColors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    },
+    backButton: {
+      alignSelf: 'flex-start',
     },
     banner: {
       backgroundColor: themeColors.accent,

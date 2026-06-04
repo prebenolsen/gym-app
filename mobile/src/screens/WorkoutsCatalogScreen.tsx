@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { WORKOUT_TEMPLATES, type WorkoutTemplate } from '@gym-app/shared';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
@@ -47,6 +48,9 @@ const WorkoutsCatalogScreen = ({ route, navigation }: any) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
+        </TouchableOpacity>
         <Text style={styles.title}>Workout Templates</Text>
         <Text style={styles.subtitle}>
           Choose a workout template to add to your program
@@ -111,6 +115,10 @@ const createStyles = (themeColors: typeof colors) =>
       borderBottomWidth: 1,
       borderBottomColor: themeColors.border,
       gap: 4,
+    },
+    backButton: {
+      alignSelf: 'flex-start',
+      marginBottom: 8,
     },
     title: {
       fontSize: 22,

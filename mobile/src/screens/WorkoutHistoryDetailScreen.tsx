@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { type WorkoutSessionDetail, type WorkoutSessionSet } from '@gym-app/shared';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
@@ -89,8 +90,8 @@ const WorkoutHistoryDetailScreen = ({ route, navigation }: any) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>← BACK</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
         </TouchableOpacity>
         <Text style={styles.title}>Workout Details</Text>
         <Text style={styles.metaText}>{formatDate(detail.session.started_at)}</Text>
@@ -149,10 +150,8 @@ const createStyles = (themeColors: typeof colors) =>
       padding: 16,
       gap: 6,
     },
-    backText: {
-      color: themeColors.accent,
-      fontWeight: '700',
-      
+    backButton: {
+      alignSelf: 'flex-start',
     },
     title: {
       color: themeColors.textStrong,

@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { type ExerciseHistorySummary, type ExerciseProgressEntry } from '@gym-app/shared';
 import { useApi } from '../hooks/useApi';
 import { usePreferences } from '../context/PreferencesContext';
@@ -162,6 +163,9 @@ const ExerciseProgressListScreen = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
+        </TouchableOpacity>
         <Text style={styles.title}>Your Exercise Progress</Text>
       </View>
 
@@ -275,6 +279,10 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: '700',
       color: themeColors.textStrong,
       
+    },
+    backButton: {
+      alignSelf: 'flex-start',
+      marginBottom: 8,
     },
     content: {
       flex: 1,
