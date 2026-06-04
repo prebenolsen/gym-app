@@ -125,6 +125,19 @@ const dateLabel = (isoDate: string): string => {
 
 const formatDate = (isoDate: string): string => isoDate.slice(5).replace('-', '/');
 
+const formatDateForAxis = (
+  isoDate: string,
+  dateFormat: 'iso' | 'eu' | 'us',
+): string => {
+  const d = parseIsoDateLocal(isoDate);
+  const day = d.getDate();
+  const month = d.getMonth() + 1;
+
+  if (dateFormat === 'eu') return `${day}/${month}`;
+  if (dateFormat === 'us') return `${month}/${day}`;
+  return `${month}-${day}`;
+};
+
 const formatDateLong = (isoDate: string): string => {
   const d = parseIsoDateLocal(isoDate);
   return `${d.getDate()}. ${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
@@ -269,7 +282,17 @@ type LogDateOption = {
 };
 
 export default function WeightTrackerScreen() {
-  const { colors: C, formatWeight, convertFromKg, convertToKg, unit, heightUnit, convertFromCm, convertToCm } = usePreferences();
+  const {
+    colors: C,
+    formatWeight,
+    convertFromKg,
+    convertToKg,
+    unit,
+    heightUnit,
+    convertFromCm,
+    convertToCm,
+    dateFormat,
+  } = usePreferences();
   const api = useApi();
   const navigation = useNavigation();
   const styles = useMemo(() => createStyles(C), [C]);
@@ -525,15 +548,73 @@ export default function WeightTrackerScreen() {
 
   const falseMetricColor = useMemo(() => getComplementaryColor(C.accent), [C.accent]);
 
+  const chartWidth = SCREEN_WIDTH - 72;
+  const chartBaseInitialSpacing = 12;
+  const chartBaseEndSpacing = 12;
+
+  const selectedSeriesCount = useMemo(() => {
+    if (selectedChartMetric.key === 'weight') return weightEntries.length;
+
+    if (selectedChartMetric.type === 'boolean') {
+      if (!selectedChartMetric.metricId) return 0;
+      const metricValuesByDate = metricValueByMetricAndDate.get(selectedChartMetric.metricId) ?? new Map();
+      return entries.reduce((count, entry) => {
+        const value = metricValuesByDate.get(entry.entry_date);
+        return value?.value_boolean == null ? count : count + 1;
+      }, 0);
+    }
+
+    if (!selectedChartMetric.metricId) return 0;
+    const metricValuesByDate = metricValueByMetricAndDate.get(selectedChartMetric.metricId) ?? new Map();
+    return entries.reduce((count, entry) => {
+      const value = metricValuesByDate.get(entry.entry_date);
+      if (!value) return count;
+      if (selectedChartMetric.type === 'integer' && value.value_integer != null) return count + 1;
+      if (selectedChartMetric.type === 'decimal' && value.value_decimal != null) return count + 1;
+      return count;
+    }, 0);
+  }, [selectedChartMetric, entries, weightEntries.length, metricValueByMetricAndDate]);
+
+  const chartLabelConfig = useMemo(() => {
+    const count = selectedSeriesCount;
+    const maxLabelsHorizontal = Math.max(2, Math.floor(chartWidth / 56));
+    const maxLabelsRotated = Math.max(2, Math.floor(chartWidth / 34));
+    const rotateLabels = count > maxLabelsHorizontal;
+    const maxLabels = rotateLabels ? maxLabelsRotated : maxLabelsHorizontal;
+    const step = count <= maxLabels ? 1 : Math.ceil((count - 1) / (maxLabels - 1));
+
+    return { rotateLabels, step };
+  }, [selectedSeriesCount, chartWidth]);
+
+  const chartInitialSpacing = chartLabelConfig.rotateLabels ? 16 : chartBaseInitialSpacing;
+  const chartEndSpacing = chartLabelConfig.rotateLabels ? 18 : chartBaseEndSpacing;
+
+  const chartXAxisLabelTextStyle = useMemo(
+    () => ({
+      color: C.textMuted,
+      fontSize: chartLabelConfig.rotateLabels ? 8 : 9,
+      ...(chartLabelConfig.rotateLabels
+        ? {
+            transform: [{ rotate: '45deg' }],
+            textAlign: 'left' as const,
+            width: 34,
+          }
+        : {}),
+    }),
+    [C.textMuted, chartLabelConfig.rotateLabels],
+  );
+
   const lineChartData = useMemo(() => {
     if (selectedChartMetric.key === 'weight') {
       return weightEntries.map((entry, idx) => {
         const displayVal = parseFloat(convertFromKg(entry.weight_kg!).toFixed(1));
         const totalPts = weightEntries.length;
-        const showLabel = idx === 0 || idx === totalPts - 1 || idx % 7 === 0;
+        const isLast = idx === totalPts - 1;
+        const showLabel =
+          !isLast && (idx === 0 || (chartLabelConfig.step > 0 && idx % chartLabelConfig.step === 0));
         return {
           value: displayVal,
-          label: showLabel ? formatDate(entry.entry_date) : '',
+          label: showLabel ? formatDateForAxis(entry.entry_date, dateFormat) : '',
           dataPointText: '',
         };
       });
@@ -560,14 +641,24 @@ export default function WeightTrackerScreen() {
 
     return points.map((point, idx) => {
       const totalPts = points.length;
-      const showLabel = idx === 0 || idx === totalPts - 1 || idx % 7 === 0;
+      const isLast = idx === totalPts - 1;
+      const showLabel =
+        !isLast && (idx === 0 || (chartLabelConfig.step > 0 && idx % chartLabelConfig.step === 0));
       return {
         value: parseFloat(point.numeric.toFixed(1)),
-        label: showLabel ? formatDate(point.date) : '',
+        label: showLabel ? formatDateForAxis(point.date, dateFormat) : '',
         dataPointText: '',
       };
     });
-  }, [selectedChartMetric, weightEntries, entries, metricValueByMetricAndDate, convertFromKg]);
+  }, [
+    selectedChartMetric,
+    weightEntries,
+    entries,
+    metricValueByMetricAndDate,
+    convertFromKg,
+    chartLabelConfig.step,
+    dateFormat,
+  ]);
 
   const booleanBarData = useMemo(() => {
     if (selectedChartMetric.type !== 'boolean' || !selectedChartMetric.metricId) return [];
@@ -580,16 +671,39 @@ export default function WeightTrackerScreen() {
         const value = metricValuesByDate.get(entry.entry_date);
         if (value?.value_boolean == null) return null;
         const totalPts = ordered.length;
-        const showLabel = idx === 0 || idx === totalPts - 1 || idx % 7 === 0;
+        const isLast = idx === totalPts - 1;
+        const showLabel =
+          !isLast && (idx === 0 || (chartLabelConfig.step > 0 && idx % chartLabelConfig.step === 0));
         return {
           value: 1,
-          label: showLabel ? formatDate(entry.entry_date) : '',
+          label: showLabel ? formatDateForAxis(entry.entry_date, dateFormat) : '',
           frontColor: value.value_boolean ? C.accent : falseMetricColor,
-          spacing: 4,
         };
       })
-      .filter((bar): bar is { value: number; label: string; frontColor: string; spacing: number } => bar !== null);
-  }, [selectedChartMetric, entries, metricValueByMetricAndDate, C.accent, falseMetricColor]);
+      .filter((bar): bar is { value: number; label: string; frontColor: string } => bar !== null);
+  }, [
+    selectedChartMetric,
+    entries,
+    metricValueByMetricAndDate,
+    C.accent,
+    falseMetricColor,
+    chartLabelConfig.step,
+    dateFormat,
+  ]);
+
+  const lineChartSpacing = useMemo(() => {
+    if (lineChartData.length <= 1) return 0;
+    const drawableWidth = Math.max(1, chartWidth - chartInitialSpacing - chartEndSpacing);
+    return Math.max(1, drawableWidth / (lineChartData.length - 1));
+  }, [lineChartData.length, chartWidth]);
+
+  const booleanBarLayout = useMemo(() => {
+    if (booleanBarData.length <= 1) return { barWidth: 10, spacing: 4 };
+    const drawableWidth = Math.max(1, chartWidth - chartInitialSpacing - chartEndSpacing);
+    const barWidth = Math.max(2, Math.min(10, drawableWidth / (booleanBarData.length * 1.6)));
+    const spacing = Math.max(1, Math.min(6, barWidth * 0.6));
+    return { barWidth, spacing };
+  }, [booleanBarData.length, chartWidth]);
 
   const chartRange = useMemo(() => {
     if (lineChartData.length === 0) return null;
@@ -1250,8 +1364,29 @@ export default function WeightTrackerScreen() {
     const deltaKg    = startKg && currentWeightKg ? currentWeightKg - startKg : null;
     const deltaLabel =
       deltaKg !== null
-        ? `${deltaKg >= 0 ? '+' : ''}${formatWeight(Math.abs(deltaKg), 1)} ${unit}`
+        ? `${deltaKg >= 0 ? '+' : ''}${formatWeight(Math.abs(deltaKg), 1)}`
         : null;
+    const changeBlue = '#42a5f5';
+    const deltaColor =
+      deltaKg == null
+        ? C.textStrong
+        : activeGoal?.goal_type === 'lose'
+          ? deltaKg < 0
+            ? '#4caf50'
+            : deltaKg > 0
+              ? changeBlue
+              : C.textStrong
+          : activeGoal?.goal_type === 'gain'
+            ? deltaKg > 0
+              ? '#4caf50'
+              : deltaKg < 0
+                ? changeBlue
+                : C.textStrong
+            : deltaKg < 0
+              ? '#4caf50'
+              : deltaKg > 0
+                ? changeBlue
+                : C.textStrong;
 
     const sortedEntries = [...entries].sort((a, b) =>
       b.entry_date.localeCompare(a.entry_date),
@@ -1271,6 +1406,13 @@ export default function WeightTrackerScreen() {
       if (metric.type === 'boolean') return value.value_boolean ? '✓' : '✗';
       if (metric.type === 'integer') return value.value_integer != null ? String(value.value_integer) : '–';
       return value.value_decimal != null ? value.value_decimal.toFixed(1) : '–';
+    };
+
+    const customMetricCellColor = (entryDate: string, metric: WeightTrackerCustomMetric): string | undefined => {
+      if (metric.type !== 'boolean') return undefined;
+      const value = metricValueByMetricAndDate.get(metric.id)?.get(entryDate);
+      if (!value || value.value_boolean == null) return undefined;
+      return value.value_boolean ? C.accent : falseMetricColor;
     };
 
     const dateColumnWidth = estimateColumnWidth(
@@ -1310,6 +1452,8 @@ export default function WeightTrackerScreen() {
       showCols.calories ? caloriesColumnWidth : 0,
       ...customMetricColumns.map((metric) => metric.width),
     ].reduce((total, width) => total + width, 0);
+    const visibleLogTableWidth = SCREEN_WIDTH - 64;
+    const canScrollLogTable = logTableWidth > visibleLogTableWidth + 1;
 
     return (
       <View style={styles.screen}>
@@ -1389,23 +1533,21 @@ export default function WeightTrackerScreen() {
           <View style={styles.summaryRow}>
             <View style={styles.summaryTile}>
               <Text style={styles.summaryValue}>
-                {currentWeightKg != null ? formatWeight(currentWeightKg) : '–'}
-              </Text>
-              <Text style={styles.summaryLabel}>Current</Text>
-            </View>
-            <View style={styles.summaryTile}>
-              <Text style={styles.summaryValue}>
                 {startKg != null ? formatWeight(startKg) : '–'}
               </Text>
               <Text style={styles.summaryLabel}>Starting</Text>
+            </View>
+            <View style={styles.summaryTile}>
+              <Text style={styles.summaryValue}>
+                {currentWeightKg != null ? formatWeight(currentWeightKg) : '–'}
+              </Text>
+              <Text style={styles.summaryLabel}>Current</Text>
             </View>
             <View style={[styles.summaryTile, { borderColor: C.border }]}>
               <Text
                 style={[
                   styles.summaryValue,
-                  deltaKg != null && {
-                    color: deltaKg < 0 ? '#4caf50' : deltaKg > 0 ? '#e57373' : C.textStrong,
-                  },
+                  { color: deltaColor },
                 ]}
               >
                 {deltaLabel ?? '–'}
@@ -1424,7 +1566,7 @@ export default function WeightTrackerScreen() {
                   activeOpacity={0.8}
                 >
                   <Text style={[styles.sectionTitle, styles.sectionTitleNoMargin]}>
-                    Weight History: {selectedChartMetric.label}
+                    {selectedChartMetric.label}
                   </Text>
                   <Ionicons
                     name={showChartMetricDropdown ? 'chevron-up' : 'chevron-down'}
@@ -1472,49 +1614,52 @@ export default function WeightTrackerScreen() {
                   </View>
                   <BarChart
                     data={booleanBarData}
-                    width={SCREEN_WIDTH - 72}
-                    height={180}
-                    barWidth={10}
-                    spacing={4}
+                    width={chartWidth}
+                    height={chartLabelConfig.rotateLabels ? 206 : 186}
+                    barWidth={booleanBarLayout.barWidth}
+                    spacing={booleanBarLayout.spacing}
+                    initialSpacing={chartInitialSpacing}
+                    endSpacing={chartEndSpacing}
                     roundedTop
                     hideRules={false}
                     rulesColor={C.border}
                     yAxisColor={C.border}
                     xAxisColor={C.border}
-                    yAxisTextStyle={{ color: C.textMuted, fontSize: 10 }}
-                    xAxisLabelTextStyle={{ color: C.textMuted, fontSize: 9 }}
+                    yAxisTextStyle={{ color: 'transparent', fontSize: 10 }}
+                    xAxisLabelTextStyle={chartXAxisLabelTextStyle}
                     noOfSections={1}
                     maxValue={1.2}
                     yAxisLabelTexts={['', '']}
                     isAnimated
+                    disableScroll
                   />
                 </>
               ) : (
                 <LineChart
                   data={lineChartData}
-                  width={SCREEN_WIDTH - 72}
-                  height={180}
+                  width={chartWidth}
+                  height={chartLabelConfig.rotateLabels ? 206 : 186}
                   color={C.accent}
                   thickness={2}
                   curved
                   noOfSections={4}
                   yAxisOffset={chartRange?.yAxisOffset}
                   maxValue={chartRange?.maxValue}
-                  initialSpacing={10}
-                  endSpacing={20}
+                  spacing={lineChartSpacing}
+                  initialSpacing={chartInitialSpacing}
+                  endSpacing={chartEndSpacing}
                   roundToDigits={1}
                   yAxisTextStyle={{ color: C.textMuted, fontSize: 10 }}
-                  xAxisLabelTextStyle={{ color: C.textMuted, fontSize: 9 }}
+                  xAxisLabelTextStyle={chartXAxisLabelTextStyle}
                   hideRules={false}
                   rulesColor={C.border}
                   yAxisColor={C.border}
                   xAxisColor={C.border}
                   isAnimated
-                  scrollToEnd
-                  showScrollIndicator={lineChartData.length > 20}
+                  disableScroll
                   dataPointsColor={C.accent}
                   dataPointsRadius={lineChartData.length > 30 ? 0 : 3}
-                  yAxisLabelSuffix={selectedChartMetric.key === 'weight' ? ` ${unit}` : ''}
+                  yAxisLabelSuffix=""
                 />
               )}
             </View>
@@ -1527,7 +1672,7 @@ export default function WeightTrackerScreen() {
                   activeOpacity={0.8}
                 >
                   <Text style={[styles.sectionTitle, styles.sectionTitleNoMargin]}>
-                    Weight History: {selectedChartMetric.label}
+                    {selectedChartMetric.label}
                   </Text>
                   <Ionicons
                     name={showChartMetricDropdown ? 'chevron-up' : 'chevron-down'}
@@ -1546,11 +1691,12 @@ export default function WeightTrackerScreen() {
               <Text style={styles.sectionTitle}>Log</Text>
 
               <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator
+                horizontal={canScrollLogTable}
+                showsHorizontalScrollIndicator={canScrollLogTable}
                 bounces={false}
+                scrollEnabled={canScrollLogTable}
               >
-                <View style={{ minWidth: Math.max(logTableWidth, SCREEN_WIDTH - 64) }}>
+                <View style={{ width: logTableWidth }}>
                   <View style={[styles.tableRow, styles.tableHeader]}>
                     <Text
                       style={[
@@ -1655,6 +1801,9 @@ export default function WeightTrackerScreen() {
                           key={`${entry.id}-${metric.id}`}
                           style={[
                             styles.tableCell,
+                            customMetricCellColor(entry.entry_date, metric)
+                              ? { color: customMetricCellColor(entry.entry_date, metric) }
+                              : null,
                             { width: customMetricWidthById.get(metric.id) ?? 64, flex: 0 },
                           ]}
                         >
