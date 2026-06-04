@@ -296,16 +296,7 @@ export default function WeightTrackerScreen() {
   const [showHealthInfo,  setShowHealthInfo]  = useState(false);
   const [showSettings,    setShowSettings]    = useState(false);
 
-  // ── inline settings edit mirrors ──────────────────────────
-  const [editGender,       setEditGender]       = useState<WeightTrackerGender | null>(null);
-  const [editAge,          setEditAge]          = useState('');
-  const [editAgeMode,      setEditAgeMode]      = useState<'age' | 'birthdate'>('age');
-  const [editBirthdate,    setEditBirthdate]    = useState('');
-  const [editHeight,       setEditHeight]       = useState('');
-  const [editGoal,         setEditGoal]         = useState<WeightTrackerGoal | null>(null);
-  const [editWeeklyTarget, setEditWeeklyTarget] = useState<number | null>(null);
-  const [editFormula,      setEditFormula]      = useState<WeightTrackerBmrFormula>('mifflin_st_jeor');
-  const [editActivity,     setEditActivity]     = useState<WeightTrackerActivityLevel | null>(null);
+  // ── metric settings mirrors ───────────────────────────────
   const [editSWeight,      setEditSWeight]      = useState(true);
   const [editSSteps,       setEditSSteps]       = useState(true);
   const [editSCal,         setEditSCal]         = useState(true);
@@ -374,6 +365,11 @@ export default function WeightTrackerScreen() {
               } else {
                 setObAge(profileData.age ? String(profileData.age) : '');
               }
+              setObWeight(
+                profileData.default_weight_kg != null
+                  ? String(parseFloat(convertFromKg(profileData.default_weight_kg).toFixed(1)))
+                  : '',
+              );
               setObHeight(profileData.height_cm ? String(parseFloat(convertFromCm(profileData.height_cm).toFixed(1))) : '');
               setObShowWeight(profileData.show_weight);
               setObShowSteps(profileData.show_steps);
@@ -394,19 +390,10 @@ export default function WeightTrackerScreen() {
 
       load();
       return () => { mounted = false; };
-    }, [api, convertFromCm]),
+    }, [api, convertFromCm, convertFromKg]),
   );
 
-  const seedSettingsMirrors = (p: WeightTrackerProfile, activeGoal: GoalProject | null) => {
-    setEditGender(p.gender);
-    setEditAge(p.age ? String(p.age) : '');
-    setEditBirthdate(p.birthdate ?? '');
-    setEditAgeMode(p.birthdate ? 'birthdate' : 'age');
-    setEditHeight(p.height_cm ? String(parseFloat(convertFromCm(p.height_cm).toFixed(1))) : '');
-    setEditGoal(activeGoal?.goal_type ?? null);
-    setEditWeeklyTarget(activeGoal?.weekly_target_kg ?? null);
-    setEditFormula(p.bmr_formula);
-    setEditActivity(p.activity_level);
+  const seedSettingsMirrors = (p: WeightTrackerProfile, _activeGoal: GoalProject | null) => {
     setEditSWeight(p.show_weight);
     setEditSSteps(p.show_steps);
     setEditSCal(p.show_calories);
@@ -745,42 +732,10 @@ export default function WeightTrackerScreen() {
     setSavingSettings(true);
     try {
       const updated = await api.upsertWeightTrackerProfile({
-        gender:           editGender,
-        age:              editAgeMode === 'age' && editAge.trim() ? parseInt(editAge, 10) : null,
-        birthdate:        editAgeMode === 'birthdate' && editBirthdate.trim() ? editBirthdate.trim() : null,
-        height_cm:        editHeight.trim() ? convertToCm(parseFloat(editHeight)) : null,
-        bmr_formula:      editFormula,
-        activity_level:   editActivity,
-        show_weight:      editSWeight,
-        show_steps:       editSSteps,
-        show_calories:    editSCal,
+        show_weight:   editSWeight,
+        show_steps:    editSSteps,
+        show_calories: editSCal,
       });
-
-      const activeGoalType = activeGoal?.goal_type ?? null;
-      const activeTarget = activeGoal?.weekly_target_kg ?? null;
-      const goalChanged = editGoal !== activeGoalType || editWeeklyTarget !== activeTarget;
-
-      if (goalChanged) {
-        const startedOn = todayString();
-        const newGoal = await api.createWeightTrackerGoal({
-          goal_type: editGoal ?? 'track',
-          weekly_target_kg: editGoal === 'lose' || editGoal === 'gain' ? editWeeklyTarget : null,
-          started_on: startedOn,
-          start_weight_kg: currentWeightKg,
-        });
-
-        setGoals((prev) => [
-          newGoal,
-          ...prev.map((goal) =>
-            goal.id === newGoal.id
-              ? newGoal
-              : goal.is_active
-                ? { ...goal, is_active: false, ended_on: startedOn }
-                : goal,
-          ),
-        ]);
-        setSelectedGoalId(newGoal.id);
-      }
 
       setProfile(updated);
       Alert.alert('Saved', 'Your profile has been updated.');
@@ -905,6 +860,7 @@ export default function WeightTrackerScreen() {
         age:                 ageValue,
         birthdate:           bdayValue,
         height_cm:           obHeight.trim() ? convertToCm(parseFloat(obHeight)) : null,
+        default_weight_kg:   weightKgValue,
         bmr_formula:         'mifflin_st_jeor',
         activity_level:      obActivity,
         show_weight:         obShowWeight,
@@ -920,6 +876,11 @@ export default function WeightTrackerScreen() {
         start_weight_kg: weightKgValue,
       });
 
+      const savedWithGoal = await api.upsertWeightTrackerProfile({
+        active_goal_id: goal.id,
+        default_weight_kg: weightKgValue,
+      });
+
       // Log starting weight as first entry (today)
       const today = todayString();
       const entry = await api.upsertWeightTrackerEntry({
@@ -928,11 +889,11 @@ export default function WeightTrackerScreen() {
         weight_kg:  weightKgValue,
       });
 
-      setProfile(saved);
+      setProfile(savedWithGoal ?? saved);
       setGoals([goal]);
       setSelectedGoalId(goal.id);
       setEntries([entry]);
-      seedSettingsMirrors(saved, goal);
+      seedSettingsMirrors(savedWithGoal ?? saved, goal);
       setView('main');
     } catch {
       Alert.alert('Error', 'Could not save profile. Please try again.');
@@ -1093,7 +1054,7 @@ export default function WeightTrackerScreen() {
         ))}
 
         <Text style={[styles.obNote, { marginTop: 16 }]}>
-          You can add up to 3 custom metrics (e.g. Sleep Score, Creatine, or Alcohol) under Profile Settings after setup.
+          You can add up to 3 custom metrics (e.g. Sleep Score, Creatine, or Alcohol) under Metric Settings after setup.
         </Text>
 
         <TouchableOpacity style={styles.primaryBtn} onPress={handleOb2Next}>
@@ -1718,7 +1679,6 @@ export default function WeightTrackerScreen() {
                       onPress={async () => {
                         const updated = await api.upsertWeightTrackerProfile({ activity_level: a.key });
                         setProfile(updated);
-                        setEditActivity(a.key);
                       }}
                     >
                       <View style={{ flex: 1 }}>
@@ -1817,7 +1777,7 @@ export default function WeightTrackerScreen() {
             </View>
           )}
 
-          {/* ── Profile Settings accordion ── */}
+          {/* ── Metric Settings accordion ── */}
           <TouchableOpacity
             style={styles.accordionHeader}
             onPress={() => {
@@ -1825,7 +1785,7 @@ export default function WeightTrackerScreen() {
               setShowSettings((v) => !v);
             }}
           >
-            <Text style={styles.accordionTitle}>Profile Settings</Text>
+            <Text style={styles.accordionTitle}>Metric Settings</Text>
             <Ionicons
               name={showSettings ? 'chevron-up' : 'chevron-down'}
               size={18}
@@ -1835,104 +1795,6 @@ export default function WeightTrackerScreen() {
 
           {showSettings && (
             <View style={styles.accordionBody}>
-              <Text style={styles.fieldLabel}>Height ({heightUnit === 'ft' ? 'ft' : 'cm'})</Text>
-              <TextInput
-                style={styles.input}
-                value={editHeight}
-                onChangeText={setEditHeight}
-                placeholder={heightUnit === 'ft' ? 'e.g. 5.8' : 'e.g. 178'}
-                placeholderTextColor={C.textMuted}
-                keyboardType="decimal-pad"
-              />
-
-              <Text style={styles.fieldLabel}>Age / Birthdate</Text>
-              <View style={[styles.pillRow, { marginBottom: 8 }]}>
-                <TouchableOpacity
-                  style={[styles.pill, editAgeMode === 'age' && styles.pillActive]}
-                  onPress={() => setEditAgeMode('age')}
-                >
-                  <Text style={[styles.pillText, editAgeMode === 'age' && styles.pillTextActive]}>Age</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.pill, editAgeMode === 'birthdate' && styles.pillActive]}
-                  onPress={() => setEditAgeMode('birthdate')}
-                >
-                  <Text style={[styles.pillText, editAgeMode === 'birthdate' && styles.pillTextActive]}>Birthdate</Text>
-                </TouchableOpacity>
-              </View>
-              {editAgeMode === 'age' ? (
-                <TextInput
-                  style={styles.input}
-                  value={editAge}
-                  onChangeText={setEditAge}
-                  placeholder="e.g. 30"
-                  placeholderTextColor={C.textMuted}
-                  keyboardType="number-pad"
-                />
-              ) : (
-                <TextInput
-                  style={styles.input}
-                  value={editBirthdate}
-                  onChangeText={setEditBirthdate}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={C.textMuted}
-                  autoCapitalize="none"
-                />
-              )}
-
-              <Text style={styles.fieldLabel}>Gender</Text>
-              <View style={styles.pillRow}>
-                {(['male', 'female'] as WeightTrackerGender[]).map((g) => (
-                  <TouchableOpacity
-                    key={g}
-                    style={[styles.pill, editGender === g && styles.pillActive]}
-                    onPress={() => setEditGender(editGender === g ? null : g)}
-                  >
-                    <Text style={[styles.pillText, editGender === g && styles.pillTextActive]}>
-                      {g.charAt(0).toUpperCase() + g.slice(1)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Goal</Text>
-              <View style={styles.pillRow}>
-                {([
-                  { v: 'lose' as WeightTrackerGoal, l: 'Lose' },
-                  { v: 'gain' as WeightTrackerGoal, l: 'Gain' },
-                  { v: null, l: 'Track only' },
-                ]).map(({ v, l }) => (
-                  <TouchableOpacity
-                    key={l}
-                    style={[styles.pill, editGoal === v && styles.pillActive]}
-                    onPress={() => setEditGoal(v)}
-                  >
-                    <Text style={[styles.pillText, editGoal === v && styles.pillTextActive]}>
-                      {l}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              {(editGoal === 'lose' || editGoal === 'gain') && (
-                <>
-                  <Text style={[styles.fieldLabel, { marginTop: 4 }]}>Weekly Target</Text>
-                  <View style={styles.pillRow}>
-                    {([0.25, 0.5, 0.75, 1.0] as const).map((r) => (
-                      <TouchableOpacity
-                        key={r}
-                        style={[styles.pill, editWeeklyTarget === r && styles.pillActive]}
-                        onPress={() => setEditWeeklyTarget(editWeeklyTarget === r ? null : r)}
-                      >
-                        <Text style={[styles.pillText, editWeeklyTarget === r && styles.pillTextActive]}>
-                          {r} kg/wk
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </>
-              )}
-
               <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Tracked Metrics</Text>
               {([
                 { key: 'weight',   label: 'Weight',   val: editSWeight, set: setEditSWeight },
