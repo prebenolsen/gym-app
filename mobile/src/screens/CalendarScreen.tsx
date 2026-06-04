@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
   ScrollView,
@@ -135,6 +136,13 @@ const CalendarScreen = ({ navigation }: any) => {
     loadWorkouts(monthDate);
     loadDatesWithWorkouts(monthDate);
   }, [monthDate]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadWorkouts(monthDate);
+      loadDatesWithWorkouts(monthDate);
+    }, [monthDate]),
+  );
 
   const heading = useMemo(() => formatMonthHeading(monthDate), [monthDate]);
 

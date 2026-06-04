@@ -280,6 +280,8 @@ declare
   ex record;
   session_num int;
   day_offset int;
+  session_started_at timestamptz;
+  session_duration_mins int;
 
   bench_w numeric := 62.5;
   shoulder_w numeric := 30.0;
@@ -315,12 +317,16 @@ begin
 
     day_offset := (total_sessions - 1 - session_num) * 2;
 
-    insert into workout_sessions (workout_id, user_id, status, started_at)
+    session_started_at := now() - day_offset * interval '1 day' - (floor(random() * 4))::int * interval '1 hour';
+    session_duration_mins := 30 + (floor(random() * 16))::int;
+
+    insert into workout_sessions (workout_id, user_id, status, started_at, ended_at)
     values (
       w.id,
       uid,
       'finished',
-      now() - day_offset * interval '1 day' - (floor(random() * 4))::int * interval '1 hour'
+      session_started_at,
+      session_started_at + session_duration_mins * interval '1 minute'
     )
     returning id into session_id;
 
