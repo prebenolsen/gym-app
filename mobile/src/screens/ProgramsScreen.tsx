@@ -334,19 +334,21 @@ const ProgramsScreen = ({ navigation }: any) => {
           <Text style={styles.noData}>No programs yet. Create one to get started!</Text>
         ) : (
           programs.map((program) => (
-            <View key={program.id} style={styles.programCard}>
+            <TouchableOpacity
+              key={program.id}
+              style={styles.programCard}
+              activeOpacity={0.9}
+              onPress={() =>
+                navigation.navigate('ProgramDetail', {
+                  programId: program.id,
+                  programName: program.name,
+                })
+              }
+            >
               <View style={styles.programHeader}>
-                <TouchableOpacity
-                  style={styles.programNameArea}
-                  onPress={() =>
-                    navigation.navigate('ProgramDetail', {
-                      programId: program.id,
-                      programName: program.name,
-                    })
-                  }
-                >
+                <View style={styles.programNameArea}>
                   <Text style={styles.programName}>{program.name}</Text>
-                </TouchableOpacity>
+                </View>
               </View>
 
               <View style={styles.workoutsList}>
@@ -428,7 +430,7 @@ const ProgramsScreen = ({ navigation }: any) => {
                   />
                 )}
               </View>
-            </View>
+            </TouchableOpacity>
           ))
         )}
       </NestableScrollContainer>
