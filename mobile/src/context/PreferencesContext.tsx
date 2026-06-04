@@ -290,8 +290,8 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
       } else if (dateFormat === 'us') {
         return `${month}/${day}/${year}`;
       } else {
-        // 'iso' format
-        return `${year}-${month}-${day}`;
+        // 'iso' key uses YYYY/MM/DD for display
+        return `${year}/${month}/${day}`;
       }
     };
 
@@ -315,8 +315,8 @@ export const PreferencesProvider = ({ children }: { children: ReactNode }) => {
       } else if (dateFormat === 'us') {
         return `${dayOfWeek}, ${monthName} ${day}, ${year}`;
       } else {
-        // 'iso' format - YYYY-MM-DD with day of week
-        return `${dayOfWeek}, ${year}-${month}-${day}`;
+        // 'iso' key uses YYYY/MM/DD for display with day of week
+        return `${dayOfWeek}, ${year}/${month}/${day}`;
       }
     };
 

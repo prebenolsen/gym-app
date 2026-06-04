@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -25,6 +25,90 @@ import {
   playCountdownPreviewById,
   playSoundById,
 } from '../lib/restTimerSounds';
+import type { DateFormat } from '../context/PreferencesContext';
+
+const DATE_FORMAT_OPTIONS: ReadonlyArray<{ key: DateFormat; label: string }> = [
+  { key: 'eu', label: 'DD/MM/YYYY' },
+  { key: 'iso', label: 'YYYY/MM/DD' },
+  { key: 'us', label: 'MM/DD/YYYY' },
+];
+
+const getDateFormatConfig = (format: DateFormat) => {
+  if (format === 'eu') {
+    return { separator: '/', segmentLengths: [2, 2, 4] as const, order: 'dmy' as const };
+  }
+  if (format === 'us') {
+    return { separator: '/', segmentLengths: [2, 2, 4] as const, order: 'mdy' as const };
+  }
+  return { separator: '/', segmentLengths: [4, 2, 2] as const, order: 'ymd' as const };
+};
+
+const formatBirthdateInput = (rawText: string, format: DateFormat) => {
+  const { separator, segmentLengths } = getDateFormatConfig(format);
+  const maxDigits = segmentLengths.reduce((sum, length) => sum + length, 0);
+  const digits = rawText.replace(/\D/g, '').slice(0, maxDigits);
+  const parts: string[] = [];
+
+  let cursor = 0;
+  for (const length of segmentLengths) {
+    if (cursor >= digits.length) break;
+    const part = digits.slice(cursor, cursor + length);
+    if (!part) break;
+    parts.push(part);
+    cursor += length;
+  }
+
+  return parts.join(separator);
+};
+
+const parseBirthdateToIso = (inputText: string, format: DateFormat): string | null => {
+  const digits = inputText.replace(/\D/g, '');
+  if (digits.length !== 8) return null;
+
+  const { order } = getDateFormatConfig(format);
+  let year = 0;
+  let month = 0;
+  let day = 0;
+
+  if (order === 'ymd') {
+    year = Number(digits.slice(0, 4));
+    month = Number(digits.slice(4, 6));
+    day = Number(digits.slice(6, 8));
+  } else if (order === 'dmy') {
+    day = Number(digits.slice(0, 2));
+    month = Number(digits.slice(2, 4));
+    year = Number(digits.slice(4, 8));
+  } else {
+    month = Number(digits.slice(0, 2));
+    day = Number(digits.slice(2, 4));
+    year = Number(digits.slice(4, 8));
+  }
+
+  if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
+    return null;
+  }
+
+  const candidate = new Date(Date.UTC(year, month - 1, day));
+  if (
+    candidate.getUTCFullYear() !== year ||
+    candidate.getUTCMonth() !== month - 1 ||
+    candidate.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+};
+
+const formatIsoBirthdateForInput = (isoDate: string, format: DateFormat): string => {
+  const parts = isoDate.split('-');
+  if (parts.length !== 3) return isoDate;
+  const [year, month, day] = parts;
+
+  if (format === 'eu') return `${day}/${month}/${year}`;
+  if (format === 'us') return `${month}/${day}/${year}`;
+  return `${year}/${month}/${day}`;
+};
 
 const SettingsScreen = () => {
   const { signOut, user } = useAuth();
@@ -64,7 +148,6 @@ const SettingsScreen = () => {
   const styles = createStyles(themeColors);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [dateFormatOpen, setDateFormatOpen] = useState(false);
   const [completionSoundOpen, setCompletionSoundOpen] = useState(false);
   const [countdownSoundOpen, setCountdownSoundOpen] = useState(false);
   const [prepareSoundOpen, setPrepareSoundOpen] = useState(false);
@@ -80,6 +163,7 @@ const SettingsScreen = () => {
   const [personalAge, setPersonalAge] = useState('');
   const [personalBirthdate, setPersonalBirthdate] = useState('');
   const [personalGender, setPersonalGender] = useState<WeightTrackerGender | null>(null);
+  const previousDateFormatRef = useRef<DateFormat>(dateFormat);
 
   useEffect(() => {
     let active = true;
@@ -101,7 +185,9 @@ const SettingsScreen = () => {
         );
         setPersonalGender(profile.gender);
         setPersonalAge(profile.age != null ? String(profile.age) : '');
-        setPersonalBirthdate(profile.birthdate ?? '');
+        setPersonalBirthdate(
+          profile.birthdate ? formatIsoBirthdateForInput(profile.birthdate, dateFormat) : '',
+        );
         setPersonalAgeMode(profile.birthdate ? 'birthdate' : 'age');
       } finally {
         if (active) setProfileLoading(false);
@@ -114,14 +200,46 @@ const SettingsScreen = () => {
     };
   }, [api, convertFromCm, convertFromKg]);
 
+  useEffect(() => {
+    if (!personalBirthdate.trim()) {
+      previousDateFormatRef.current = dateFormat;
+      return;
+    }
+
+    const previousFormat = previousDateFormatRef.current;
+    if (previousFormat === dateFormat) {
+      return;
+    }
+
+    const isoBirthdate = parseBirthdateToIso(personalBirthdate, previousFormat);
+    if (isoBirthdate) {
+      setPersonalBirthdate(formatIsoBirthdateForInput(isoBirthdate, dateFormat));
+    } else {
+      setPersonalBirthdate((current) => formatBirthdateInput(current, dateFormat));
+    }
+
+    previousDateFormatRef.current = dateFormat;
+  }, [dateFormat, personalBirthdate]);
+
   const handleSavePersonalMetrics = async () => {
     setSavingPersonalMetrics(true);
     try {
+      const normalizedBirthdate =
+        personalAgeMode === 'birthdate' && personalBirthdate.trim()
+          ? parseBirthdateToIso(personalBirthdate, dateFormat)
+          : null;
+
+      if (personalAgeMode === 'birthdate' && personalBirthdate.trim() && !normalizedBirthdate) {
+        const activeDateFormat = DATE_FORMAT_OPTIONS.find((option) => option.key === dateFormat)?.label;
+        Alert.alert('Invalid birthdate', `Please use a valid date in ${activeDateFormat} format.`);
+        return;
+      }
+
       await api.upsertWeightTrackerProfile({
         default_weight_kg: personalWeight.trim() ? convertToKg(parseFloat(personalWeight.replace(',', '.'))) : null,
         height_cm: personalHeight.trim() ? convertToCm(parseFloat(personalHeight.replace(',', '.'))) : null,
         age: personalAgeMode === 'age' && personalAge.trim() ? parseInt(personalAge, 10) : null,
-        birthdate: personalAgeMode === 'birthdate' && personalBirthdate.trim() ? personalBirthdate.trim() : null,
+        birthdate: normalizedBirthdate,
         gender: personalGender,
       });
       Alert.alert('Saved', 'Personal metrics were updated.');
@@ -253,45 +371,27 @@ const SettingsScreen = () => {
         </View>
 
         <Text style={styles.section}>Date Format</Text>
-        {(() => {
-          const DATE_FORMAT_OPTIONS = [
-            { key: 'iso', label: 'ISO 8601',   example: '2026-01-31' },
-            { key: 'eu',  label: 'DD/MM/YYYY', example: '31/01/2026' },
-            { key: 'us',  label: 'MM/DD/YYYY', example: '01/31/2026' },
-          ] as const;
-          const selected = DATE_FORMAT_OPTIONS.find((o) => o.key === dateFormat)!;
-          return (
-            <View style={styles.dateFormatList}>
-              {/* Trigger row — always visible */}
-              <TouchableOpacity
-                style={styles.dateFormatTrigger}
-                onPress={() => setDateFormatOpen((v) => !v)}
+        <View style={styles.dateFormatTileRow}>
+          {DATE_FORMAT_OPTIONS.map((option) => (
+            <TouchableOpacity
+              key={option.key}
+              style={[
+                styles.dateFormatTile,
+                dateFormat === option.key && styles.dateFormatTileActive,
+              ]}
+              onPress={() => setDateFormat(option.key)}
+            >
+              <Text
+                style={[
+                  styles.dateFormatTileText,
+                  dateFormat === option.key && styles.dateFormatTileTextActive,
+                ]}
               >
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.dateFormatLabel}>{selected.label}</Text>
-                  <Text style={styles.dateFormatExample}>{selected.example}</Text>
-                </View>
-                <Text style={styles.dateFormatChevron}>
-                  {dateFormatOpen ? '▲' : '▼'}
-                </Text>
-              </TouchableOpacity>
-
-              {/* Options — visible only when open */}
-              {dateFormatOpen && DATE_FORMAT_OPTIONS.filter((o) => o.key !== dateFormat).map(({ key, label, example }) => (
-                <TouchableOpacity
-                  key={key}
-                  style={styles.dateFormatRow}
-                  onPress={() => { setDateFormat(key); setDateFormatOpen(false); }}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.dateFormatLabel}>{label}</Text>
-                    <Text style={styles.dateFormatExample}>{example}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          );
-        })()}
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
@@ -338,13 +438,7 @@ const SettingsScreen = () => {
             />
 
             <Text style={styles.section}>Age / Birthdate</Text>
-            <View style={styles.chipRow}>
-              <TouchableOpacity
-                style={[styles.chip, personalAgeMode === 'age' && styles.chipActive]}
-                onPress={() => setPersonalAgeMode('age')}
-              >
-                <Text style={[styles.chipText, personalAgeMode === 'age' && styles.chipTextActive]}>Age</Text>
-              </TouchableOpacity>
+            <View style={styles.ageModeRow}>
               <TouchableOpacity
                 style={[styles.chip, personalAgeMode === 'birthdate' && styles.chipActive]}
                 onPress={() => setPersonalAgeMode('birthdate')}
@@ -352,6 +446,12 @@ const SettingsScreen = () => {
                 <Text style={[styles.chipText, personalAgeMode === 'birthdate' && styles.chipTextActive]}>
                   Birthdate
                 </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.chip, personalAgeMode === 'age' && styles.chipActive]}
+                onPress={() => setPersonalAgeMode('age')}
+              >
+                <Text style={[styles.chipText, personalAgeMode === 'age' && styles.chipTextActive]}>Age</Text>
               </TouchableOpacity>
             </View>
 
@@ -368,10 +468,11 @@ const SettingsScreen = () => {
               <TextInput
                 style={styles.input}
                 value={personalBirthdate}
-                onChangeText={setPersonalBirthdate}
+                onChangeText={(value) => setPersonalBirthdate(formatBirthdateInput(value, dateFormat))}
                 autoCapitalize="none"
-                placeholder="YYYY-MM-DD"
+                placeholder={DATE_FORMAT_OPTIONS.find((option) => option.key === dateFormat)?.label}
                 placeholderTextColor={themeColors.textMuted}
+                keyboardType="number-pad"
               />
             )}
 
@@ -817,55 +918,38 @@ const createStyles = (themeColors: typeof colors) =>
     chipTextActive: {
       color: themeColors.accent,
     },
-    dateFormatList: {
-      borderWidth: 1,
-      borderColor: themeColors.border,
-      borderRadius: radius.sm,
-      overflow: 'hidden',
+    dateFormatTileRow: {
+      flexDirection: 'row',
+      gap: 8,
       marginBottom: 8,
     },
-    dateFormatTrigger: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 14,
+    dateFormatTile: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: radius.md,
       paddingVertical: 12,
-      backgroundColor: themeColors.surface,
-    },
-    dateFormatRow: {
-      flexDirection: 'row',
+      paddingHorizontal: 8,
       alignItems: 'center',
-      paddingHorizontal: 14,
-      paddingVertical: 12,
       backgroundColor: themeColors.background,
-      borderTopWidth: 1,
-      borderTopColor: themeColors.border,
     },
-    dateFormatRowActive: {
+    dateFormatTileActive: {
+      borderColor: themeColors.accent,
       backgroundColor: themeColors.accentSoft,
     },
-    dateFormatLabel: {
-      color: themeColors.textStrong,
-      fontWeight: '600',
-      fontSize: 14,
-    },
-    dateFormatLabelActive: {
-      color: themeColors.accent,
-    },
-    dateFormatExample: {
+    dateFormatTileText: {
       color: themeColors.textMuted,
-      fontSize: 12,
-      marginTop: 1,
-    },
-    dateFormatChevron: {
-      color: themeColors.textMuted,
-      fontSize: 10,
-      marginLeft: 8,
-    },
-    dateFormatCheck: {
-      color: themeColors.accent,
       fontWeight: '700',
-      fontSize: 16,
-      marginLeft: 8,
+      fontSize: 12,
+      textAlign: 'center',
+    },
+    dateFormatTileTextActive: {
+      color: themeColors.accent,
+    },
+    ageModeRow: {
+      flexDirection: 'row',
+      gap: 10,
+      marginBottom: 10,
     },
     input: {
       borderWidth: 1,
