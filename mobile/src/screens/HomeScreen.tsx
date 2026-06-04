@@ -16,6 +16,7 @@ import {
   type WorkoutHistoryByDate,
   type Exercise,
   type MuscleGroup,
+  type WeightTrackerGoalProject,
   resolveExerciseMuscleGroup,
 } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
@@ -164,6 +165,15 @@ const getWorkoutMessage = (count: number): string => {
 const getCountLabel = (count: number, singular: string, plural: string): string =>
   count === 1 ? singular : plural;
 
+const formatWeightGoalText = (
+  goalType: WeightTrackerGoalProject['goal_type'] | null,
+): string => {
+  if (goalType === 'lose') return 'Goal: Weight loss';
+  if (goalType === 'gain') return 'Goal: Weight gain';
+  if (goalType === 'track') return 'Goal: Track only';
+  return 'Goal: Not set';
+};
+
 const HomeScreen = ({ navigation }: any) => {
   const { colors: themeColors } = usePreferences();
   const styles = createStyles(themeColors);
@@ -171,6 +181,7 @@ const HomeScreen = ({ navigation }: any) => {
   const [programTree, setProgramTree] = useState<ProgramWithWorkouts[]>([]);
   const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null);
   const [workouts7Days, setWorkouts7Days] = useState<number>(0);
+  const [weightGoalText, setWeightGoalText] = useState<string>('Goal: Not set');
   const [daysSinceByWorkout, setDaysSinceByWorkout] = useState<
     Record<string, number | null>
   >({});
@@ -268,6 +279,23 @@ const HomeScreen = ({ navigation }: any) => {
       } catch (err) {
         console.error('Failed to fetch 7-day workouts count:', err);
       }
+
+      try {
+        const [profile, goals] = await Promise.all([
+          api.getWeightTrackerProfile(),
+          api.getWeightTrackerGoals(),
+        ]);
+
+        const activeGoal =
+          goals.find((goal) => goal.id === profile?.active_goal_id) ??
+          goals.find((goal) => goal.is_active) ??
+          null;
+
+        setWeightGoalText(formatWeightGoalText(activeGoal?.goal_type ?? null));
+      } catch (err) {
+        console.error('Failed to fetch weight tracker goal:', err);
+        setWeightGoalText(formatWeightGoalText(null));
+      }
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
     } finally {
@@ -358,7 +386,7 @@ const HomeScreen = ({ navigation }: any) => {
               color={themeColors.accent}
               style={{ marginBottom: 6 }}
             />
-            <Text style={[styles.statValue, styles.statValuePlaceholder]}>0</Text>
+            <Text style={styles.statGoalValue}>{weightGoalText}</Text>
             <Text style={styles.statLabel} numberOfLines={1}>Weight Tracker</Text>
           </TouchableOpacity>
 
@@ -592,8 +620,11 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.accent,
       
     },
-    statValuePlaceholder: {
-      opacity: 0,
+    statGoalValue: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: themeColors.accent,
+      textAlign: 'center',
     },
     statLabel: {
       fontSize: 12,
