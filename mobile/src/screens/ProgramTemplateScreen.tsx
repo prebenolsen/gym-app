@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import {
   PROGRAM_TEMPLATES,
   type ProgramTemplateWorkout,
@@ -57,7 +58,7 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
       <View style={styles.container}>
         <Text style={styles.errorText}>Template not found.</Text>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backBtnText}>← Back</Text>
+          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
         </TouchableOpacity>
       </View>
     );
@@ -127,7 +128,7 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backBtnText}>← Back</Text>
+          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
         </TouchableOpacity>
         <Text style={styles.title}>{template.name}</Text>
         <Text style={styles.subtitle}>{template.description}</Text>
@@ -215,11 +216,8 @@ const createStyles = (themeColors: typeof colors) =>
       borderBottomColor: themeColors.border,
       gap: 6,
     },
-    backBtn: {},
-    backBtnText: {
-      color: themeColors.accent,
-      fontSize: 14,
-      fontWeight: '600',
+    backBtn: {
+      alignSelf: 'flex-start',
       marginBottom: 4,
     },
     title: {

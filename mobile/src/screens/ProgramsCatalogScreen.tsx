@@ -1,4 +1,5 @@
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { PROGRAM_TEMPLATES, type ProgramTemplate } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
@@ -51,7 +52,7 @@ const ProgramsCatalogScreen = ({ navigation }: any) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backBtnText}>← Back</Text>
+          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
         </TouchableOpacity>
         <Text style={styles.title}>Program Templates</Text>
         <Text style={styles.subtitle}>
@@ -131,12 +132,8 @@ const createStyles = (themeColors: typeof colors) =>
       gap: 4,
     },
     backBtn: {
+      alignSelf: 'flex-start',
       marginBottom: 8,
-    },
-    backBtnText: {
-      color: themeColors.accent,
-      fontSize: 14,
-      fontWeight: '600',
     },
     title: {
       fontSize: 22,

@@ -8,6 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { type ExerciseProgressHistory } from '@gym-app/shared';
 import { LineChart } from 'react-native-gifted-charts';
 import { useApi } from '../hooks/useApi';
@@ -116,7 +117,7 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={styles.backBtnText}>← Back</Text>
+            <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
           </TouchableOpacity>
           <Text style={styles.title}>Exercise</Text>
         </View>
@@ -137,7 +138,7 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backBtnText}>← Back</Text>
+          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
         </TouchableOpacity>
         <Text style={styles.title}>{data.exercise_name}</Text>
         <Text style={styles.personalBest}>
@@ -347,12 +348,8 @@ const createStyles = (themeColors: typeof colors) =>
       gap: 4,
     },
     backBtn: {
+      alignSelf: 'flex-start',
       marginBottom: 4,
-    },
-    backBtnText: {
-      color: themeColors.accent,
-      fontSize: 14,
-      fontWeight: '600',
     },
     title: {
       fontSize: 20,
