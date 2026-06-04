@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   StyleSheet,
   Alert,
   ActivityIndicator,
@@ -51,7 +50,6 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
   const [workouts, setWorkouts] = useState<EditableWorkout[]>(
     template ? deepCopyWorkouts(template.workouts) : [],
   );
-  const [newExerciseNames, setNewExerciseNames] = useState<Record<number, string>>({});
   const [importing, setImporting] = useState(false);
 
   if (!template) {
@@ -92,22 +90,6 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
           : { ...w, exercises: w.exercises.filter((_, ei) => ei !== exerciseIndex) },
       ),
     );
-  };
-
-  const addExercise = (workoutIndex: number) => {
-    const name = (newExerciseNames[workoutIndex] ?? '').trim();
-    if (!name) return;
-    setWorkouts((prev) =>
-      prev.map((w, wi) =>
-        wi !== workoutIndex
-          ? w
-          : {
-              ...w,
-              exercises: [...w.exercises, { name, sets: 4, rest_seconds: 120 }],
-            },
-      ),
-    );
-    setNewExerciseNames((prev) => ({ ...prev, [workoutIndex]: '' }));
   };
 
   const handleImport = async () => {
@@ -168,7 +150,7 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
             <Text style={styles.workoutName}>{workout.name}</Text>
 
             {workout.exercises.length === 0 && (
-              <Text style={styles.noExercises}>No exercises. Add one below.</Text>
+              <Text style={styles.noExercises}>No exercises in this workout.</Text>
             )}
 
             {workout.exercises.map((exercise, ei) => (
@@ -202,23 +184,6 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
                 </View>
               </View>
             ))}
-
-            <View style={styles.addExerciseRow}>
-              <TextInput
-                style={styles.addExerciseInput}
-                placeholder="Add exercise..."
-                placeholderTextColor={themeColors.textMuted}
-                value={newExerciseNames[wi] ?? ''}
-                onChangeText={(text) =>
-                  setNewExerciseNames((prev) => ({ ...prev, [wi]: text }))
-                }
-                onSubmitEditing={() => addExercise(wi)}
-                returnKeyType="done"
-              />
-              <TouchableOpacity style={styles.btnAdd} onPress={() => addExercise(wi)}>
-                <Text style={styles.btnAddText}>+ Add</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         ))}
 
@@ -332,48 +297,24 @@ const createStyles = (themeColors: typeof colors) =>
     },
     exerciseControls: {
       flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
+      alignItems: 'flex-end',
+      gap: 12,
       flexWrap: 'wrap',
     },
     btnRemove: {
       backgroundColor: themeColors.danger,
       borderRadius: radius.sm,
+      minWidth: 36,
       paddingHorizontal: 10,
       paddingVertical: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: 'auto',
     },
     btnRemoveText: {
       color: '#fff',
       fontWeight: 'bold',
       fontSize: 12,
-    },
-    addExerciseRow: {
-      flexDirection: 'row',
-      gap: 8,
-      marginTop: 12,
-    },
-    addExerciseInput: {
-      flex: 1,
-      borderWidth: 1,
-      borderColor: themeColors.border,
-      borderRadius: radius.sm,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      color: themeColors.textStrong,
-      backgroundColor: themeColors.background,
-      fontSize: 14,
-    },
-    btnAdd: {
-      backgroundColor: themeColors.accentSoft,
-      borderRadius: radius.sm,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      justifyContent: 'center',
-    },
-    btnAddText: {
-      color: themeColors.accent,
-      fontWeight: '700',
-      fontSize: 13,
     },
     errorText: {
       color: themeColors.textStrong,

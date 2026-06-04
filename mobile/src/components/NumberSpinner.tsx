@@ -53,16 +53,19 @@ const createStyles = (themeColors: typeof colors) =>
     container: {
       flexDirection: 'column',
       gap: 8,
+      alignItems: 'center',
     },
     label: {
       fontSize: 12,
       fontWeight: '600',
-      
+      width: '100%',
+      textAlign: 'center',
       color: themeColors.textMuted,
     },
     controls: {
       flexDirection: 'row',
       alignItems: 'center',
+      minWidth: 124,
       borderWidth: 1,
       borderColor: themeColors.border,
       borderRadius: radius.sm,
@@ -70,9 +73,11 @@ const createStyles = (themeColors: typeof colors) =>
       overflow: 'hidden',
     },
     btn: {
+      width: 36,
       paddingHorizontal: 12,
       paddingVertical: 8,
       backgroundColor: themeColors.accentSoft,
+      alignItems: 'center',
     },
     btnText: {
       fontSize: 12,
@@ -82,6 +87,8 @@ const createStyles = (themeColors: typeof colors) =>
     },
     value: {
       flex: 1,
+      minWidth: 52,
+      paddingHorizontal: 12,
       textAlign: 'center',
       fontSize: 16,
       fontWeight: '600',

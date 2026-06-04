@@ -308,6 +308,12 @@ const ProgramsScreen = ({ navigation }: any) => {
       <View style={styles.header}>
         <Text style={styles.title}>Programs</Text>
         <View style={styles.headerActions}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ProgramsCatalog')}
+            style={styles.btnSecondary}
+          >
+            <Text style={styles.btnSecondaryText}>Import</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={handleCreateProgram} style={styles.btnPrimary}>
             <Text style={styles.btnText}>+ Create</Text>
           </TouchableOpacity>
@@ -469,11 +475,24 @@ const createStyles = (themeColors: typeof colors) =>
       paddingVertical: 12,
       borderRadius: radius.sm,
     },
+    btnSecondary: {
+      backgroundColor: themeColors.accentSoft,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      borderRadius: radius.sm,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+    },
     btnText: {
       color: '#fff',
       fontWeight: '600',
       fontSize: 12,
       
+    },
+    btnSecondaryText: {
+      color: themeColors.textStrong,
+      fontWeight: '600',
+      fontSize: 12,
     },
     list: {
       flex: 1,
