@@ -225,14 +225,6 @@ export const PROGRAM_TEMPLATES: ProgramTemplate[] = [
           { name: 'Deadlifts', sets: 1, rest_seconds: 300 },
         ],
       },
-      {
-        name: 'Workout A',
-        exercises: [
-          { name: 'Squats', sets: 5, rest_seconds: 180 },
-          { name: 'Bench Press', sets: 5, rest_seconds: 180 },
-          { name: 'Barbell Rows', sets: 5, rest_seconds: 180 },
-        ],
-      },
     ],
   },
   {
