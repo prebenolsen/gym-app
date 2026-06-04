@@ -228,28 +228,21 @@ app.delete('/programs/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Delete all workouts and exercises in this program
-    const { data: workouts } = await supabase
-      .from('workouts')
-      .select('id')
-      .eq('program_id', id);
-
-    if (workouts) {
-      for (const workout of workouts) {
-        await supabase.from('exercises').delete().eq('workout_id', workout.id);
-      }
-
-      await supabase.from('workouts').delete().eq('program_id', id);
-    }
-
-    // Delete the program
-    const { error } = await supabase
+    // Ensure the caller owns the program before deleting.
+    const { data: deletedProgram, error } = await supabase
       .from('programs')
       .delete()
       .eq('id', id)
-      .eq('user_id', req.userId);
+      .eq('user_id', req.userId)
+      .select('id');
 
     if (error) throw error;
+    if (!deletedProgram || deletedProgram.length === 0) {
+      res.status(404).json({ error: 'Program not found' });
+      return;
+    }
+
+    // Child records are removed by FK cascades.
     res.status(204).send();
   } catch (err: unknown) {
     const errorMsg = formatError(err);
@@ -339,17 +332,21 @@ app.delete('/workouts/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Delete all exercises in this workout
-    await supabase.from('exercises').delete().eq('workout_id', id);
-
-    // Delete the workout
-    const { error } = await supabase
+    // Ensure the caller owns the workout before deleting.
+    const { data: deletedWorkout, error } = await supabase
       .from('workouts')
       .delete()
       .eq('id', id)
-      .eq('user_id', req.userId);
+      .eq('user_id', req.userId)
+      .select('id');
 
     if (error) throw error;
+    if (!deletedWorkout || deletedWorkout.length === 0) {
+      res.status(404).json({ error: 'Workout not found' });
+      return;
+    }
+
+    // Child records are removed by FK cascades.
     res.status(204).send();
   } catch (err: unknown) {
     const errorMsg = formatError(err);
@@ -359,10 +356,46 @@ app.delete('/workouts/:id', async (req, res) => {
 
 app.patch('/programs/:programId/workouts/reorder', async (req, res) => {
   try {
+    const { programId } = req.params;
     const { items } = req.body;
 
+    if (!Array.isArray(items)) {
+      res.status(400).json({ error: 'items must be an array' });
+      return;
+    }
+
+    const { data: ownedProgram, error: ownedProgramError } = await supabase
+      .from('programs')
+      .select('id')
+      .eq('id', programId)
+      .eq('user_id', req.userId)
+      .maybeSingle();
+
+    if (ownedProgramError) throw ownedProgramError;
+    if (!ownedProgram) {
+      res.status(404).json({ error: 'Program not found' });
+      return;
+    }
+
     for (const item of items) {
-      await supabase.from('workouts').update({ order: item.order }).eq('id', item.id);
+      if (!item || typeof item.id !== 'string' || typeof item.order !== 'number') {
+        res.status(400).json({ error: 'Each item must include id (string) and order (number)' });
+        return;
+      }
+
+      const { data: updatedRows, error: updateError } = await supabase
+        .from('workouts')
+        .update({ order: item.order })
+        .eq('id', item.id)
+        .eq('program_id', programId)
+        .eq('user_id', req.userId)
+        .select('id');
+
+      if (updateError) throw updateError;
+      if (!updatedRows || updatedRows.length === 0) {
+        res.status(404).json({ error: 'Workout not found in this program' });
+        return;
+      }
     }
 
     res.json({ success: true });
@@ -515,10 +548,46 @@ app.delete('/exercises/:id', async (req, res) => {
 
 app.patch('/workouts/:workoutId/exercises/reorder', async (req, res) => {
   try {
+    const { workoutId } = req.params;
     const { items } = req.body;
 
+    if (!Array.isArray(items)) {
+      res.status(400).json({ error: 'items must be an array' });
+      return;
+    }
+
+    const { data: ownedWorkout, error: ownedWorkoutError } = await supabase
+      .from('workouts')
+      .select('id')
+      .eq('id', workoutId)
+      .eq('user_id', req.userId)
+      .maybeSingle();
+
+    if (ownedWorkoutError) throw ownedWorkoutError;
+    if (!ownedWorkout) {
+      res.status(404).json({ error: 'Workout not found' });
+      return;
+    }
+
     for (const item of items) {
-      await supabase.from('exercises').update({ order: item.order }).eq('id', item.id);
+      if (!item || typeof item.id !== 'string' || typeof item.order !== 'number') {
+        res.status(400).json({ error: 'Each item must include id (string) and order (number)' });
+        return;
+      }
+
+      const { data: updatedRows, error: updateError } = await supabase
+        .from('exercises')
+        .update({ order: item.order })
+        .eq('id', item.id)
+        .eq('workout_id', workoutId)
+        .eq('user_id', req.userId)
+        .select('id');
+
+      if (updateError) throw updateError;
+      if (!updatedRows || updatedRows.length === 0) {
+        res.status(404).json({ error: 'Exercise not found in this workout' });
+        return;
+      }
     }
 
     res.json({ success: true });
