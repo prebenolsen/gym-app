@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   NestableDraggableFlatList,
   NestableScrollContainer,
 } from 'react-native-draggable-flatlist';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import {
   type Program,
@@ -152,9 +153,11 @@ const ProgramsScreen = ({ navigation }: any) => {
 
   const api = useApi();
 
-  useEffect(() => {
-    fetchPrograms();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchPrograms();
+    }, []),
+  );
 
   useEffect(() => {
     if (showMessage) {

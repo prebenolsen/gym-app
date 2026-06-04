@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   NestableDraggableFlatList,
   NestableScrollContainer,
 } from 'react-native-draggable-flatlist';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import {
   type Exercise,
@@ -57,8 +58,13 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
 
   useEffect(() => {
     setEditName(workoutName);
-    fetchExercises();
-  }, [workoutId, workoutName]);
+  }, [workoutName]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchExercises();
+    }, [workoutId]),
+  );
 
   const fetchExercises = async () => {
     setLoading(true);
