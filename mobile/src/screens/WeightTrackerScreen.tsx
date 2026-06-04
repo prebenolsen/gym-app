@@ -846,6 +846,36 @@ export default function WeightTrackerScreen() {
 
     const tiles: Array<{ key: string; label: string; value: string; detail: string }> = [];
 
+    if (activeGoal?.goal_type === 'lose' || activeGoal?.goal_type === 'gain') {
+      const weightPoints = entries
+        .filter((entry) => entry.weight_kg != null)
+        .sort((a, b) => a.entry_date.localeCompare(b.entry_date));
+
+      let weeklyRateKg: number | null = null;
+      if (weightPoints.length >= 2) {
+        const first = weightPoints[0];
+        const last = weightPoints[weightPoints.length - 1];
+        const startMs = new Date(`${first.entry_date}T00:00:00Z`).getTime();
+        const endMs = new Date(`${last.entry_date}T00:00:00Z`).getTime();
+        const elapsedDays = Math.max(1, Math.round((endMs - startMs) / (1000 * 60 * 60 * 24)));
+        const deltaKg = (last.weight_kg ?? 0) - (first.weight_kg ?? 0);
+        const weeklyDeltaKg = (deltaKg / elapsedDays) * 7;
+        weeklyRateKg = activeGoal.goal_type === 'lose' ? -weeklyDeltaKg : weeklyDeltaKg;
+      }
+
+      const weeklyRateDisplay =
+        weeklyRateKg == null
+          ? '–'
+          : `${convertFromKg(weeklyRateKg).toFixed(2)} ${unit}`;
+
+      tiles.push({
+        key: 'weekly-goal-rate',
+        label: activeGoal.goal_type === 'lose' ? 'Weight Loss' : 'Weight Gain',
+        value: weeklyRateDisplay,
+        detail: 'Avg weekly',
+      });
+    }
+
     if (profile?.show_steps) {
       tiles.push(
         buildNumericTile(
@@ -902,7 +932,16 @@ export default function WeightTrackerScreen() {
     }
 
     return tiles.slice(0, 3);
-  }, [customMetrics, entries, metricValueByMetricAndDate, profile?.show_calories, profile?.show_steps]);
+  }, [
+    activeGoal,
+    convertFromKg,
+    customMetrics,
+    entries,
+    metricValueByMetricAndDate,
+    profile?.show_calories,
+    profile?.show_steps,
+    unit,
+  ]);
 
   const chartRange = useMemo(() => {
     if (lineChartData.length === 0) return null;
