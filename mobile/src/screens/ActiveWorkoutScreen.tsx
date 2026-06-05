@@ -723,6 +723,7 @@ const ActiveWorkoutScreen = ({ navigation, route }: any) => {
           lastRestSoundSecondRef.current = 0;
           await api.cancelWorkoutSession(session.id);
           await loadContext();
+          navigation.navigate('Home');
         } catch (err) {
           console.error('Failed to cancel workout:', err);
           showError({ message: 'Failed to cancel workout' });

@@ -709,14 +709,12 @@ app.post('/workout-sessions/:id/cancel', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('workout_sessions')
       .update({ status: 'cancelled', ended_at: new Date().toISOString() })
       .eq('id', id)
       .eq('user_id', req.userId)
-      .eq('status', 'active')
-      .select()
-      .single();
+      .eq('status', 'active');
 
     if (error) throw error;
 
@@ -726,7 +724,7 @@ app.post('/workout-sessions/:id/cancel', async (req, res) => {
       .eq('session_id', id)
       .eq('user_id', req.userId);
 
-    res.json(data);
+    res.status(204).send();
   } catch (err: unknown) {
     const errorMsg = formatError(err);
     res.status(500).json({ error: errorMsg });

@@ -436,7 +436,7 @@ const HomeScreen = ({ navigation }: any) => {
             if (favorites.length === 0) {
               return (
                 <Text style={styles.noData}>
-                  No favorites yet. Open a program and star it to add it here.
+                  The first program you create will automatically become favorited.
                 </Text>
               );
             }

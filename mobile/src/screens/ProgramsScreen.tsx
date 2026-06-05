@@ -146,7 +146,7 @@ const getNextProgramName = (existingPrograms: Program[]): string => {
   return `Program ${String(nextNumber).padStart(2, '0')}`;
 };
 
-const ProgramsScreen = ({ navigation }: any) => {
+const ProgramsScreen = ({ navigation, route }: any) => {
   const { colors: themeColors } = usePreferences();
   const styles = createStyles(themeColors);
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -171,13 +171,7 @@ const ProgramsScreen = ({ navigation }: any) => {
   const { showToast } = useToast();
   const { showError } = useErrorDialog();
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchPrograms();
-    }, []),
-  );
-
-  const fetchPrograms = async () => {
+  const fetchPrograms = useCallback(async () => {
     setLoading(true);
     try {
       const data = await api.getPrograms();
@@ -251,7 +245,13 @@ const ProgramsScreen = ({ navigation }: any) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [api]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchPrograms();
+    }, [fetchPrograms, route?.params?.forceRefreshAt]),
+  );
 
   const handleCreateProgram = async () => {
     try {

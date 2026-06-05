@@ -117,6 +117,10 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
         duration: 'short',
         message: `"${template.name}" has been imported to your programs!`,
       });
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'ProgramsList', params: { forceRefreshAt: Date.now() } }],
+      });
     } catch (err) {
       console.error('Failed to import template:', err);
       showError({ message: 'Failed to import program. Please try again.' });
