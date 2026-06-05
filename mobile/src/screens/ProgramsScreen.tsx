@@ -294,6 +294,87 @@ const ProgramsScreen = ({ navigation, route }: any) => {
     );
   }
 
+  const favoritePrograms = programs.filter((program) => program.is_favorite_program);
+  const otherPrograms = programs.filter((program) => !program.is_favorite_program);
+
+  const renderProgramCard = (program: Program) => (
+    <TouchableOpacity
+      key={program.id}
+      style={styles.programCard}
+      activeOpacity={0.9}
+      onPress={() =>
+        navigation.navigate('ProgramDetail', {
+          programId: program.id,
+          programName: program.name,
+        })
+      }
+    >
+      <View style={styles.programHeader}>
+        <View style={styles.programNameArea}>
+          <Text style={styles.programName}>{program.name}</Text>
+        </View>
+        {program.is_favorite_program ? (
+          <Ionicons name="star" size={18} color={themeColors.accent} />
+        ) : null}
+      </View>
+
+      <View style={styles.workoutsList}>
+        {(workoutsByProgram[program.id] ?? []).length === 0 ? (
+          <Text style={styles.noWorkouts}>No workouts yet</Text>
+        ) : (
+          (workoutsByProgram[program.id] ?? []).map((workout) => {
+              const count = exerciseCountByWorkout[workout.id] ?? 0;
+
+              return (
+                <TouchableOpacity
+                  key={workout.id}
+                  style={styles.workoutRow}
+                  activeOpacity={0.9}
+                  onPress={() =>
+                    navigation.navigate('WorkoutDetail', {
+                      programId: program.id,
+                      workoutId: workout.id,
+                      workoutName: workout.name,
+                    })
+                  }
+                >
+                  <View style={styles.workoutRowContent}>
+                    <MuscleMapThumb
+                      groups={dominantMuscleGroupsByWorkout[workout.id] ?? []}
+                      size={34}
+                      mutedColor={themeColors.textMuted}
+                      highlightColor={themeColors.accent}
+                    />
+
+                    <View style={styles.workoutRowMain}>
+                      <Text style={styles.workoutRowName}>{workout.name}</Text>
+                      <View style={styles.workoutRowMeta}>
+                        <View style={styles.workoutRowMetaCell}>
+                          <Text style={styles.workoutRowDays}>
+                            {formatDaysSince(daysSinceByWorkout[workout.id] ?? null)}
+                          </Text>
+                        </View>
+                        <View style={styles.workoutRowMetaCell}>
+                          <Text style={styles.workoutRowDuration}>
+                            {estimatedDurationByWorkout[workout.id] ?? '0m'}
+                          </Text>
+                        </View>
+                        <View style={styles.workoutRowMetaCell}>
+                          <Text style={styles.workoutRowCount}>
+                            {count} {count === 1 ? 'exercise' : 'exercises'}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={styles.container}>
       <ScreenHeader
@@ -319,83 +400,21 @@ const ProgramsScreen = ({ navigation, route }: any) => {
         {programs.length === 0 ? (
           <Text style={styles.noData}>No programs yet. Create one to get started!</Text>
         ) : (
-          programs.map((program) => (
-            <TouchableOpacity
-              key={program.id}
-              style={styles.programCard}
-              activeOpacity={0.9}
-              onPress={() =>
-                navigation.navigate('ProgramDetail', {
-                  programId: program.id,
-                  programName: program.name,
-                })
-              }
-            >
-              <View style={styles.programHeader}>
-                <View style={styles.programNameArea}>
-                  <Text style={styles.programName}>{program.name}</Text>
-                </View>
-                {program.is_favorite_program ? (
-                  <Ionicons name="star" size={18} color={themeColors.accent} />
-                ) : null}
-              </View>
+          <>
+            {favoritePrograms.length > 0 ? (
+              <>
+                <Text style={styles.sectionTitle}>Favorite programs</Text>
+                {favoritePrograms.map(renderProgramCard)}
+              </>
+            ) : null}
 
-              <View style={styles.workoutsList}>
-                {(workoutsByProgram[program.id] ?? []).length === 0 ? (
-                  <Text style={styles.noWorkouts}>No workouts yet</Text>
-                ) : (
-                  (workoutsByProgram[program.id] ?? []).map((workout) => {
-                      const count = exerciseCountByWorkout[workout.id] ?? 0;
-
-                      return (
-                        <TouchableOpacity
-                          key={workout.id}
-                          style={styles.workoutRow}
-                          activeOpacity={0.9}
-                          onPress={() =>
-                            navigation.navigate('WorkoutDetail', {
-                              programId: program.id,
-                              workoutId: workout.id,
-                              workoutName: workout.name,
-                            })
-                          }
-                        >
-                          <View style={styles.workoutRowContent}>
-                            <MuscleMapThumb
-                              groups={dominantMuscleGroupsByWorkout[workout.id] ?? []}
-                              size={34}
-                              mutedColor={themeColors.textMuted}
-                              highlightColor={themeColors.accent}
-                            />
-
-                            <View style={styles.workoutRowMain}>
-                              <Text style={styles.workoutRowName}>{workout.name}</Text>
-                              <View style={styles.workoutRowMeta}>
-                                <View style={styles.workoutRowMetaCell}>
-                                  <Text style={styles.workoutRowDays}>
-                                    {formatDaysSince(daysSinceByWorkout[workout.id] ?? null)}
-                                  </Text>
-                                </View>
-                                <View style={styles.workoutRowMetaCell}>
-                                  <Text style={styles.workoutRowDuration}>
-                                    {estimatedDurationByWorkout[workout.id] ?? '0m'}
-                                  </Text>
-                                </View>
-                                <View style={styles.workoutRowMetaCell}>
-                                  <Text style={styles.workoutRowCount}>
-                                    {count} {count === 1 ? 'exercise' : 'exercises'}
-                                  </Text>
-                                </View>
-                              </View>
-                            </View>
-                          </View>
-                        </TouchableOpacity>
-                      );
-                    })
-                )}
-              </View>
-            </TouchableOpacity>
-          ))
+            {otherPrograms.length > 0 ? (
+              <>
+                <Text style={styles.sectionTitle}>Other programs</Text>
+                {otherPrograms.map(renderProgramCard)}
+              </>
+            ) : null}
+          </>
         )}
       </ScrollView>
     </View>
@@ -415,6 +434,15 @@ const createStyles = (themeColors: typeof colors) =>
     list: {
       flex: 1,
       padding: 16,
+    },
+    sectionTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: themeColors.textMuted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: 8,
+      marginTop: 4,
     },
     noData: {
       padding: 16,
