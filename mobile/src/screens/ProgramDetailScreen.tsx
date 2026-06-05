@@ -201,39 +201,6 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
     );
   };
 
-  const handleReorderWorkouts = async (reorderedWorkouts: Workout[]) => {
-    const previousWorkouts = workouts;
-
-    setWorkouts(reorderedWorkouts);
-
-    try {
-      await api.reorderWorkouts(
-        programId,
-        reorderedWorkouts.map((workout, index) => ({
-          id: workout.id,
-          order: index + 1,
-        })),
-      );
-    } catch (err) {
-      console.error('Failed to reorder workouts:', err);
-      setWorkouts(previousWorkouts);
-      showError({ message: 'Failed to reorder workouts' });
-    }
-  };
-
-  const handleMoveWorkout = (workoutId: string, direction: 'up' | 'down') => {
-    const currentIndex = workouts.findIndex((workout) => workout.id === workoutId);
-    if (currentIndex < 0) return;
-
-    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    if (targetIndex < 0 || targetIndex >= workouts.length) return;
-
-    const reordered = workouts.slice();
-    const [moved] = reordered.splice(currentIndex, 1);
-    reordered.splice(targetIndex, 0, moved);
-    handleReorderWorkouts(reordered);
-  };
-
   if (loading) {
     return (
       <View style={styles.container}>
@@ -291,7 +258,7 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
           {workouts.length === 0 ? (
             <Text style={styles.noData}>No workouts yet. Add one to get started!</Text>
           ) : (
-            workouts.map((workout, index) => (
+            workouts.map((workout) => (
               <TouchableOpacity
                 key={workout.id}
                 style={styles.workoutCard}
@@ -306,38 +273,6 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
               >
                 <View style={styles.workoutHeaderRow}>
                   <Text style={styles.workoutName}>{workout.name}</Text>
-                  <View style={styles.reorderButtonsRow}>
-                    <TouchableOpacity
-                      style={styles.reorderButton}
-                      onPress={() => handleMoveWorkout(workout.id, 'up')}
-                      disabled={index === 0}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Move ${workout.name} up`}
-                    >
-                      <Ionicons
-                        name="chevron-up-outline"
-                        size={18}
-                        color={index === 0 ? themeColors.border : themeColors.textMuted}
-                      />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.reorderButton}
-                      onPress={() => handleMoveWorkout(workout.id, 'down')}
-                      disabled={index === workouts.length - 1}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Move ${workout.name} down`}
-                    >
-                      <Ionicons
-                        name="chevron-down-outline"
-                        size={18}
-                        color={
-                          index === workouts.length - 1
-                            ? themeColors.border
-                            : themeColors.textMuted
-                        }
-                      />
-                    </TouchableOpacity>
-                  </View>
                 </View>
                 {(exercisesByWorkout[workout.id] ?? []).length === 0 ? (
                   <Text style={styles.exerciseEmpty}>No exercises yet</Text>
@@ -465,21 +400,6 @@ const createStyles = (themeColors: typeof colors) =>
       alignItems: 'center',
       gap: 8,
       marginBottom: 6,
-    },
-    reorderButtonsRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 2,
-    },
-    reorderButton: {
-      width: 28,
-      height: 28,
-      borderWidth: 1,
-      borderColor: themeColors.border,
-      borderRadius: radius.sm,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: themeColors.background,
     },
     workoutName: {
       flex: 1,
