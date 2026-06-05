@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { type Workout, type Exercise, type Program } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
 import { useApi } from '../hooks/useApi';
@@ -89,6 +90,13 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
   useEffect(() => {
     setEditName(initialProgramName);
   }, [initialProgramName]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!programId) return;
+      void fetchWorkouts();
+    }, [programId]),
+  );
 
   const fetchWorkouts = async () => {
     setLoading(true);

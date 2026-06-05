@@ -31,10 +31,11 @@ import ScreenHeader from '../components/ui/ScreenHeader';
 import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
 import { useToast } from '../components/ui/AppToastProvider';
 import {
-  showConfirmDialog,
   showDeleteConfirmDialog,
-  showInputConfirmDialog,
 } from '../components/ui/ConfirmDialog';
+import { useConfirmDialog } from '../components/ui/ConfirmDialogProvider';
+
+const WORKOUT_NAME_PATTERN = /^Workout\s+\d+$/;
 
 const getExerciseMuscleGroup = (name: string): MuscleGroup | undefined =>
   resolveExerciseMuscleGroup(name);
@@ -48,15 +49,20 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   const [isCreatingExercise, setIsCreatingExercise] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(workoutName);
+  const [savedWorkoutName, setSavedWorkoutName] = useState(workoutName);
   const [isDraggingExercise, setIsDraggingExercise] = useState(false);
 
   const api = useApi();
   const { showError } = useErrorDialog();
   const { showToast } = useToast();
+  const { showConfirm } = useConfirmDialog();
   const muscleGroupOptions = getMuscleGroups();
+  const resolvedWorkoutName = (savedWorkoutName ?? editName ?? '').trim();
+  const showRenameHint = WORKOUT_NAME_PATTERN.test(resolvedWorkoutName);
 
   useEffect(() => {
     setEditName(workoutName);
+    setSavedWorkoutName(workoutName);
   }, [workoutName]);
 
   useFocusEffect(
@@ -111,24 +117,27 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   const handleOpenCreateExercisePrompt = () => {
     if (isCreatingExercise) return;
 
-    showInputConfirmDialog({
+    showConfirm({
       title: 'Create Exercise',
       message: 'Enter a name for your custom exercise.',
-      placeholder: 'Exercise name',
+      destructive: false,
+      onConfirm: () => {},
+      onConfirmInput: handleCreateExercise,
+      promptPlaceholder: 'Exercise name',
       promptOptions: muscleGroupOptions,
       promptOptionsLabel: 'Muscle groups',
-      autoSuggestSelections: (inputValue) => suggestMuscleGroupsFromInput(inputValue),
-      selectionMode: 'multi',
+      promptAutoSuggestSelections: (inputValue) => suggestMuscleGroupsFromInput(inputValue),
+      promptSelectionMode: 'multi',
       confirmText: 'Confirm',
       cancelText: 'Cancel',
-      onConfirmInput: handleCreateExercise,
     });
   };
 
   const handleOpenAddExercisePrompt = () => {
-    showConfirmDialog({
+    showConfirm({
       title: 'Add Exercise',
       message: '',
+      destructive: false,
       confirmText: 'Create exercise',
       cancelText: 'From catalog',
       onConfirm: handleOpenCreateExercisePrompt,
@@ -258,6 +267,29 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
     );
   };
 
+  const handleRenameWorkout = async () => {
+    const newName = editName.trim();
+    setEditing(false);
+
+    if (!newName) {
+      setEditName(savedWorkoutName);
+      return;
+    }
+
+    if (newName === savedWorkoutName) return;
+
+    try {
+      const updated = await api.updateWorkout(workoutId, { name: newName });
+      setSavedWorkoutName(updated.name);
+      setEditName(updated.name);
+      navigation.setParams({ workoutName: updated.name });
+    } catch (err) {
+      console.error('Failed to rename workout:', err);
+      showError({ message: 'Failed to rename workout' });
+      setEditName(savedWorkoutName);
+    }
+  };
+
   const handleReorderExercises = async (reorderedExercises: Exercise[]) => {
     const previousExercises = exercises;
 
@@ -291,21 +323,27 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
       <ScreenHeader
         onBackPress={() => navigation.goBack()}
         rightActions={<AppButton title="+ Add" size="sm" onPress={handleOpenAddExercisePrompt} disabled={isCreatingExercise} />}
-        titleNode={
-          editing ? (
-            <TextInput
-              style={styles.titleInput}
-              value={editName}
-              onChangeText={setEditName}
-              onBlur={() => setEditing(false)}
-              autoFocus
-            />
-          ) : (
-            <Text style={styles.title} onPress={() => setEditing(true)}>
-              {editName}
-            </Text>
-          )
-        }
+        titleNode={(
+          <View style={styles.titleRow}>
+            {editing ? (
+              <TextInput
+                style={styles.titleInput}
+                value={editName}
+                onChangeText={setEditName}
+                onBlur={handleRenameWorkout}
+                autoFocus
+                onSubmitEditing={handleRenameWorkout}
+              />
+            ) : (
+              <View style={styles.titleTextGroup}>
+                <Text style={styles.title} onPress={() => setEditing(true)}>
+                  {editName}
+                </Text>
+                {showRenameHint ? <Text style={styles.renameHint}>Click to rename</Text> : null}
+              </View>
+            )}
+          </View>
+        )}
       />
 
       <View style={styles.section}>
@@ -421,6 +459,11 @@ const createStyles = (themeColors: typeof colors) =>
       flex: 1,
       backgroundColor: themeColors.background,
     },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
     title: {
       fontSize: 22,
       fontWeight: '700',
@@ -428,6 +471,16 @@ const createStyles = (themeColors: typeof colors) =>
       flex: 1,
       includeFontPadding: false,
       lineHeight: 26,
+    },
+    titleTextGroup: {
+      flex: 1,
+    },
+    renameHint: {
+      marginTop: 2,
+      fontSize: 12,
+      color: themeColors.textMuted,
+      opacity: 0.75,
+      fontStyle: 'italic',
     },
     titleInput: {
       flex: 1,
