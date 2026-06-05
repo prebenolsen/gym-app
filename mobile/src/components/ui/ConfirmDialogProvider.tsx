@@ -109,6 +109,7 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
 
   const handleConfirm = useCallback(async () => {
     if (!dialog) return;
+    const activeDialogId = dialog.id;
     try {
       if (dialog.onConfirmInput) {
         await dialog.onConfirmInput(promptValue.trim(), promptSelections);
@@ -116,7 +117,12 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
         await dialog.onConfirm();
       }
     } finally {
-      setDialog(null);
+      setDialog((current) => {
+        if (current && current.id !== activeDialogId) {
+          return current;
+        }
+        return null;
+      });
     }
   }, [dialog, promptSelections, promptValue]);
 

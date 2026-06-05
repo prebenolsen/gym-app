@@ -20,7 +20,6 @@ import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
 import { useToast } from '../components/ui/AppToastProvider';
 import { showConfirmDialog, showDeleteConfirmDialog } from '../components/ui/ConfirmDialog';
 
-const PROGRAM_NAME_PATTERN = /^Program\s+\d+$/;
 const TIME_PER_SET_SECONDS = { low: 30, high: 45 };
 
 const roundDownToNearestFive = (value: number): number => Math.floor(value / 5) * 5;
@@ -70,8 +69,6 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
   const api = useApi();
   const { showError } = useErrorDialog();
   const { showToast } = useToast();
-  const resolvedProgramName = (program?.name ?? editName ?? '').trim();
-  const showRenameHint = PROGRAM_NAME_PATTERN.test(resolvedProgramName);
 
   useEffect(() => {
     if (!programId) {
@@ -245,12 +242,21 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
                 onSubmitEditing={handleRenameProgram}
               />
             ) : (
-              <View style={styles.titleTextGroup}>
-                <Text style={styles.title} onPress={() => setEditing(true)}>
-                  {editName}
-                </Text>
-                {showRenameHint ? <Text style={styles.renameHint}>Click to rename</Text> : null}
-              </View>
+              <>
+                <View style={styles.titleTextGroup}>
+                  <Text style={styles.title} onPress={() => setEditing(true)}>
+                    {editName}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.editNameButton}
+                  onPress={() => setEditing(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Edit program name"
+                >
+                  <Ionicons name="pencil-outline" size={20} color={themeColors.textMuted} />
+                </TouchableOpacity>
+              </>
             )}
           </View>
         )}
@@ -340,13 +346,13 @@ const createStyles = (themeColors: typeof colors) =>
     },
     titleTextGroup: {
       flex: 1,
+      justifyContent: 'center',
     },
-    renameHint: {
-      marginTop: 2,
-      fontSize: 12,
-      color: themeColors.textMuted,
-      opacity: 0.75,
-      fontStyle: 'italic',
+    editNameButton: {
+      width: 36,
+      height: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     titleInput: {
       flex: 1,

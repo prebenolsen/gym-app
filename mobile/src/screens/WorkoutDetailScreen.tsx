@@ -35,8 +35,6 @@ import {
 } from '../components/ui/ConfirmDialog';
 import { useConfirmDialog } from '../components/ui/ConfirmDialogProvider';
 
-const WORKOUT_NAME_PATTERN = /^Workout\s+\d+$/;
-
 const getExerciseMuscleGroup = (name: string): MuscleGroup | undefined =>
   resolveExerciseMuscleGroup(name);
 
@@ -57,8 +55,6 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   const { showToast } = useToast();
   const { showConfirm } = useConfirmDialog();
   const muscleGroupOptions = getMuscleGroups();
-  const resolvedWorkoutName = (savedWorkoutName ?? editName ?? '').trim();
-  const showRenameHint = WORKOUT_NAME_PATTERN.test(resolvedWorkoutName);
 
   useEffect(() => {
     setEditName(workoutName);
@@ -335,12 +331,21 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                 onSubmitEditing={handleRenameWorkout}
               />
             ) : (
-              <View style={styles.titleTextGroup}>
-                <Text style={styles.title} onPress={() => setEditing(true)}>
-                  {editName}
-                </Text>
-                {showRenameHint ? <Text style={styles.renameHint}>Click to rename</Text> : null}
-              </View>
+              <>
+                <View style={styles.titleTextGroup}>
+                  <Text style={styles.title} onPress={() => setEditing(true)}>
+                    {editName}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.editNameButton}
+                  onPress={() => setEditing(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Edit workout name"
+                >
+                  <Ionicons name="pencil-outline" size={20} color={themeColors.textMuted} />
+                </TouchableOpacity>
+              </>
             )}
           </View>
         )}
@@ -462,25 +467,25 @@ const createStyles = (themeColors: typeof colors) =>
     titleRow: {
       flexDirection: 'row',
       alignItems: 'center',
+      gap: 10,
       flex: 1,
     },
     title: {
       fontSize: 22,
       fontWeight: '700',
       color: themeColors.textStrong,
-      flex: 1,
       includeFontPadding: false,
       lineHeight: 26,
     },
     titleTextGroup: {
       flex: 1,
+      justifyContent: 'center',
     },
-    renameHint: {
-      marginTop: 2,
-      fontSize: 12,
-      color: themeColors.textMuted,
-      opacity: 0.75,
-      fontStyle: 'italic',
+    editNameButton: {
+      width: 36,
+      height: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     titleInput: {
       flex: 1,
