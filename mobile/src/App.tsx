@@ -24,6 +24,7 @@ import CalendarScreen from './screens/CalendarScreen';
 import WorkoutHistoryDetailScreen from './screens/WorkoutHistoryDetailScreen';
 import AuthScreen from './screens/AuthScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import FeedbackScreen from './screens/FeedbackScreen';
 import WeightTrackerScreen from './screens/WeightTrackerScreen';
 import OnboardingSetupScreen from './screens/OnboardingSetupScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -75,6 +76,7 @@ const SCREEN_FILE_NAME_BY_ROUTE: Record<string, string> = {
   Calendar: 'CalendarScreen.tsx',
   WorkoutHistoryDetail: 'WorkoutHistoryDetailScreen.tsx',
   Settings: 'SettingsScreen.tsx',
+  Feedback: 'FeedbackScreen.tsx',
   Auth: 'AuthScreen.tsx',
   WeightTrackerStack: 'WeightTrackerScreen.tsx',
   WeightTracker: 'WeightTrackerScreen.tsx',
@@ -148,6 +150,15 @@ const CalendarStackNavigator = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Calendar" component={CalendarScreen} />
       <Stack.Screen name="WorkoutHistoryDetail" component={WorkoutHistoryDetailScreen} />
+    </Stack.Navigator>
+  );
+};
+
+const SettingsStackNavigator = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="Feedback" component={FeedbackScreen} />
     </Stack.Navigator>
   );
 };
@@ -465,7 +476,7 @@ const AppRoutes = () => {
           </Tab.Screen>
           <Tab.Screen
             name="Settings"
-            component={SettingsScreen}
+            component={SettingsStackNavigator}
             listeners={({ navigation }) => ({
               tabPress: (event) => {
                 event.preventDefault();

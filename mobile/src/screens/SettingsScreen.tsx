@@ -115,7 +115,7 @@ const formatIsoBirthdateForInput = (isoDate: string, format: DateFormat): string
   return `${year}/${month}/${day}`;
 };
 
-const SettingsScreen = () => {
+const SettingsScreen = ({ navigation }: any) => {
   const { signOut, user } = useAuth();
   const {
     theme,
@@ -158,9 +158,6 @@ const SettingsScreen = () => {
   const [completionSoundOpen, setCompletionSoundOpen] = useState(false);
   const [countdownSoundOpen, setCountdownSoundOpen] = useState(false);
   const [prepareSoundOpen, setPrepareSoundOpen] = useState(false);
-  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
-  const [feedbackText, setFeedbackText] = useState('');
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
   const [profileLoading, setProfileLoading] = useState(true);
   const [savingPersonalMetrics, setSavingPersonalMetrics] = useState(false);
@@ -295,22 +292,7 @@ const SettingsScreen = () => {
   };
 
   const handleOpenFeedback = () => {
-    if (feedbackSubmitted) {
-      return;
-    }
-    setShowFeedbackForm(true);
-  };
-
-  const handleSubmitFeedback = () => {
-    if (!feedbackText.trim()) {
-      Alert.alert('Feedback required', 'Please write a short message before submitting.');
-      return;
-    }
-
-    setFeedbackSubmitted(true);
-    setShowFeedbackForm(false);
-    setFeedbackText('');
-    showToast({ type: 'success', duration: 'short', message: 'Thanks! Your feedback has been recorded.' });
+    navigation.navigate('Feedback');
   };
 
   return (
@@ -702,7 +684,6 @@ const SettingsScreen = () => {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.title}>About</Text>
 
         <View style={styles.aboutLogoWrap}>
           <BrandLogo width={170} color={themeColors.textStrong} />
@@ -715,56 +696,11 @@ const SettingsScreen = () => {
         <Text style={styles.aboutLine}>Developed by {APP_INFO.author}</Text>
 
         <TouchableOpacity
-          style={[styles.secondaryButton, feedbackSubmitted && styles.successButton]}
+          style={styles.secondaryButton}
           onPress={handleOpenFeedback}
-          disabled={feedbackSubmitted}
         >
-          <Text
-            style={[
-              styles.secondaryButtonText,
-              feedbackSubmitted && styles.successButtonText,
-            ]}
-          >
-            {feedbackSubmitted
-              ? 'Thanks for your feedback!'
-              : 'Send Feedback or Report a Bug'}
-          </Text>
+          <Text style={styles.secondaryButtonText}>Send Feedback or Report a Bug</Text>
         </TouchableOpacity>
-
-        {showFeedbackForm ? (
-          <View style={styles.feedbackForm}>
-            <Text style={styles.section}>Feedback Message</Text>
-            <TextInput
-              style={styles.feedbackInput}
-              value={feedbackText}
-              onChangeText={setFeedbackText}
-              multiline
-              numberOfLines={5}
-              textAlignVertical="top"
-              placeholder="Tell us what happened or what you would like improved..."
-              placeholderTextColor={themeColors.textMuted}
-            />
-
-            <View style={styles.feedbackActions}>
-              <TouchableOpacity
-                style={styles.feedbackCancelButton}
-                onPress={() => {
-                  setShowFeedbackForm(false);
-                  setFeedbackText('');
-                }}
-              >
-                <Text style={styles.feedbackCancelText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={handleSubmitFeedback}
-              >
-                <Text style={styles.primaryButtonText}>Submit</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : null}
       </View>
     </ScrollView>
   );
@@ -901,48 +837,6 @@ const createStyles = (themeColors: typeof colors) =>
     },
     secondaryButtonText: {
       color: themeColors.accent,
-      fontWeight: '700',
-      
-    },
-    successButton: {
-      borderColor: themeColors.success,
-      backgroundColor: themeColors.accentSoft,
-    },
-    successButtonText: {
-      color: themeColors.success,
-    },
-    feedbackForm: {
-      marginTop: 14,
-      borderTopWidth: 1,
-      borderTopColor: themeColors.border,
-      paddingTop: 12,
-    },
-    feedbackInput: {
-      minHeight: 120,
-      borderWidth: 1,
-      borderColor: themeColors.border,
-      borderRadius: radius.sm,
-      backgroundColor: themeColors.background,
-      color: themeColors.textStrong,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-    },
-    feedbackActions: {
-      flexDirection: 'row',
-      gap: 10,
-      marginTop: 10,
-    },
-    feedbackCancelButton: {
-      flex: 0.5,
-      borderColor: themeColors.border,
-      borderWidth: 1,
-      borderRadius: radius.sm,
-      paddingVertical: 12,
-      alignItems: 'center',
-      backgroundColor: themeColors.background,
-    },
-    feedbackCancelText: {
-      color: themeColors.textMuted,
       fontWeight: '700',
       
     },
