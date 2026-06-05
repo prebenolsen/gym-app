@@ -913,14 +913,16 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
           </View>
         </View>
 
-        <View style={styles.progressDotsRow}>
-          {Array.from({ length: CARD_COUNT }).map((_, index) => (
-            <View
-              key={index}
-              style={[styles.progressDot, index === step && styles.progressDotActive]}
-            />
-          ))}
-        </View>
+        {step > STEPS.welcome && (
+          <View style={styles.progressDotsRow}>
+            {Array.from({ length: CARD_COUNT - 1 }).map((_, index) => (
+              <View
+                key={index}
+                style={[styles.progressDot, index === step - 1 && styles.progressDotActive]}
+              />
+            ))}
+          </View>
+        )}
       </KeyboardAvoidingView>
       </View>
     </ImageBackground>

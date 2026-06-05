@@ -363,14 +363,18 @@ const AppRoutes = () => {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <NavigationContainer>
         <Tab.Navigator
-          tabBar={(props) => (
-            <View style={[styles.tabBarWrapper, !showFileDisplay && styles.tabBarWrapperHidden]}>
-              <BottomTabBar {...props} />
-              <View style={[styles.tabBarFooter, !showFileDisplay && styles.tabBarFooterHidden]}>
-                <Text style={styles.versionText}>{getActiveScreenFileName(props.state)}</Text>
+          tabBar={(props) => {
+            const activeRouteName = props.state.routes[props.state.index]?.name;
+            if (activeRouteName === 'OnboardingSetup') return null;
+            return (
+              <View style={[styles.tabBarWrapper, !showFileDisplay && styles.tabBarWrapperHidden]}>
+                <BottomTabBar {...props} />
+                <View style={[styles.tabBarFooter, !showFileDisplay && styles.tabBarFooterHidden]}>
+                  <Text style={styles.versionText}>{getActiveScreenFileName(props.state)}</Text>
+                </View>
               </View>
-            </View>
-          )}
+            );
+          }}
           screenOptions={{
             headerShown: false,
             tabBarActiveTintColor: colors.accent,
@@ -504,6 +508,7 @@ const AppRoutes = () => {
             name="OnboardingSetup"
             options={{
               tabBarButton: () => null,
+              tabBarStyle: { display: 'none' },
             }}
           >
             {({ navigation }) => (
