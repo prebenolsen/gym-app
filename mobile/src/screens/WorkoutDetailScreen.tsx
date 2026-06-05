@@ -469,19 +469,23 @@ const createStyles = (themeColors: typeof colors) =>
       backgroundColor: themeColors.background,
     },
     title: {
-      fontSize: 24,
-      fontWeight: 'bold',
+      fontSize: 22,
+      fontWeight: '700',
       color: themeColors.textStrong,
       flex: 1,
+      includeFontPadding: false,
+      lineHeight: 26,
     },
     titleInput: {
-      fontSize: 24,
-      fontWeight: 'bold',
+      flex: 1,
+      fontSize: 22,
+      fontWeight: '700',
       color: themeColors.textStrong,
       borderBottomWidth: 2,
       borderBottomColor: themeColors.accent,
       paddingBottom: 8,
-      
+      includeFontPadding: false,
+      lineHeight: 26,
     },
     startWorkoutButton: {
       width: '100%',

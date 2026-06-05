@@ -381,7 +381,8 @@ const createStyles = (themeColors: typeof colors) =>
       flex: 1,
     },
     favoriteStarButton: {
-      padding: 2,
+      width: 28,
+      height: 28,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -389,13 +390,15 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.accent,
       fontSize: 27,
       fontWeight: '800',
-      lineHeight: 30,
+      lineHeight: 27,
+      includeFontPadding: false,
     },
     title: {
-      fontSize: 24,
-      fontWeight: 'bold',
+      fontSize: 22,
+      fontWeight: '700',
       color: themeColors.textStrong,
-      
+      includeFontPadding: false,
+      lineHeight: 26,
     },
     titleTextGroup: {
       flex: 1,
@@ -409,13 +412,14 @@ const createStyles = (themeColors: typeof colors) =>
     },
     titleInput: {
       flex: 1,
-      fontSize: 24,
-      fontWeight: 'bold',
+      fontSize: 22,
+      fontWeight: '700',
       color: themeColors.textStrong,
       borderBottomWidth: 2,
       borderBottomColor: themeColors.accent,
       paddingBottom: 8,
-      
+      includeFontPadding: false,
+      lineHeight: 26,
     },
     section: {
       flex: 1,
