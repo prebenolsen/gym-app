@@ -10,6 +10,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { WeightTrackerGender } from '@gym-app/shared';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -289,6 +290,26 @@ const SettingsScreen = ({ navigation }: any) => {
           showError({ message });
         }
       },
+    );
+  };
+
+  const handleResetAccount = () => {
+    showDeleteConfirmDialog(
+      'Reset account',
+      'This will completely erase your workouts, exercises, weight tracker data, and settings. You will be taken to a fresh onboarding setup.',
+      async () => {
+        try {
+          await api.resetAccount();
+          if (user?.id) {
+            await AsyncStorage.removeItem(`gym-app.mobile.onboarding-skipped.${user.id}`);
+          }
+          navigation.navigate('OnboardingSetup');
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Failed to reset account';
+          showError({ message });
+        }
+      },
+      'Reset',
     );
   };
 
@@ -676,6 +697,13 @@ const SettingsScreen = ({ navigation }: any) => {
           placeholderTextColor={themeColors.textMuted}
         />
         <AppButton title="Update Password" variant="outlineAccent" onPress={handleChangePassword} />
+
+        <AppButton
+          title="Reset Account"
+          variant="danger"
+          style={styles.deleteAccountButton}
+          onPress={handleResetAccount}
+        />
 
         <AppButton title="Delete Account" variant="danger" style={styles.deleteAccountButton} onPress={handleDeleteAccount} />
       </View>

@@ -145,6 +145,10 @@ class ApiClient {
     return this.request('DELETE', '/account');
   }
 
+  async resetAccount(): Promise<void> {
+    return this.request('DELETE', '/account/reset');
+  }
+
   async createProgramWithWorkouts(template: {
     name: string;
     workouts: {

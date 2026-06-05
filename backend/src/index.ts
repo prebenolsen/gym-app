@@ -85,6 +85,29 @@ const formatError = (err: unknown): string => {
   return String(err);
 };
 
+const deleteAllUserData = async (userId: string) => {
+  const tablesToDelete = [
+    'workout_session_sets',
+    'workout_sessions',
+    'exercise_notes',
+    'exercises',
+    'workouts',
+    'programs',
+    'weight_tracker_custom_metric_values',
+    'weight_tracker_entries',
+    'weight_tracker_custom_metrics',
+    'weight_tracker_goals',
+    'weight_tracker_profile',
+  ] as const;
+
+  for (const table of tablesToDelete) {
+    const { error } = await supabase.from(table).delete().eq('user_id', userId);
+    if (error) {
+      throw error;
+    }
+  }
+};
+
 const extractBearerToken = (authHeader?: string): string | null => {
   if (!authHeader) return null;
   const [scheme, token] = authHeader.split(' ');
@@ -1400,34 +1423,23 @@ app.get('/exercises/:exerciseId/progress', async (req, res) => {
 
 app.delete('/account', async (req, res) => {
   try {
-    // Delete child records first, then parent records.
-    const { data: sessions, error: sessionsError } = await supabase
-      .from('workout_sessions')
-      .select('id')
-      .eq('user_id', req.userId);
-
-    if (sessionsError) {
-      throw sessionsError;
-    }
-
-    const sessionIds = (sessions ?? []).map((session) => session.id);
-    if (sessionIds.length > 0) {
-      await supabase.from('workout_session_sets').delete().in('session_id', sessionIds);
-    }
-
-    await supabase.from('workout_sessions').delete().eq('user_id', req.userId);
-
-    await supabase.from('exercises').delete().eq('user_id', req.userId);
-
-    await supabase.from('workouts').delete().eq('user_id', req.userId);
-
-    await supabase.from('programs').delete().eq('user_id', req.userId);
+    await deleteAllUserData(req.userId);
 
     const { error: authDeleteError } = await supabase.auth.admin.deleteUser(req.userId);
     if (authDeleteError) {
       throw authDeleteError;
     }
 
+    res.status(204).send();
+  } catch (err: unknown) {
+    const errorMsg = formatError(err);
+    res.status(500).json({ error: errorMsg });
+  }
+});
+
+app.delete('/account/reset', async (req, res) => {
+  try {
+    await deleteAllUserData(req.userId);
     res.status(204).send();
   } catch (err: unknown) {
     const errorMsg = formatError(err);

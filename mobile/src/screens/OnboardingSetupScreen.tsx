@@ -4,6 +4,8 @@ import {
   Alert,
   Animated,
   Dimensions,
+  ImageBackground,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -17,22 +19,40 @@ import BrandLogo from '../components/BrandLogo';
 import { usePreferences } from '../context/PreferencesContext';
 import { useApi } from '../hooks/useApi';
 import { radius, shadow } from '../theme';
+import type { DateFormat } from '../context/PreferencesContext';
 import type { WeightTrackerGender, WeightTrackerGoal } from '@gym-app/shared';
 import AppButton from '../components/ui/AppButton';
 import ChipButton from '../components/ui/ChipButton';
-import SegmentedControl from '../components/ui/SegmentedControl';
 
 type UnitSystem = 'metric' | 'us';
 type AgeInputMode = 'birthdate' | 'age';
+type ProfileCardKey = 'gender' | 'birthdate' | 'height' | 'weight';
+type ProfileCardsGroup = 'identity' | 'measurements';
+type DateFormatChoice = DateFormat | null;
 
 type OnboardingSetupScreenProps = {
   onComplete: () => void;
   onSkip: () => void;
 };
 
-const CARD_COUNT = 4;
+const STEPS = {
+  welcome: 0,
+  unitFormat: 1,
+  dateFormat: 2,
+  profileCards: 3,
+  goal: 4,
+  review: 5,
+} as const;
+
+const CARD_COUNT = 6;
 const CARD_GAP = 0;
 const HORIZONTAL_PADDING = 20;
+
+const DATE_FORMAT_OPTIONS: ReadonlyArray<{ key: DateFormat; label: string }> = [
+  { key: 'eu', label: 'DD/MM/YYYY' },
+  { key: 'iso', label: 'YYYY/MM/DD' },
+  { key: 'us', label: 'MM/DD/YYYY' },
+];
 
 const GOAL_OPTIONS: Array<{
   id: WeightTrackerGoal;
@@ -60,16 +80,66 @@ const GOAL_OPTIONS: Array<{
   },
 ];
 
-const parseBirthdateIso = (value: string): string | null => {
-  const trimmed = value.trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    return null;
+const getDateFormatConfig = (format: DateFormat) => {
+  if (format === 'eu') {
+    return { separator: '/', segmentLengths: [2, 2, 4] as const, order: 'dmy' as const };
+  }
+  if (format === 'us') {
+    return { separator: '/', segmentLengths: [2, 2, 4] as const, order: 'mdy' as const };
+  }
+  return { separator: '/', segmentLengths: [4, 2, 2] as const, order: 'ymd' as const };
+};
+
+const formatBirthdateInput = (
+  rawText: string,
+  format: DateFormat,
+  showSeparators: boolean,
+): string => {
+  const { separator, segmentLengths } = getDateFormatConfig(format);
+  const maxDigits = segmentLengths.reduce((sum, length) => sum + length, 0);
+  const digits = rawText.replace(/\D/g, '').slice(0, maxDigits);
+  const parts: string[] = [];
+
+  let cursor = 0;
+  for (const length of segmentLengths) {
+    if (cursor >= digits.length) {
+      if (showSeparators && parts.length > 0 && parts.length < segmentLengths.length) {
+        parts.push('');
+      }
+      break;
+    }
+
+    const part = digits.slice(cursor, cursor + length);
+    if (!part) break;
+    parts.push(part);
+    cursor += length;
   }
 
-  const [yearRaw, monthRaw, dayRaw] = trimmed.split('-');
-  const year = Number(yearRaw);
-  const month = Number(monthRaw);
-  const day = Number(dayRaw);
+  return parts.join(separator);
+};
+
+const parseBirthdateToIso = (inputText: string, format: DateFormat): string | null => {
+  const digits = inputText.replace(/\D/g, '');
+  if (digits.length !== 8) return null;
+
+  const { order } = getDateFormatConfig(format);
+  let year = 0;
+  let month = 0;
+  let day = 0;
+
+  if (order === 'ymd') {
+    year = Number(digits.slice(0, 4));
+    month = Number(digits.slice(4, 6));
+    day = Number(digits.slice(6, 8));
+  } else if (order === 'dmy') {
+    day = Number(digits.slice(0, 2));
+    month = Number(digits.slice(2, 4));
+    year = Number(digits.slice(4, 8));
+  } else {
+    month = Number(digits.slice(0, 2));
+    day = Number(digits.slice(2, 4));
+    year = Number(digits.slice(4, 8));
+  }
 
   if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
     return null;
@@ -84,22 +154,21 @@ const parseBirthdateIso = (value: string): string | null => {
     return null;
   }
 
-  return `${yearRaw}-${monthRaw}-${dayRaw}`;
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 };
 
-const formatBirthdateInput = (rawText: string, showSeparators: boolean): string => {
-  const digits = rawText.replace(/\D/g, '').slice(0, 8);
-  const year = digits.slice(0, 4);
-  const month = digits.slice(4, 6);
-  const day = digits.slice(6, 8);
+const formatIsoBirthdateForInput = (isoDate: string, format: DateFormat): string => {
+  const parts = isoDate.split('-');
+  if (parts.length !== 3) return isoDate;
+  const [year, month, day] = parts;
 
-  let output = year;
-  if (month.length > 0 || (showSeparators && digits.length === 4)) output += '-';
-  if (month.length > 0) output += month;
-  if (day.length > 0 || (showSeparators && digits.length === 6)) output += '-';
-  if (day.length > 0) output += day;
-  return output;
+  if (format === 'eu') return `${day}/${month}/${year}`;
+  if (format === 'us') return `${month}/${day}/${year}`;
+  return `${year}/${month}/${day}`;
 };
+
+const getDateFormatLabel = (format: DateFormat): string =>
+  DATE_FORMAT_OPTIONS.find((option) => option.key === format)?.label ?? 'YYYY/MM/DD';
 
 const todayIsoString = (): string => new Date().toISOString().split('T')[0];
 
@@ -113,24 +182,39 @@ const formatSummaryValue = (value: string): string => (value ? value : 'Not set'
 
 export default function OnboardingSetupScreen({ onComplete, onSkip }: OnboardingSetupScreenProps) {
   const api = useApi();
-  const { colors: themeColors, setUnit } = usePreferences();
+  const { colors: themeColors, setUnit, dateFormat, setDateFormat } = usePreferences();
   const styles = useMemo(() => createStyles(themeColors), [themeColors]);
+  const showTroubleshootingSkip = __DEV__;
 
   const initialCardWidth = Dimensions.get('window').width - HORIZONTAL_PADDING * 2;
   const [cardWidth, setCardWidth] = useState(initialCardWidth);
   const sliderX = useRef(new Animated.Value(0)).current;
+  const previousDateFormatRef = useRef<DateFormat>(dateFormat);
 
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState<number>(STEPS.welcome);
   const [saving, setSaving] = useState(false);
 
-  const [unitSystem, setUnitSystem] = useState<UnitSystem>('metric');
+  const [unitSystem, setUnitSystem] = useState<UnitSystem | null>(null);
+  const [selectedDateFormat, setSelectedDateFormat] = useState<DateFormatChoice>(null);
   const [ageMode, setAgeMode] = useState<AgeInputMode>('birthdate');
   const [birthdateInput, setBirthdateInput] = useState('');
   const [ageInput, setAgeInput] = useState('');
   const [gender, setGender] = useState<WeightTrackerGender | null>(null);
   const [heightInput, setHeightInput] = useState('');
   const [weightInput, setWeightInput] = useState('');
-  const [goal, setGoal] = useState<WeightTrackerGoal>('track');
+  const [goal, setGoal] = useState<WeightTrackerGoal | null>(null);
+  const [profileCardsGroup, setProfileCardsGroup] = useState<ProfileCardsGroup>('identity');
+  const [hiddenProfileCards, setHiddenProfileCards] = useState<Record<ProfileCardKey, boolean>>({
+    gender: false,
+    birthdate: false,
+    height: false,
+    weight: false,
+  });
+
+  const genderCardAnim = useRef(new Animated.Value(1)).current;
+  const birthdateCardAnim = useRef(new Animated.Value(1)).current;
+  const heightCardAnim = useRef(new Animated.Value(1)).current;
+  const weightCardAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.timing(sliderX, {
@@ -140,13 +224,45 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
     }).start();
   }, [cardWidth, sliderX, step]);
 
-  const aboutYouComplete = useMemo(() => {
-    const hasBirthdate = ageMode === 'birthdate' ? !!parseBirthdateIso(birthdateInput) : true;
-    const hasAge = ageMode === 'age' ? !!ageInput.trim() && Number(ageInput) > 0 : true;
-    const hasHeight = !!heightInput.trim() && Number(heightInput.replace(',', '.')) > 0;
-    const hasWeight = !!weightInput.trim() && Number(weightInput.replace(',', '.')) > 0;
-    return hasBirthdate && hasAge && hasHeight && hasWeight;
-  }, [ageInput, ageMode, birthdateInput, heightInput, weightInput]);
+  useEffect(() => {
+    if (!selectedDateFormat) {
+      return;
+    }
+
+    if (!birthdateInput.trim()) {
+      previousDateFormatRef.current = selectedDateFormat;
+      return;
+    }
+
+    const previousFormat = previousDateFormatRef.current;
+    if (previousFormat === selectedDateFormat) {
+      return;
+    }
+
+    const isoBirthdate = parseBirthdateToIso(birthdateInput, previousFormat);
+    if (isoBirthdate) {
+      setBirthdateInput(formatIsoBirthdateForInput(isoBirthdate, selectedDateFormat));
+    } else {
+      setBirthdateInput((current) => formatBirthdateInput(current, selectedDateFormat, false));
+    }
+
+    previousDateFormatRef.current = selectedDateFormat;
+  }, [birthdateInput, selectedDateFormat]);
+
+  useEffect(() => {
+    if (step !== STEPS.profileCards || profileCardsGroup !== 'measurements') {
+      return;
+    }
+
+    heightCardAnim.setValue(1);
+    weightCardAnim.setValue(1);
+    setHiddenProfileCards((previous) => {
+      if (!previous.height && !previous.weight) {
+        return previous;
+      }
+      return { ...previous, height: false, weight: false };
+    });
+  }, [heightCardAnim, profileCardsGroup, step, weightCardAnim]);
 
   const openHomeWithSkip = () => {
     if (saving) return;
@@ -159,21 +275,158 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
   };
 
   const handleBirthdateChange = (rawValue: string) => {
+    if (!selectedDateFormat) {
+      return;
+    }
+
     const previousDigits = birthdateInput.replace(/\D/g, '').length;
     const nextDigits = rawValue.replace(/\D/g, '').length;
     const isDeleting = rawValue.length < birthdateInput.length || nextDigits < previousDigits;
-    setBirthdateInput(formatBirthdateInput(rawValue, !isDeleting));
+    const formatted = formatBirthdateInput(rawValue, selectedDateFormat, !isDeleting);
+    setBirthdateInput(formatted);
+
+    const digitCount = formatted.replace(/\D/g, '').length;
+    if (digitCount === 8) {
+      Keyboard.dismiss();
+      if (!hiddenProfileCards.birthdate) {
+        const isValid = !!parseBirthdateToIso(formatted, selectedDateFormat);
+        if (isValid) {
+        dismissProfileCard('birthdate');
+        }
+      }
+    }
   };
 
-  const handleNextFromAboutYou = () => {
-    if (!aboutYouComplete) {
-      Alert.alert('Required fields missing', 'Please complete your birthdate or age, plus height and weight.');
+  const handleHeightChange = (rawValue: string) => {
+    setHeightInput(rawValue);
+
+    const digitCount = rawValue.replace(/\D/g, '').length;
+    if (digitCount === 3 && !hiddenProfileCards.height) {
+      Keyboard.dismiss();
+      dismissProfileCard('height');
+    }
+  };
+
+  const getProfileCardAnim = (card: ProfileCardKey) => {
+    if (card === 'gender') return genderCardAnim;
+    if (card === 'birthdate') return birthdateCardAnim;
+    if (card === 'height') return heightCardAnim;
+    return weightCardAnim;
+  };
+
+  const dismissProfileCard = (card: ProfileCardKey) => {
+    if (hiddenProfileCards[card]) {
       return;
     }
-    goToStep(2);
+
+    Animated.timing(getProfileCardAnim(card), {
+      toValue: 0,
+      duration: 220,
+      useNativeDriver: true,
+    }).start(() => {
+      setHiddenProfileCards((previous) => {
+        if (previous[card]) {
+          return previous;
+        }
+
+        const next = { ...previous, [card]: true };
+        const identityComplete = next.gender && next.birthdate;
+        const measurementsComplete = next.height && next.weight;
+        if (profileCardsGroup === 'identity' && identityComplete) {
+          setProfileCardsGroup('measurements');
+        }
+        if (measurementsComplete) {
+          goToStep(STEPS.goal);
+        }
+        return next;
+      });
+    });
+  };
+
+  const resetProfileCards = () => {
+    genderCardAnim.setValue(1);
+    birthdateCardAnim.setValue(1);
+    heightCardAnim.setValue(1);
+    weightCardAnim.setValue(1);
+
+    setHiddenProfileCards({
+      gender: false,
+      birthdate: false,
+      height: false,
+      weight: false,
+    });
+    setProfileCardsGroup('identity');
+  };
+
+  const goBackInProfileCards = () => {
+    if (profileCardsGroup === 'measurements') {
+      genderCardAnim.setValue(1);
+      birthdateCardAnim.setValue(1);
+      setHiddenProfileCards((previous) => ({ ...previous, gender: false, birthdate: false }));
+      setProfileCardsGroup('identity');
+      return;
+    }
+
+    goToStep(STEPS.dateFormat);
+  };
+
+  const handleSelectGender = (value: WeightTrackerGender) => {
+    setGender(value);
+    dismissProfileCard('gender');
+  };
+
+  const handleConfirmBirthdateAge = () => {
+    if (!selectedDateFormat) {
+      Alert.alert('Select date format', 'Please choose your date format first.');
+      return;
+    }
+
+    if (ageMode === 'birthdate') {
+      if (!parseBirthdateToIso(birthdateInput, selectedDateFormat)) {
+        Alert.alert('Invalid birthdate', `Use the ${getDateFormatLabel(selectedDateFormat)} format.`);
+        return;
+      }
+      Keyboard.dismiss();
+      dismissProfileCard('birthdate');
+      return;
+    }
+
+    const numericAge = Number(ageInput);
+    if (!Number.isFinite(numericAge) || numericAge <= 0) {
+      Alert.alert('Invalid age', 'Please provide a valid age.');
+      return;
+    }
+
+    Keyboard.dismiss();
+    dismissProfileCard('birthdate');
+  };
+
+  const handleConfirmHeight = () => {
+    const numericHeight = Number(heightInput.replace(',', '.'));
+    if (!Number.isFinite(numericHeight) || numericHeight <= 0) {
+      Alert.alert('Invalid height', 'Please provide a valid height.');
+      return;
+    }
+
+    dismissProfileCard('height');
+  };
+
+  const handleConfirmWeight = () => {
+    const numericWeight = Number(weightInput.replace(',', '.'));
+    if (!Number.isFinite(numericWeight) || numericWeight <= 0) {
+      Alert.alert('Invalid weight', 'Please provide a valid weight.');
+      return;
+    }
+
+    dismissProfileCard('weight');
   };
 
   const handleFinish = async () => {
+    if (!selectedDateFormat) {
+      Alert.alert('Select date format', 'Please choose your date format first.');
+      return;
+    }
+
     const numericWeight = Number(weightInput.replace(',', '.'));
     const numericHeight = Number(heightInput.replace(',', '.'));
     const numericAge = Number(ageInput);
@@ -188,8 +441,8 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
       return;
     }
 
-    if (ageMode === 'birthdate' && !parseBirthdateIso(birthdateInput)) {
-      Alert.alert('Invalid birthdate', 'Use the format yyyy-mm-dd.');
+    if (ageMode === 'birthdate' && !parseBirthdateToIso(birthdateInput, selectedDateFormat)) {
+      Alert.alert('Invalid birthdate', `Use the ${getDateFormatLabel(selectedDateFormat)} format.`);
       return;
     }
 
@@ -198,13 +451,25 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
       return;
     }
 
+    if (!goal) {
+      Alert.alert('Select a goal', 'Please choose a goal first.');
+      return;
+    }
+
     setSaving(true);
     try {
+      if (!unitSystem) {
+        Alert.alert('Select units', 'Please choose Metric or US Units first.');
+        return;
+      }
+
       setUnit(unitSystem === 'metric' ? 'kg' : 'lb');
+      setDateFormat(selectedDateFormat);
 
       const weightKg = toKg(numericWeight, unitSystem);
       const heightCm = toCm(numericHeight, unitSystem);
-      const birthdateIso = ageMode === 'birthdate' ? parseBirthdateIso(birthdateInput) : null;
+      const birthdateIso =
+        ageMode === 'birthdate' ? parseBirthdateToIso(birthdateInput, selectedDateFormat) : null;
       const ageValue = ageMode === 'age' ? Math.floor(numericAge) : null;
 
       await api.upsertWeightTrackerProfile({
@@ -243,26 +508,42 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
   };
 
   const summaryRows = [
-    { label: 'Units', value: unitSystem === 'metric' ? 'Metric (kg/cm)' : 'US (lb/ft)' },
+    { label: 'Units', value: unitSystem === 'metric' ? 'Metric (kg/cm)' : unitSystem === 'us' ? 'US (lb/ft)' : '' },
+    { label: 'Date format', value: selectedDateFormat ? getDateFormatLabel(selectedDateFormat) : '' },
     {
       label: ageMode === 'birthdate' ? 'Birthdate' : 'Age',
       value: ageMode === 'birthdate' ? birthdateInput : ageInput ? `${ageInput} years` : '',
     },
     { label: 'Gender', value: gender ? gender.charAt(0).toUpperCase() + gender.slice(1) : '' },
-    { label: 'Height', value: heightInput ? `${heightInput} ${unitSystem === 'metric' ? 'cm' : 'ft'}` : '' },
-    { label: 'Weight', value: weightInput ? `${weightInput} ${unitSystem === 'metric' ? 'kg' : 'lb'}` : '' },
-    { label: 'Goal', value: GOAL_OPTIONS.find((item) => item.id === goal)?.title ?? '' },
+    {
+      label: 'Height',
+      value: heightInput ? `${heightInput} ${unitSystem === 'metric' ? 'cm' : 'ft'}` : '',
+    },
+    {
+      label: 'Weight',
+      value: weightInput ? `${weightInput} ${unitSystem === 'metric' ? 'kg' : 'lb'}` : '',
+    },
+    { label: 'Goal', value: goal ? GOAL_OPTIONS.find((item) => item.id === goal)?.title ?? '' : '' },
   ];
+  const showBirthdateConfirmAction =
+    ageMode === 'age' || (ageMode === 'birthdate' && birthdateInput.trim().length > 0);
 
   return (
-    <View style={styles.screen}>
+    <ImageBackground
+      source={require('../../../shared/assets/Copilot_20260402_133811.png')}
+      style={styles.screen}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
       <KeyboardAvoidingView
         style={styles.screen}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <TouchableOpacity style={styles.skipButton} onPress={openHomeWithSkip}>
-          <Text style={styles.skipButtonText}>Skip setup</Text>
-        </TouchableOpacity>
+        {showTroubleshootingSkip ? (
+          <TouchableOpacity style={styles.skipButton} onPress={openHomeWithSkip}>
+            <Text style={styles.skipButtonText}>Skip (temp)</Text>
+          </TouchableOpacity>
+        ) : null}
 
         <View
           style={styles.sliderViewport}
@@ -283,190 +564,351 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
                 },
               ]}
             >
-            <View style={[styles.card, { width: cardWidth }]}> 
-              <View style={[styles.cardContent, styles.welcomeCardContent]}>
-                <BrandLogo width={220} color={themeColors.accent} />
-                <Text style={styles.welcomeTitle}>Welcome</Text>
-                <Text style={styles.welcomeSubtitle}>Let's get started</Text>
+              <View style={[styles.card, styles.welcomeCard, { width: cardWidth }]}> 
+                <View style={[styles.cardContent, styles.welcomeCardContent]}>
+                  <BrandLogo width={220} color={themeColors.accent} />
 
-                <AppButton title="Get started" style={styles.welcomeButton} onPress={() => goToStep(1)} />
+                  <AppButton
+                    title="Get started"
+                    style={styles.welcomeButton}
+                    onPress={() => goToStep(STEPS.unitFormat)}
+                  />
+                </View>
               </View>
-            </View>
 
-            <View style={[styles.card, { width: cardWidth }]}> 
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>About you</Text>
-                <Text style={styles.cardSubtitle}>
-                  These details are saved in Settings and used in progress calculations.
-                </Text>
+              <View style={[styles.card, { width: cardWidth }]}> 
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle}>Which formats do you prefer?</Text>
+                  <Text style={styles.cardSubtitle}>
+                    We will use this unit system for your goals and weight tracking.
+                  </Text>
 
-                <Text style={styles.label}>Units</Text>
-                <SegmentedControl
-                  style={styles.segmentedRow}
-                  options={[
-                    { value: 'metric', label: 'Metric (kg · cm)' },
-                    { value: 'us', label: 'US Units (lb · ft)' },
-                  ]}
-                  selectedValue={unitSystem}
-                  onChange={setUnitSystem}
-                />
-                <Text style={styles.helperText}>
-                  Metric uses kilograms/centimeters. US Units uses pounds/feet.
-                </Text>
-
-                <Text style={styles.label}>Birthdate or age</Text>
-                <SegmentedControl
-                  style={styles.segmentedRow}
-                  options={[
-                    { value: 'birthdate', label: 'Birthdate' },
-                    { value: 'age', label: 'Age' },
-                  ]}
-                  selectedValue={ageMode}
-                  onChange={setAgeMode}
-                />
-
-                {ageMode === 'birthdate' ? (
-                  <View style={styles.inputShell}>
-                    <TextInput
-                      style={[styles.input, styles.inputWithRightHint]}
-                      value={birthdateInput}
-                      onChangeText={handleBirthdateChange}
-                      keyboardType="number-pad"
-                      placeholderTextColor={themeColors.textMuted}
-                    />
-                    <Text style={styles.inputRightHint}>yyyy-mm-dd</Text>
+                  <Text style={styles.label}>Units</Text>
+                  <View style={styles.quickChoiceRow}>
+                    <TouchableOpacity
+                      style={styles.quickChoiceCard}
+                      onPress={() => {
+                        setUnitSystem('metric');
+                        goToStep(STEPS.dateFormat);
+                      }}
+                    >
+                      <Text style={styles.quickChoiceTitle}>Metric</Text>
+                      <Text style={styles.quickChoiceSubtitle}>kg and cm</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.quickChoiceCard}
+                      onPress={() => {
+                        setUnitSystem('us');
+                        goToStep(STEPS.dateFormat);
+                      }}
+                    >
+                      <Text style={styles.quickChoiceTitle}>US Units</Text>
+                      <Text style={styles.quickChoiceSubtitle}>lb and ft</Text>
+                    </TouchableOpacity>
                   </View>
-                ) : (
-                  <TextInput
-                    style={styles.input}
-                    value={ageInput}
-                    onChangeText={setAgeInput}
-                    keyboardType="number-pad"
-                    placeholder="Age"
-                    placeholderTextColor={themeColors.textMuted}
-                  />
-                )}
 
-                <Text style={styles.label}>Gender</Text>
-                <View style={styles.segmentRow}>
-                  {(['male', 'female', 'other'] as WeightTrackerGender[]).map((option) => (
-                    <ChipButton
-                      key={option}
-                      label={option.charAt(0).toUpperCase() + option.slice(1)}
-                      selected={gender === option}
-                      onPress={() => setGender(gender === option ? null : option)}
-                    />
-                  ))}
-                </View>
 
-                <Text style={styles.label}>Height ({unitSystem === 'metric' ? 'cm' : 'ft'})</Text>
-                <View style={styles.inputShell}>
-                  <TextInput
-                    style={[styles.input, styles.inputWithRightHint]}
-                    value={heightInput}
-                    onChangeText={setHeightInput}
-                    keyboardType="decimal-pad"
-                    placeholderTextColor={themeColors.textMuted}
-                  />
-                  <Text style={styles.inputRightHint}>{unitSystem === 'metric' ? 'e.g. 178' : 'e.g. 5.10'}</Text>
-                </View>
-
-                <Text style={styles.label}>Weight ({unitSystem === 'metric' ? 'kg' : 'lb'})</Text>
-                <View style={styles.inputShell}>
-                  <TextInput
-                    style={[styles.input, styles.inputWithRightHint]}
-                    value={weightInput}
-                    onChangeText={setWeightInput}
-                    keyboardType="decimal-pad"
-                    placeholderTextColor={themeColors.textMuted}
-                  />
-                  <Text style={styles.inputRightHint}>{unitSystem === 'metric' ? 'e.g. 78.5' : 'e.g. 173.0'}</Text>
-                </View>
-
-                <View style={styles.buttonRow}>
-                  <AppButton
-                    title="Back"
-                    variant="secondary"
-                    style={styles.rowButton}
-                    onPress={() => goToStep(0)}
-                  />
-                  <AppButton title="Next" style={styles.rowButton} onPress={handleNextFromAboutYou} />
-                </View>
-              </View>
-            </View>
-
-            <View style={[styles.card, { width: cardWidth }]}> 
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>Your goal</Text>
-                <Text style={styles.cardSubtitle}>
-                  Pick the mode that shapes guidance in the Weight Tracker.
-                </Text>
-
-                {GOAL_OPTIONS.map((option) => (
-                  <TouchableOpacity
-                    key={option.id}
-                    style={[styles.goalCard, goal === option.id && styles.goalCardActive]}
-                    onPress={() => setGoal(option.id)}
-                  >
-                    <Ionicons
-                      name={option.icon}
-                      size={22}
-                      color={goal === option.id ? themeColors.accent : themeColors.textMuted}
-                    />
-                    <View style={styles.goalCardTextWrap}>
-                      <Text style={styles.goalCardTitle}>{option.title}</Text>
-                      <Text style={styles.goalCardSubtitle}>{option.subtitle}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-
-                <View style={styles.buttonRow}>
-                  <AppButton
-                    title="Back"
-                    variant="secondary"
-                    style={styles.rowButton}
-                    onPress={() => goToStep(1)}
-                  />
-                  <AppButton title="Next" style={styles.rowButton} onPress={() => goToStep(3)} />
-                </View>
-              </View>
-            </View>
-
-            <View style={[styles.card, { width: cardWidth }]}> 
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>All set</Text>
-                <Text style={styles.cardSubtitle}>
-                  Review your setup. You can change everything later in Settings.
-                </Text>
-
-                <View style={styles.summaryCard}>
-                  {summaryRows.map((row) => (
-                    <View key={row.label} style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>{row.label}</Text>
-                      <Text style={styles.summaryValue}>{formatSummaryValue(row.value)}</Text>
-                    </View>
-                  ))}
-                </View>
-
-                {saving ? (
-                  <ActivityIndicator color={themeColors.accent} style={styles.savingIndicator} />
-                ) : (
                   <View style={styles.buttonRow}>
                     <AppButton
                       title="Back"
                       variant="secondary"
                       style={styles.rowButton}
-                      onPress={() => goToStep(2)}
-                    />
-                    <AppButton
-                      title="Go to dashboard"
-                      style={styles.rowButton}
-                      onPress={handleFinish}
+                      onPress={() => goToStep(STEPS.welcome)}
                     />
                   </View>
-                )}
+                </View>
               </View>
-            </View>
+
+              <View style={[styles.card, { width: cardWidth }]}> 
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle}>And how do you write dates?</Text>
+
+
+                  <Text style={styles.label}>Date format</Text>
+                  <View style={styles.quickChoiceRow}>
+                    {DATE_FORMAT_OPTIONS.map((option) => (
+                      <TouchableOpacity
+                        key={option.key}
+                        style={styles.quickChoiceCard}
+                        onPress={() => {
+                          setSelectedDateFormat(option.key);
+                          setDateFormat(option.key);
+                          goToStep(STEPS.profileCards);
+                        }}
+                      >
+                        <Text style={styles.quickChoiceTitle}>{option.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  <View style={styles.buttonRow}>
+                    <AppButton
+                      title="Back"
+                      variant="secondary"
+                      style={styles.rowButton}
+                      onPress={() => goToStep(STEPS.unitFormat)}
+                    />
+                  </View>
+                </View>
+              </View>
+
+              <View style={[styles.profilePage, { width: cardWidth }]}> 
+                <View style={styles.profilePageContent}>
+                  <View style={styles.profileCardsStack}>
+                    {profileCardsGroup === 'identity' ? (
+                      <>
+                        <Animated.View
+                          pointerEvents={hiddenProfileCards.gender ? 'none' : 'auto'}
+                          style={[
+                            styles.profileMiniCard,
+                            {
+                              opacity: genderCardAnim,
+                              transform: [
+                                {
+                                  translateX: genderCardAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [-420, 0],
+                                  }),
+                                },
+                              ],
+                            },
+                          ]}
+                        >
+                          <Text style={styles.profileMiniTitle}>I am a</Text>
+                          <View style={styles.segmentRow}>
+                            {(['male', 'female', 'other'] as WeightTrackerGender[]).map((option) => (
+                              <ChipButton
+                                key={option}
+                                label={option.charAt(0).toUpperCase() + option.slice(1)}
+                                selected={gender === option}
+                                onPress={() => handleSelectGender(option)}
+                              />
+                            ))}
+                          </View>
+                        </Animated.View>
+
+                        <Animated.View
+                          pointerEvents={hiddenProfileCards.birthdate ? 'none' : 'auto'}
+                          style={[
+                            styles.profileMiniCard,
+                            {
+                              opacity: birthdateCardAnim,
+                              transform: [
+                                {
+                                  translateX: birthdateCardAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [-420, 0],
+                                  }),
+                                },
+                              ],
+                            },
+                          ]}
+                        >
+                          <Text style={styles.profileMiniTitle}>I was born on</Text>
+                          {ageMode === 'birthdate' ? (
+                            <View style={styles.inputShell}>
+                              <TextInput
+                                style={[styles.input, styles.inputWithRightHint]}
+                                value={birthdateInput}
+                                onChangeText={handleBirthdateChange}
+                                keyboardType="number-pad"
+                                placeholderTextColor={themeColors.textMuted}
+                              />
+                              <Text style={styles.inputRightHint}>
+                                {selectedDateFormat ? getDateFormatLabel(selectedDateFormat) : ''}
+                              </Text>
+                            </View>
+                          ) : (
+                            <TextInput
+                              style={styles.input}
+                              value={ageInput}
+                              onChangeText={setAgeInput}
+                              keyboardType="number-pad"
+                              placeholder="e.g. 29"
+                              placeholderTextColor={themeColors.textMuted}
+                            />
+                          )}
+                          <View style={styles.birthdateActionsRow}>
+                            <TouchableOpacity
+                              style={styles.birthdateModeSwitchAction}
+                              onPress={() => setAgeMode(ageMode === 'birthdate' ? 'age' : 'birthdate')}
+                            >
+                              <Text style={styles.modeSwitchText}>
+                                {ageMode === 'birthdate' ? 'Use my Age instead' : 'Use my birthdate instead'}
+                              </Text>
+                            </TouchableOpacity>
+                            {showBirthdateConfirmAction ? (
+                              <TouchableOpacity
+                                style={styles.birthdateConfirmAction}
+                                onPress={handleConfirmBirthdateAge}
+                              >
+                                <Text style={styles.birthdateConfirmActionText}>Confirm</Text>
+                              </TouchableOpacity>
+                            ) : null}
+                          </View>
+                        </Animated.View>
+                      </>
+                    ) : (
+                      <>
+                        <Animated.View
+                          pointerEvents={hiddenProfileCards.height ? 'none' : 'auto'}
+                          style={[
+                            styles.profileMiniCard,
+                            {
+                              opacity: heightCardAnim,
+                              transform: [
+                                {
+                                  translateX: heightCardAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [-420, 0],
+                                  }),
+                                },
+                              ],
+                            },
+                          ]}
+                        >
+                          <Text style={styles.profileMiniTitle}>My height is</Text>
+                          <View style={styles.inputShell}>
+                            <TextInput
+                              style={[styles.input, styles.inputWithRightHint]}
+                              value={heightInput}
+                              onChangeText={handleHeightChange}
+                              keyboardType="decimal-pad"
+                              placeholderTextColor={themeColors.textMuted}
+                            />
+                            <Text style={styles.inputRightHint}>{unitSystem === 'metric' ? 'cm' : 'ft'}</Text>
+                          </View>
+                          <AppButton
+                            title="Confirm"
+                            style={styles.inlineConfirmButton}
+                            onPress={handleConfirmHeight}
+                          />
+                        </Animated.View>
+
+                        <Animated.View
+                          pointerEvents={hiddenProfileCards.weight ? 'none' : 'auto'}
+                          style={[
+                            styles.profileMiniCard,
+                            {
+                              opacity: weightCardAnim,
+                              transform: [
+                                {
+                                  translateX: weightCardAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [-420, 0],
+                                  }),
+                                },
+                              ],
+                            },
+                          ]}
+                        >
+                          <Text style={styles.profileMiniTitle}>I weigh roughly</Text>
+                          <View style={styles.inputShell}>
+                            <TextInput
+                              style={[styles.input, styles.inputWithRightHint]}
+                              value={weightInput}
+                              onChangeText={setWeightInput}
+                              keyboardType="decimal-pad"
+                              placeholderTextColor={themeColors.textMuted}
+                            />
+                            <Text style={styles.inputRightHint}>{unitSystem === 'metric' ? 'kg' : 'lb'}</Text>
+                          </View>
+                          <AppButton
+                            title="Confirm"
+                            style={styles.inlineConfirmButton}
+                            onPress={handleConfirmWeight}
+                          />
+                        </Animated.View>
+                      </>
+                    )}
+                  </View>
+
+                  <View style={styles.buttonRow}>
+                    <AppButton
+                      title="Back"
+                      variant="secondary"
+                      style={styles.rowButton}
+                      onPress={goBackInProfileCards}
+                    />
+                  </View>
+                </View>
+              </View>
+
+              <View style={[styles.card, { width: cardWidth }]}> 
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle}>Your goal</Text>
+
+
+                  {GOAL_OPTIONS.map((option) => (
+                    <TouchableOpacity
+                      key={option.id}
+                      style={[styles.goalCard, goal === option.id && styles.goalCardActive]}
+                      onPress={() => {
+                        setGoal(option.id);
+                        goToStep(STEPS.review);
+                      }}
+                    >
+                      <Ionicons
+                        name={option.icon}
+                        size={22}
+                        color={goal === option.id ? themeColors.accent : themeColors.textMuted}
+                      />
+                      <View style={styles.goalCardTextWrap}>
+                        <Text style={styles.goalCardTitle}>{option.title}</Text>
+                        <Text style={styles.goalCardSubtitle}>{option.subtitle}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+
+                  <View style={styles.buttonRow}>
+                    <AppButton
+                      title="Back"
+                      variant="secondary"
+                      style={styles.rowButton}
+                      onPress={() => {
+                        setProfileCardsGroup('measurements');
+                        goToStep(STEPS.profileCards);
+                      }}
+                    />
+                  </View>
+                </View>
+              </View>
+
+              <View style={[styles.card, { width: cardWidth }]}> 
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle}>All set</Text>
+                  <Text style={styles.cardSubtitle}>
+                    You can change everything in the Settings menu.
+                  </Text>
+
+                  <View style={styles.summaryCard}>
+                    {summaryRows.map((row) => (
+                      <View key={row.label} style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>{row.label}</Text>
+                        <Text style={styles.summaryValue}>{formatSummaryValue(row.value)}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  {saving ? (
+                    <ActivityIndicator color={themeColors.accent} style={styles.savingIndicator} />
+                  ) : (
+                    <View style={styles.buttonRow}>
+                      <AppButton
+                        title="Back"
+                        variant="secondary"
+                        style={styles.rowButton}
+                        onPress={() => goToStep(STEPS.goal)}
+                      />
+                      <AppButton
+                        title="Continue"
+                        style={styles.rowButton}
+                        onPress={handleFinish}
+                      />
+                    </View>
+                  )}
+                </View>
+              </View>
             </Animated.View>
           </View>
         </View>
@@ -480,7 +922,8 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
           ))}
         </View>
       </KeyboardAvoidingView>
-    </View>
+      </View>
+    </ImageBackground>
   );
 }
 
@@ -488,7 +931,10 @@ const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors']) 
   StyleSheet.create({
     screen: {
       flex: 1,
-      backgroundColor: themeColors.background,
+    },
+    overlay: {
+      flex: 1,
+      backgroundColor: themeColors.overlayScrim,
     },
     sliderViewport: {
       flex: 1,
@@ -503,7 +949,7 @@ const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors']) 
     sliderRow: {
       flexDirection: 'row',
       gap: CARD_GAP,
-      alignItems: 'flex-start',
+      alignItems: 'center',
     },
     card: {
       borderRadius: radius.md,
@@ -512,33 +958,57 @@ const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors']) 
       backgroundColor: themeColors.surface,
       ...shadow.card,
     },
+    profilePage: {
+      backgroundColor: 'transparent',
+    },
+    profilePageContent: {
+      gap: 6,
+      paddingHorizontal: 2,
+      paddingBottom: 6,
+    },
     cardContent: {
       padding: 20,
       paddingBottom: 22,
       gap: 10,
     },
     welcomeCardContent: {
-      flexGrow: 1,
+      flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
       gap: 12,
     },
+    welcomeCard: {
+      borderWidth: 0,
+      backgroundColor: 'transparent',
+      shadowOpacity: 0,
+      shadowRadius: 0,
+      shadowOffset: { width: 0, height: 0 },
+      elevation: 0,
+      minHeight: '54%',
+      maxHeight: '60%',
+    },
     welcomeButton: {
       flex: 0,
-      marginTop: 14,
+      marginTop: 39,
       width: '100%',
       maxWidth: 220,
     },
     skipButton: {
       position: 'absolute',
-      top: 14,
+      top: 50,
       right: 20,
       zIndex: 10,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: themeColors.accent,
+      backgroundColor: themeColors.surface,
+      ...shadow.card,
     },
     skipButtonText: {
-      color: themeColors.textMuted,
+      color: themeColors.accent,
+      fontSize: 12,
       fontWeight: '700',
     },
     welcomeTitle: {
@@ -587,7 +1057,7 @@ const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors']) 
       justifyContent: 'center',
     },
     inputWithRightHint: {
-      paddingRight: 98,
+      paddingRight: 112,
     },
     inputRightHint: {
       position: 'absolute',
@@ -602,6 +1072,34 @@ const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors']) 
       marginTop: -2,
       marginBottom: 4,
     },
+    modeSwitchText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: themeColors.accent,
+    },
+    birthdateActionsRow: {
+      marginTop: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 10,
+    },
+    birthdateModeSwitchAction: {
+      flexShrink: 1,
+    },
+    birthdateConfirmAction: {
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: themeColors.accent,
+      backgroundColor: themeColors.accentSoft,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    birthdateConfirmActionText: {
+      color: themeColors.accent,
+      fontSize: 12,
+      fontWeight: '800',
+    },
     segmentRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -611,6 +1109,52 @@ const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors']) 
     segmentedRow: {
       marginBottom: 2,
     },
+    quickChoiceRow: {
+      flexDirection: 'row',
+      gap: 10,
+      marginBottom: 2,
+      flexWrap: 'wrap',
+    },
+    quickChoiceCard: {
+      minWidth: 94,
+      flexGrow: 1,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: radius.sm,
+      backgroundColor: themeColors.background,
+      paddingVertical: 14,
+      paddingHorizontal: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 2,
+    },
+    quickChoiceTitle: {
+      color: themeColors.textStrong,
+      fontSize: 15,
+      fontWeight: '700',
+    },
+    quickChoiceSubtitle: {
+      color: themeColors.textMuted,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    profileCardsStack: {
+      gap: 14,
+      marginTop: 8,
+    },
+    profileMiniCard: {
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: radius.sm,
+      backgroundColor: themeColors.surface,
+      padding: 12,
+      gap: 8,
+    },
+    profileMiniTitle: {
+      color: themeColors.textStrong,
+      fontWeight: '800',
+      fontSize: 18,
+    },
     buttonRow: {
       flexDirection: 'row',
       gap: 10,
@@ -618,6 +1162,9 @@ const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors']) 
     },
     rowButton: {
       flex: 1,
+    },
+    inlineConfirmButton: {
+      marginTop: 2,
     },
     goalCard: {
       borderWidth: 1,
