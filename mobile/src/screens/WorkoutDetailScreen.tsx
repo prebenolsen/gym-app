@@ -46,7 +46,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   const [newExerciseMuscleGroups, setNewExerciseMuscleGroups] = useState<
     MuscleGroup[] | null
   >(null);
-  const [isAddingExercise, setIsAddingExercise] = useState(false);
+  const [isCreatingExercise, setIsCreatingExercise] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(workoutName);
   const [isDraggingExercise, setIsDraggingExercise] = useState(false);
@@ -86,10 +86,10 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
     }
   };
 
-  const handleAddExercise = async () => {
-    if (!newExerciseName.trim() || isAddingExercise) return;
+  const handleCreateExercise = async () => {
+    if (!newExerciseName.trim() || isCreatingExercise) return;
 
-    setIsAddingExercise(true);
+    setIsCreatingExercise(true);
     try {
       const resolvedGroups = autoMappedGroups.length > 0 ? autoMappedGroups : null;
       const newExercise = await api.createExercise(workoutId, {
@@ -104,10 +104,10 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
       setNewExerciseName('');
       setNewExerciseMuscleGroups(null);
     } catch (err) {
-      console.error('Failed to add exercise:', err);
-      showError({ message: 'Failed to add exercise' });
+      console.error('Failed to create exercise:', err);
+      showError({ message: 'Failed to create exercise' });
     } finally {
-      setIsAddingExercise(false);
+      setIsCreatingExercise(false);
     }
   };
 
@@ -380,33 +380,31 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
           )}
 
 
-          <View style={styles.addExercise}>
+          <View style={styles.createExercise}>
           <TextInput
             style={styles.input}
-            placeholder="Add a custom exercise"
+            placeholder="Create a custom exercise"
             placeholderTextColor={themeColors.textMuted}
             value={newExerciseName}
-            editable={!isAddingExercise}
+            editable={!isCreatingExercise}
             onChangeText={setNewExerciseName}
           />
           <AppButton
-            title={isAddingExercise ? 'Adding...' : '+ Add'}
-            onPress={handleAddExercise}
-            loading={isAddingExercise}
-            disabled={isAddingExercise}
-            style={styles.addExerciseButton}
+            title={isCreatingExercise ? 'Creating...' : '+ Create Exercise'}
+            onPress={handleCreateExercise}
+            loading={isCreatingExercise}
+            disabled={isCreatingExercise || !newExerciseName.trim()}
+            style={styles.createExerciseButton}
           />
         </View>
 
-          {newExerciseName.trim().length > 0 && !isAddingExercise ? (
+          {newExerciseName.trim().length > 0 && !isCreatingExercise ? (
             <View style={styles.customGroupCreateBox}>
               <Text style={styles.customGroupLabel}>
                 Optional muscle groups for custom exercise
               </Text>
               {suggestedGroups.length > 0 ? (
-                <Text style={styles.suggestionText}>
-                  Auto-mapped from name: {suggestedGroups.join(', ')}
-                </Text>
+                <View />
               ) : null}
               <View style={styles.customGroupChipsWrap}>
                 <ChipButton
@@ -414,7 +412,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                   selected={autoMappedGroups.length === 0}
                   compact
                   onPress={() => setNewExerciseMuscleGroups([])}
-                  disabled={isAddingExercise}
+                  disabled={isCreatingExercise}
                 />
                 {muscleGroupOptions.map((group) => (
                   <ChipButton
@@ -427,7 +425,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                         toggleGroupSelection(prev ?? [], group),
                       )
                     }
-                    disabled={isAddingExercise}
+                    disabled={isCreatingExercise}
                   />
                 ))}
               </View>
@@ -501,7 +499,7 @@ const createStyles = (themeColors: typeof colors) =>
       marginBottom: 16,
       
     },
-    addExercise: {
+    createExercise: {
       flexDirection: 'row',
       gap: 10,
       marginBottom: 10,
@@ -524,7 +522,7 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       backgroundColor: themeColors.surface,
     },
-    addExerciseButton: {
+    createExerciseButton: {
       paddingHorizontal: 12,
     },
     catalogButton: {
@@ -609,11 +607,6 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textMuted,
       fontSize: 12,
       fontWeight: '600',
-    },
-    suggestionText: {
-      color: themeColors.textMuted,
-      fontSize: 12,
-      marginTop: -2,
     },
     customGroupChipsWrap: {
       flexDirection: 'row',
