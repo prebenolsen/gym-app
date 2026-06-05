@@ -307,6 +307,17 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
     }
   };
 
+  const handleWeightChange = (rawValue: string) => {
+    setWeightInput(rawValue);
+
+    const normalized = rawValue.trim().replace(',', '.');
+    const isCompleteDecimalWeight = /^\d{2,3}\.\d$/.test(normalized);
+    if (isCompleteDecimalWeight && !hiddenProfileCards.weight) {
+      Keyboard.dismiss();
+      dismissProfileCard('weight');
+    }
+  };
+
   const getProfileCardAnim = (card: ProfileCardKey) => {
     if (card === 'gender') return genderCardAnim;
     if (card === 'birthdate') return birthdateCardAnim;
@@ -418,6 +429,7 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
       return;
     }
 
+    Keyboard.dismiss();
     dismissProfileCard('weight');
   };
 
@@ -807,8 +819,10 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
                             <TextInput
                               style={[styles.input, styles.inputWithRightHint]}
                               value={weightInput}
-                              onChangeText={setWeightInput}
+                              onChangeText={handleWeightChange}
+                              onSubmitEditing={handleConfirmWeight}
                               keyboardType="decimal-pad"
+                              returnKeyType="done"
                               placeholderTextColor={themeColors.textMuted}
                             />
                             <Text style={styles.inputRightHint}>{unitSystem === 'metric' ? 'kg' : 'lb'}</Text>
