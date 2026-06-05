@@ -24,6 +24,7 @@ import { usePreferences } from '../context/PreferencesContext';
 import { useApi } from '../hooks/useApi';
 import { Ionicons } from '@expo/vector-icons';
 import MuscleMapThumb from '../components/MuscleMapThumb';
+import AppButton from '../components/ui/AppButton';
 
 type ProgramWithWorkouts = {
   program: Program;
@@ -326,16 +327,15 @@ const HomeScreen = ({ navigation }: any) => {
           <Text style={styles.onboardingHelper}>
             Track your workouts, build your programs, crush your goals.
           </Text>
-          <TouchableOpacity
+          <AppButton
+            title="Get started"
             style={styles.btnGetStarted}
             onPress={() =>
               onboardingComplete
                 ? navigation.navigate('ProgramsStack', { screen: 'ProgramsList' })
                 : navigation.navigate('OnboardingSetup')
             }
-          >
-            <Text style={styles.btnGetStartedText}>Get started</Text>
-          </TouchableOpacity>
+          />
         </View>
       </ScrollView>
     );
@@ -554,15 +554,7 @@ const createStyles = (themeColors: typeof colors) =>
       lineHeight: 22,
     },
     btnGetStarted: {
-      backgroundColor: themeColors.accent,
-      borderRadius: radius.sm,
-      paddingHorizontal: 24,
-      paddingVertical: 14,
-    },
-    btnGetStartedText: {
-      color: '#fff',
-      fontWeight: '700',
-      fontSize: 16,
+      minWidth: 180,
     },
     screenWrapper: {
       flex: 1,

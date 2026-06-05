@@ -4,14 +4,13 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { type WorkoutSessionDetail, type WorkoutSessionSet } from '@gym-app/shared';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
+import ScreenHeader from '../components/ui/ScreenHeader';
 
 const formatTime = (isoString: string): string => {
   const date = new Date(isoString);
@@ -89,24 +88,15 @@ const WorkoutHistoryDetailScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
-        </TouchableOpacity>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Workout Details</Text>
-          <Text style={styles.metaText}>{formatDate(detail.session.started_at)}</Text>
-          <Text style={styles.metaText}>
-            Start: {formatTime(detail.session.started_at)}
-          </Text>
-          {detail.session.ended_at ? (
-            <Text style={styles.metaText}>End: {formatTime(detail.session.ended_at)}</Text>
-          ) : null}
-          <Text style={styles.metaText}>
-            Duration: {formatDuration(detail.session.started_at, detail.session.ended_at)}
-          </Text>
-        </View>
-      </View>
+      <ScreenHeader
+        onBackPress={() => navigation.goBack()}
+        title="Workout Details"
+        subtitle={
+          `${formatDate(detail.session.started_at)} · Start: ${formatTime(detail.session.started_at)}${
+            detail.session.ended_at ? ` · End: ${formatTime(detail.session.ended_at)}` : ''
+          } · Duration: ${formatDuration(detail.session.started_at, detail.session.ended_at)}`
+        }
+      />
 
       <ScrollView style={styles.list}>
         {Object.entries(groupedByExercise).map(([exerciseName, sets]) => (
@@ -144,23 +134,6 @@ const createStyles = (themeColors: typeof colors) =>
       justifyContent: 'center',
       alignItems: 'center',
       padding: 20,
-    },
-    header: {
-      backgroundColor: themeColors.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: themeColors.border,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    backButton: {},
-    title: {
-      color: themeColors.textStrong,
-      fontSize: 22,
-      fontWeight: '700',
-      
     },
     metaText: {
       color: themeColors.textMuted,

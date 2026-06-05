@@ -7,8 +7,6 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import {
   exercises,
   getMuscleGroups,
@@ -22,6 +20,8 @@ import { usePreferences } from '../context/PreferencesContext';
 import MuscleMapThumb from '../components/MuscleMapThumb';
 import ChipButton from '../components/ui/ChipButton';
 import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
+import AppButton from '../components/ui/AppButton';
+import ScreenHeader from '../components/ui/ScreenHeader';
 
 const ExercisesCatalogScreen = ({ route, navigation }: any) => {
   const { programId, workoutId, workoutName } = route.params;
@@ -122,11 +122,7 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader title="Add Exercises" onBackPress={() => navigation.goBack()} />
 
       {/* Active Workout Banner */}
       <View style={styles.banner}>
@@ -265,17 +261,12 @@ const ExercisesCatalogScreen = ({ route, navigation }: any) => {
       {/* Add Button */}
       {selectedExercises.size > 0 && (
         <View style={styles.footer}>
-          <TouchableOpacity
-            style={[styles.btnAddSelected, isAdding && styles.btnDisabled]}
+          <AppButton
+            title={`Add Selected (${selectedExercises.size})`}
             onPress={handleAddSelected}
+            loading={isAdding}
             disabled={isAdding}
-          >
-            {isAdding ? (
-              <ActivityIndicator color={themeColors.textOnAccent} />
-            ) : (
-              <Text style={styles.btnText}>Add Selected ({selectedExercises.size})</Text>
-            )}
-          </TouchableOpacity>
+          />
         </View>
       )}
     </View>
@@ -288,16 +279,6 @@ const createStyles = (themeColors: typeof colors) =>
       flex: 1,
       backgroundColor: themeColors.background,
     },
-    header: {
-      backgroundColor: themeColors.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: themeColors.border,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    backButton: {},
     banner: {
       backgroundColor: themeColors.accent,
       paddingVertical: 12,
@@ -426,23 +407,6 @@ const createStyles = (themeColors: typeof colors) =>
       borderTopWidth: 1,
       borderTopColor: themeColors.border,
       backgroundColor: themeColors.surface,
-    },
-    btnAddSelected: {
-      backgroundColor: themeColors.accent,
-      paddingVertical: 12,
-      paddingHorizontal: 20,
-      borderRadius: 6,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    btnDisabled: {
-      opacity: 0.6,
-    },
-    btnText: {
-      color: themeColors.textOnAccent,
-      fontWeight: '600',
-      fontSize: 14,
-      
     },
   });
 

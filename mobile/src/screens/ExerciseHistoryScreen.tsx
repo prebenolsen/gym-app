@@ -5,13 +5,12 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  TouchableOpacity,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { type ExerciseLastPerformance } from '@gym-app/shared';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
+import ScreenHeader from '../components/ui/ScreenHeader';
 
 type GroupedByDate = {
   date: string;
@@ -71,13 +70,7 @@ const ExerciseHistoryScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
-        </TouchableOpacity>
-        <Text style={styles.title}>{exerciseName} History</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <ScreenHeader title={`${exerciseName} History`} onBackPress={() => navigation.goBack()} />
 
       {loading ? (
         <View style={styles.centered}>
@@ -126,29 +119,6 @@ const createStyles = (themeColors: typeof colors) =>
     container: {
       flex: 1,
       backgroundColor: themeColors.background,
-    },
-    header: {
-      backgroundColor: themeColors.surface,
-      borderBottomColor: themeColors.border,
-      borderBottomWidth: 1,
-      padding: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    backButton: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    title: {
-      color: themeColors.textStrong,
-      fontSize: 18,
-      fontWeight: '700',
-      
-      flex: 1,
-      textAlign: 'center',
     },
     centered: {
       flex: 1,

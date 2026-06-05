@@ -1055,24 +1055,19 @@ const ActiveWorkoutScreen = ({ navigation, route }: any) => {
 
           <View style={styles.bottomActionsWrap}>
             <View style={styles.bottomActionsBar}>
-              <TouchableOpacity
-                style={[
-                  styles.saveSetButton,
-                  activeSaveShouldOverwrite && styles.saveSetButtonOverwrite,
-                ]}
+              <AppButton
+                title={
+                  activeSaveSetNumber === null
+                    ? 'Save'
+                    : activeSaveShouldOverwrite
+                      ? `Overwrite #${activeSaveSetNumber}`
+                      : `Save #${activeSaveSetNumber}`
+                }
+                variant={activeSaveShouldOverwrite ? 'danger' : 'primary'}
                 onPress={() => activeSaveIndex !== null && handleSaveSet(activeSaveIndex)}
                 disabled={activeSaveIndex === null || savingSet === activeSaveIndex}
-              >
-                <Text style={styles.saveSetButtonText}>
-                  {activeSaveSetNumber === null
-                    ? 'Save'
-                    : savingSet === activeSaveIndex
-                      ? `Saving #${activeSaveSetNumber}...`
-                      : activeSaveShouldOverwrite
-                        ? `Overwrite #${activeSaveSetNumber}`
-                        : `Save #${activeSaveSetNumber}`}
-                </Text>
-              </TouchableOpacity>
+                loading={savingSet === activeSaveIndex}
+              />
             </View>
 
             <View style={styles.exerciseProgressRow}>
@@ -1235,23 +1230,6 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.accent,
       fontWeight: '700',
       fontSize: 16,
-    },
-    saveSetButton: {
-      backgroundColor: themeColors.accent,
-      borderRadius: radius.sm,
-      paddingHorizontal: 8,
-      paddingVertical: 10,
-      flex: 1,
-      alignItems: 'center',
-    },
-    saveSetButtonOverwrite: {
-      backgroundColor: themeColors.danger,
-    },
-    saveSetButtonText: {
-      color: themeColors.textOnAccent,
-      fontWeight: '700',
-      fontSize: 12,
-      
     },
     navButton: {
       flex: 1,

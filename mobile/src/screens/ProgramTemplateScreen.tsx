@@ -5,9 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import {
   PROGRAM_TEMPLATES,
   type ProgramTemplateWorkout,
@@ -19,6 +17,8 @@ import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
 import { useToast } from '../components/ui/AppToastProvider';
 import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
+import AppButton from '../components/ui/AppButton';
+import ScreenHeader from '../components/ui/ScreenHeader';
 
 interface EditableExercise {
   name: string;
@@ -59,12 +59,11 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
   if (!template) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
-          </TouchableOpacity>
-          <Text style={styles.errorText}>Template not found.</Text>
-        </View>
+        <ScreenHeader
+          onBackPress={() => navigation.goBack()}
+          title="Template"
+          subtitle="Template not found."
+        />
       </View>
     );
   }
@@ -131,28 +130,24 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
-          </TouchableOpacity>
+      <ScreenHeader
+        onBackPress={() => navigation.goBack()}
+        titleNode={(
           <View style={{ flex: 1 }}>
             <Text style={styles.title}>{template.name}</Text>
             <Text style={styles.subtitle}>{template.description}</Text>
           </View>
-        </View>
-        <TouchableOpacity
-          style={[styles.btnImport, importing && styles.btnImportDisabled]}
-          onPress={handleImport}
-          disabled={importing}
-        >
-          {importing ? (
-            <ActivityIndicator size="small" color={themeColors.textOnAccent} />
-          ) : (
-            <Text style={styles.btnImportText}>Import Program</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+        )}
+        rightActions={(
+          <AppButton
+            title="Import Program"
+            size="sm"
+            onPress={handleImport}
+            loading={importing}
+            disabled={importing}
+          />
+        )}
+      />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {workouts.map((workout, wi) => (
@@ -207,18 +202,6 @@ const createStyles = (themeColors: typeof colors) =>
       flex: 1,
       backgroundColor: themeColors.background,
     },
-    header: {
-      backgroundColor: themeColors.surface,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: themeColors.border,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    backBtn: {
-    },
     title: {
       fontSize: 20,
       fontWeight: 'bold',
@@ -231,12 +214,6 @@ const createStyles = (themeColors: typeof colors) =>
       lineHeight: 18,
       marginBottom: 8,
     },
-    btnImport: {
-      backgroundColor: themeColors.accent,
-      borderRadius: radius.sm,
-      padding: 12,
-      alignItems: 'center',
-    },
     btnImportBottom: {
       backgroundColor: themeColors.accent,
       borderRadius: radius.sm,
@@ -244,15 +221,6 @@ const createStyles = (themeColors: typeof colors) =>
       alignItems: 'center',
       marginTop: 8,
       marginBottom: 32,
-    },
-    btnImportDisabled: {
-      opacity: 0.6,
-    },
-    btnImportText: {
-      color: themeColors.textOnAccent,
-      fontWeight: '700',
-      fontSize: 14,
-      
     },
     content: {
       flex: 1,

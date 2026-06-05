@@ -1,0 +1,17 @@
+Screen file,Local pattern found,Matching ui/ component,Action needed
+WorkoutHistoryDetailScreen.tsx,Local header + chevron back button (styles.header/styles.backButton + Ionicons chevron-back),ScreenHeader,Replace header JSX with ScreenHeader (title + subtitle/meta via titleNode) and remove header/backButton styles
+ExerciseHistoryScreen.tsx,Local header + centered title + back button,ScreenHeader,Replace local header with ScreenHeader and remove redundant header/back/title spacer styles
+ExerciseNotesScreen.tsx,Local header + back button + centered title + right loading slot,ScreenHeader,Replace with ScreenHeader using title and rightActions (ActivityIndicator/spacer) and remove header/back/title styles
+ExerciseNotesScreen.tsx,Local "Save Note" CTA button built with TouchableOpacity + saveNoteButton styles,AppButton,Replace TouchableOpacity with AppButton variant primary and remove saveNoteButton/saveNoteButtonText styles
+ExerciseProgressListScreen.tsx,Local header + back button + title,ScreenHeader,Replace with ScreenHeader and remove header/back/title styles
+ExerciseProgressScreen.tsx,Local header/back/title in both "no data" and main branches,ScreenHeader,Replace both local header blocks with ScreenHeader and remove backBtn/header/title styles
+ProgramTemplateScreen.tsx,Local header with back button + title/subtitle + import CTA TouchableOpacity (btnImport),ScreenHeader + AppButton,Replace header shell with ScreenHeader and replace btnImport TouchableOpacity with AppButton loading variant; remove backBtn/btnImport/btnImportText styles
+FeedbackScreen.tsx,Local header/back/title/spacer,ScreenHeader,Replace with ScreenHeader and remove header/backButton/title styles
+ExercisesCatalogScreen.tsx,Local back-only header row (header/backButton + chevron),ScreenHeader,Replace with ScreenHeader onBackPress; if no title is desired this needs ScreenHeader support for a back-only/compact mode (or allow empty title without reserved spacing) before safe replacement
+ExercisesCatalogScreen.tsx,Local footer CTA "Add Selected" built with TouchableOpacity + ActivityIndicator (btnAddSelected),AppButton,Replace with AppButton loading state and remove btnAddSelected/btnText/btnDisabled styles
+ExercisesScreen.tsx,Local "Progress" pill action per exercise (progressButton/progressButtonText),AppButton,Replace with compact AppButton (likely outlineAccent/sm) and remove local progress button styles
+WorkoutDetailScreen.tsx,Local custom selectable pill chips for muscle groups (customGroupChip* styles + TouchableOpacity),ChipButton,Replace chip touchables with ChipButton selected/compact props and remove customGroupChip/customGroupChipText styles
+HomeScreen.tsx,Local onboarding CTA "Get started" (btnGetStarted + btnGetStartedText),AppButton,Replace with AppButton and remove local button styles
+WeightTrackerScreen.tsx,Local ghost text button used for onboarding back navigation (ghostBtn/ghostBtnText),AppButton,Replace with AppButton variant="ghost" and remove ghost button styles
+ActiveWorkoutScreen.tsx,Local primary action button "Save #n" (saveSetButton + saveSetButtonText),AppButton,Replace with AppButton using title/loading; add/confirm support for danger overwrite visual state (variant override when overwrite) before removing local styles
+CalendarScreen.tsx,Local month navigation buttons ('<' and '>') implemented with monthButton/monthButtonText touchables,AppButton,Replace with compact AppButton (secondary/outline) for previous/next month controls and remove month button styles

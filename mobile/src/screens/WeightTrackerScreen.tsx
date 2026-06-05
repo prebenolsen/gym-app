@@ -1543,12 +1543,7 @@ export default function WeightTrackerScreen() {
 
         <AppButton title="Next" onPress={handleOb2Next} />
 
-        <TouchableOpacity
-          style={styles.ghostBtn}
-          onPress={() => setView('ob-1')}
-        >
-          <Text style={styles.ghostBtnText}>Back</Text>
-        </TouchableOpacity>
+        <AppButton title="Back" variant="ghost" style={styles.ghostBtn} onPress={() => setView('ob-1')} />
       </ScrollView>
     );
   }
@@ -1589,12 +1584,7 @@ export default function WeightTrackerScreen() {
 
         <AppButton title="Next" style={{ marginTop: 32 }} onPress={handleOb3Next} />
 
-        <TouchableOpacity
-          style={styles.ghostBtn}
-          onPress={() => setView('ob-2')}
-        >
-          <Text style={styles.ghostBtnText}>Back</Text>
-        </TouchableOpacity>
+        <AppButton title="Back" variant="ghost" style={styles.ghostBtn} onPress={() => setView('ob-2')} />
       </ScrollView>
     );
   }
@@ -1638,12 +1628,7 @@ export default function WeightTrackerScreen() {
 
         <AppButton title="Next" style={{ marginTop: 32 }} onPress={handleOb4Next} />
 
-        <TouchableOpacity
-          style={styles.ghostBtn}
-          onPress={() => setView('ob-3')}
-        >
-          <Text style={styles.ghostBtnText}>Back</Text>
-        </TouchableOpacity>
+        <AppButton title="Back" variant="ghost" style={styles.ghostBtn} onPress={() => setView('ob-3')} />
       </ScrollView>
     );
   }
@@ -1684,12 +1669,12 @@ export default function WeightTrackerScreen() {
           <AppButton title="Let's go!" style={{ marginTop: 32 }} onPress={() => handleFinishOnboarding()} />
         )}
 
-        <TouchableOpacity
+        <AppButton
+          title="Back"
+          variant="ghost"
           style={styles.ghostBtn}
           onPress={() => setView(obGoal === 'lose' || obGoal === 'gain' ? 'ob-4' : 'ob-3')}
-        >
-          <Text style={styles.ghostBtnText}>Back</Text>
-        </TouchableOpacity>
+        />
       </ScrollView>
     );
   }
@@ -3285,10 +3270,6 @@ const createStyles = (C: ReturnType<typeof usePreferences>['colors']) =>
       paddingVertical: 12,
       alignItems: 'center',
       marginTop: 8,
-    },
-    ghostBtnText: {
-      fontSize: 14,
-      color: C.textMuted,
     },
     bottomActions: {
       paddingHorizontal: 16,

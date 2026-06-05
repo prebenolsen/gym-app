@@ -4,14 +4,13 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { colors, radius } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
 import { useToast } from '../components/ui/AppToastProvider';
 import AppButton from '../components/ui/AppButton';
+import ScreenHeader from '../components/ui/ScreenHeader';
 
 const FeedbackScreen = ({ navigation }: any) => {
   const { colors: themeColors } = usePreferences();
@@ -29,13 +28,7 @@ const FeedbackScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Feedback and Bug Report</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <ScreenHeader title="Feedback and Bug Report" onBackPress={() => navigation.goBack()} />
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentInner}>
         <View style={styles.card}>
@@ -71,28 +64,6 @@ const createStyles = (themeColors: typeof colors) =>
     container: {
       flex: 1,
       backgroundColor: themeColors.background,
-    },
-    header: {
-      backgroundColor: themeColors.surface,
-      borderBottomColor: themeColors.border,
-      borderBottomWidth: 1,
-      padding: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    backButton: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    title: {
-      color: themeColors.textStrong,
-      fontSize: 18,
-      fontWeight: '700',
-      flex: 1,
-      textAlign: 'center',
     },
     content: {
       flex: 1,

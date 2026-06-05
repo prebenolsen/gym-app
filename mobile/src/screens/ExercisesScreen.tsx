@@ -10,6 +10,7 @@ import {
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
 import ChipButton from '../components/ui/ChipButton';
+import AppButton from '../components/ui/AppButton';
 
 const ExercisesScreen = ({ navigation }: any) => {
   const { colors: themeColors } = usePreferences();
@@ -160,14 +161,14 @@ const ExercisesScreen = ({ navigation }: any) => {
                       {exercise.muscleGroup} • {exercise.equipment}
                     </Text>
                   </View>
-                  <TouchableOpacity
-                    style={styles.progressButton}
+                  <AppButton
+                    title="Progress"
+                    variant="outlineAccent"
+                    size="sm"
                     onPress={() =>
                       navigation.navigate('ExerciseProgress', { exerciseId: exercise.id })
                     }
-                  >
-                    <Text style={styles.progressButtonText}>Progress</Text>
-                  </TouchableOpacity>
+                  />
                 </View>
               </View>
             ))
@@ -252,20 +253,6 @@ const createStyles = (themeColors: typeof colors) =>
     exerciseMeta: {
       fontSize: 12,
       color: themeColors.textMuted,
-      
-    },
-    progressButton: {
-      backgroundColor: themeColors.accentSoft,
-      borderWidth: 1,
-      borderColor: themeColors.accent,
-      borderRadius: radius.sm,
-      paddingHorizontal: 10,
-      paddingVertical: 8,
-    },
-    progressButtonText: {
-      color: themeColors.accent,
-      fontWeight: '700',
-      fontSize: 12,
       
     },
   });

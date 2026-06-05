@@ -12,6 +12,7 @@ import { type WorkoutHistoryByDate } from '@gym-app/shared';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
+import AppButton from '../components/ui/AppButton';
 
 const toMonthKey = (date: Date): string => {
   const year = date.getFullYear();
@@ -204,13 +205,9 @@ const CalendarScreen = ({ navigation }: any) => {
       <View style={styles.header}>
         <Text style={styles.title}>Workout History</Text>
         <View style={styles.monthRow}>
-          <TouchableOpacity style={styles.monthButton} onPress={() => shiftMonth(-1)}>
-            <Text style={styles.monthButtonText}>{'<'}</Text>
-          </TouchableOpacity>
+          <AppButton title="<" variant="outline" size="sm" onPress={() => shiftMonth(-1)} />
           <Text style={styles.monthLabel}>{heading}</Text>
-          <TouchableOpacity style={styles.monthButton} onPress={() => shiftMonth(1)}>
-            <Text style={styles.monthButtonText}>{'>'}</Text>
-          </TouchableOpacity>
+          <AppButton title=">" variant="outline" size="sm" onPress={() => shiftMonth(1)} />
         </View>
       </View>
 
@@ -285,18 +282,6 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       fontWeight: '700',
       
-    },
-    monthButton: {
-      borderColor: themeColors.border,
-      borderWidth: 1,
-      borderRadius: radius.sm,
-      backgroundColor: themeColors.background,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-    },
-    monthButtonText: {
-      color: themeColors.textStrong,
-      fontWeight: '700',
     },
     calendarCard: {
       backgroundColor: themeColors.surface,

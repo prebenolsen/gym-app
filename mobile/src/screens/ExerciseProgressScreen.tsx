@@ -4,11 +4,9 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { type ExerciseProgressHistory } from '@gym-app/shared';
 import { LineChart } from 'react-native-gifted-charts';
 import { useApi } from '../hooks/useApi';
@@ -16,6 +14,7 @@ import { usePreferences } from '../context/PreferencesContext';
 import { colors, radius, shadow } from '../theme';
 import ChipButton from '../components/ui/ChipButton';
 import SegmentedControl from '../components/ui/SegmentedControl';
+import ScreenHeader from '../components/ui/ScreenHeader';
 
 type ViewMode = 'max-weight' | 'total-volume';
 type RangeKey = '2w' | '1m' | '3m' | '6m' | '12m' | 'all';
@@ -117,12 +116,7 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
   if (!data) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
-          </TouchableOpacity>
-          <Text style={styles.title}>Exercise</Text>
-      </View>
+        <ScreenHeader title="Exercise" onBackPress={() => navigation.goBack()} />
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>No data available for this exercise yet.</Text>
         </View>
@@ -138,18 +132,11 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
-        </TouchableOpacity>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.title}>{data.exercise_name}</Text>
-          <Text style={styles.personalBest}>
-            Personal Best:{' '}
-            <Text style={styles.personalBestValue}>{formatWeight(personalBest)}</Text>
-          </Text>
-        </View>
-      </View>
+      <ScreenHeader
+        title={data.exercise_name}
+        subtitle={`Personal Best: ${formatWeight(personalBest)}`}
+        onBackPress={() => navigation.goBack()}
+      />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Toggle */}
@@ -314,33 +301,6 @@ const createStyles = (themeColors: typeof colors) =>
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: themeColors.background,
-    },
-    header: {
-      backgroundColor: themeColors.surface,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: themeColors.border,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    backBtn: {
-    },
-    title: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: themeColors.textStrong,
-      
-    },
-    personalBest: {
-      fontSize: 13,
-      color: themeColors.textMuted,
-      marginTop: 2,
-    },
-    personalBestValue: {
-      color: themeColors.accent,
-      fontWeight: 'bold',
     },
     content: {
       flex: 1,

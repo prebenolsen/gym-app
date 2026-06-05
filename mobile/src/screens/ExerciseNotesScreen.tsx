@@ -4,13 +4,13 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useApi } from '../hooks/useApi';
 import { colors, radius } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
+import AppButton from '../components/ui/AppButton';
+import ScreenHeader from '../components/ui/ScreenHeader';
 
 const ExerciseNotesScreen = ({ route, navigation }: any) => {
   const { exerciseId, exerciseName } = route.params;
@@ -94,14 +94,11 @@ const ExerciseNotesScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
-        </TouchableOpacity>
-        <Text style={styles.title}>{exerciseName} Notes</Text>
-        {saving && <ActivityIndicator size="small" color={themeColors.accent} />}
-        {!saving && <View style={{ width: 40 }} />}
-      </View>
+      <ScreenHeader
+        title={`${exerciseName} Notes`}
+        onBackPress={() => navigation.goBack()}
+        rightActions={saving ? <ActivityIndicator size="small" color={themeColors.accent} /> : <View style={{ width: 16 }} />}
+      />
 
       <View style={styles.content}>
         <TextInput
@@ -123,12 +120,7 @@ const ExerciseNotesScreen = ({ route, navigation }: any) => {
           <Ionicons name="calendar" size={14} color="#fff" />
           <Text style={styles.insertDateButtonText}>Insert Date</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.saveNoteButton}
-          onPress={handleSaveAndGoBack}
-        >
-          <Text style={styles.saveNoteButtonText}>Save Note</Text>
-        </TouchableOpacity>
+        <AppButton title="Save Note" style={styles.saveNoteButton} onPress={handleSaveAndGoBack} />
       </View>
     </View>
   );
@@ -139,29 +131,6 @@ const createStyles = (themeColors: typeof colors) =>
     container: {
       flex: 1,
       backgroundColor: themeColors.background,
-    },
-    header: {
-      backgroundColor: themeColors.surface,
-      borderBottomColor: themeColors.border,
-      borderBottomWidth: 1,
-      padding: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    backButton: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    title: {
-      color: themeColors.textStrong,
-      fontSize: 18,
-      fontWeight: '700',
-      
-      flex: 1,
-      textAlign: 'center',
     },
     content: {
       flex: 1,
@@ -207,19 +176,7 @@ const createStyles = (themeColors: typeof colors) =>
       
     },
     saveNoteButton: {
-      backgroundColor: themeColors.accent,
-      borderRadius: radius.sm,
-      paddingVertical: 10,
-      paddingHorizontal: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
       flex: 1,
-    },
-    saveNoteButtonText: {
-      color: '#fff',
-      fontSize: 12,
-      fontWeight: '700',
-      
     },
   });
 

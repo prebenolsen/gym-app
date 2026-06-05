@@ -7,11 +7,11 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { type ExerciseHistorySummary, type ExerciseProgressEntry } from '@gym-app/shared';
 import { useApi } from '../hooks/useApi';
 import { usePreferences } from '../context/PreferencesContext';
 import { colors, radius, shadow } from '../theme';
+import ScreenHeader from '../components/ui/ScreenHeader';
 
 type ExerciseMonthlyStats = {
   exerciseId: string;
@@ -162,12 +162,7 @@ const ExerciseProgressListScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Your Exercise Progress</Text>
-      </View>
+      <ScreenHeader title="Your Exercise Progress" onBackPress={() => navigation.goBack()} />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.funFactsSection}>
@@ -267,23 +262,6 @@ const createStyles = (themeColors: typeof colors) =>
       justifyContent: 'center',
       backgroundColor: themeColors.background,
     },
-    header: {
-      backgroundColor: themeColors.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: themeColors.border,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    title: {
-      fontSize: 20,
-      fontWeight: '700',
-      color: themeColors.textStrong,
-      flex: 1,
-    },
-    backButton: {},
     content: {
       flex: 1,
       padding: 16,

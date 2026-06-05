@@ -27,6 +27,7 @@ import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
 import MuscleMapThumb from '../components/MuscleMapThumb';
 import AppButton from '../components/ui/AppButton';
+import ChipButton from '../components/ui/ChipButton';
 import ScreenHeader from '../components/ui/ScreenHeader';
 import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
 import { useToast } from '../components/ui/AppToastProvider';
@@ -408,47 +409,26 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                 </Text>
               ) : null}
               <View style={styles.customGroupChipsWrap}>
-                <TouchableOpacity
-                  style={[
-                    styles.customGroupChip,
-                    autoMappedGroups.length === 0 && styles.customGroupChipActive,
-                  ]}
-                    onPress={() => setNewExerciseMuscleGroups([])}
-                    disabled={isAddingExercise}
-                >
-                  <Text
-                    style={[
-                      styles.customGroupChipText,
-                      autoMappedGroups.length === 0 && styles.customGroupChipTextActive,
-                    ]}
-                  >
-                    None
-                  </Text>
-                </TouchableOpacity>
+                <ChipButton
+                  label="None"
+                  selected={autoMappedGroups.length === 0}
+                  compact
+                  onPress={() => setNewExerciseMuscleGroups([])}
+                  disabled={isAddingExercise}
+                />
                 {muscleGroupOptions.map((group) => (
-                  <TouchableOpacity
+                  <ChipButton
                     key={`new-${group}`}
-                    style={[
-                      styles.customGroupChip,
-                      autoMappedGroups.includes(group) && styles.customGroupChipActive,
-                    ]}
+                    label={group}
+                    selected={autoMappedGroups.includes(group)}
+                    compact
                     onPress={() =>
                       setNewExerciseMuscleGroups((prev) =>
                         toggleGroupSelection(prev ?? [], group),
                       )
                     }
                     disabled={isAddingExercise}
-                  >
-                    <Text
-                      style={[
-                        styles.customGroupChipText,
-                        autoMappedGroups.includes(group) &&
-                          styles.customGroupChipTextActive,
-                      ]}
-                    >
-                      {group}
-                    </Text>
-                  </TouchableOpacity>
+                  />
                 ))}
               </View>
             </View>
@@ -635,26 +615,6 @@ const createStyles = (themeColors: typeof colors) =>
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 6,
-    },
-    customGroupChip: {
-      borderWidth: 1,
-      borderColor: themeColors.border,
-      borderRadius: 999,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      backgroundColor: themeColors.background,
-    },
-    customGroupChipActive: {
-      borderColor: themeColors.accent,
-      backgroundColor: themeColors.accentSoft,
-    },
-    customGroupChipText: {
-      color: themeColors.textMuted,
-      fontSize: 12,
-      fontWeight: '600',
-    },
-    customGroupChipTextActive: {
-      color: themeColors.accent,
     },
     deleteButtonInList: {
       marginTop: 0,
