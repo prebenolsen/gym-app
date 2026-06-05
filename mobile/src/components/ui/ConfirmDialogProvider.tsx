@@ -11,10 +11,12 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { colors, radius } from '../../theme';
 import { usePreferences } from '../../context/PreferencesContext';
+import ChipButton from './ChipButton';
 
 type ConfirmDialogState = {
   id: number;
@@ -24,7 +26,15 @@ type ConfirmDialogState = {
   cancelText: string;
   destructive: boolean;
   onConfirm: () => void | Promise<void>;
+  onConfirmInput?: (inputValue: string, selectedOptions?: string[]) => void | Promise<void>;
   onCancel?: () => void | Promise<void>;
+  promptPlaceholder?: string;
+  promptInitialValue?: string;
+  promptOptions?: string[];
+  promptOptionsLabel?: string;
+  promptInitialSelections?: string[];
+  promptAutoSuggestSelections?: (inputValue: string) => string[];
+  promptSelectionMode?: 'single' | 'multi';
 };
 
 type ConfirmDialogContextValue = {
@@ -37,6 +47,9 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
   const { colors: themeColors } = usePreferences();
   const styles = createStyles(themeColors);
   const [dialog, setDialog] = useState<ConfirmDialogState | null>(null);
+  const [promptValue, setPromptValue] = useState('');
+  const [promptSelections, setPromptSelections] = useState<string[]>([]);
+  const [isPromptSelectionManual, setIsPromptSelectionManual] = useState(false);
   const idRef = React.useRef(0);
 
   const showConfirm = useCallback(
@@ -49,14 +62,63 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  React.useEffect(() => {
+    if (!dialog) {
+      setPromptValue('');
+      setPromptSelections([]);
+      setIsPromptSelectionManual(false);
+      return;
+    }
+
+    const initialValue = dialog.promptInitialValue ?? '';
+    setPromptValue(initialValue);
+
+    if (dialog.promptAutoSuggestSelections) {
+      setPromptSelections(dialog.promptAutoSuggestSelections(initialValue));
+      setIsPromptSelectionManual(false);
+    } else {
+      setPromptSelections(dialog.promptInitialSelections ?? []);
+      setIsPromptSelectionManual(true);
+    }
+  }, [dialog]);
+
+  const handlePromptInputChange = useCallback((value: string) => {
+    setPromptValue(value);
+
+    if (!dialog?.promptAutoSuggestSelections || isPromptSelectionManual) {
+      return;
+    }
+
+    setPromptSelections(dialog.promptAutoSuggestSelections(value));
+  }, [dialog, isPromptSelectionManual]);
+
+  const handleSelectOption = useCallback((option: string) => {
+    setIsPromptSelectionManual(true);
+    setPromptSelections((current) => {
+      if (dialog?.promptSelectionMode === 'single') {
+        return current.includes(option) ? [] : [option];
+      }
+
+      if (current.includes(option)) {
+        return current.filter((entry) => entry !== option);
+      }
+
+      return [...current, option];
+    });
+  }, [dialog?.promptSelectionMode]);
+
   const handleConfirm = useCallback(async () => {
     if (!dialog) return;
     try {
-      await dialog.onConfirm();
+      if (dialog.onConfirmInput) {
+        await dialog.onConfirmInput(promptValue.trim(), promptSelections);
+      } else {
+        await dialog.onConfirm();
+      }
     } finally {
       setDialog(null);
     }
-  }, [dialog]);
+  }, [dialog, promptSelections, promptValue]);
 
   const handleCancel = useCallback((runCancelAction = false) => {
     if (!dialog) return;
@@ -86,6 +148,45 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
             <View style={styles.dialog}>
               <Text style={styles.title}>{dialog.title}</Text>
               <Text style={styles.message}>{dialog.message}</Text>
+              {dialog.onConfirmInput ? (
+                <TextInput
+                  style={styles.promptInput}
+                  value={promptValue}
+                  onChangeText={handlePromptInputChange}
+                  placeholder={dialog.promptPlaceholder ?? ''}
+                  placeholderTextColor={themeColors.textMuted}
+                  autoFocus
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                />
+              ) : null}
+              {dialog.onConfirmInput && dialog.promptOptions?.length ? (
+                <View style={styles.promptOptionsContainer}>
+                  {dialog.promptOptionsLabel ? (
+                    <Text style={styles.promptOptionsLabel}>{dialog.promptOptionsLabel}</Text>
+                  ) : null}
+                  <View style={styles.promptOptionsWrap}>
+                    <ChipButton
+                      label="None"
+                      compact
+                      selected={promptSelections.length === 0}
+                      onPress={() => {
+                        setIsPromptSelectionManual(true);
+                        setPromptSelections([]);
+                      }}
+                    />
+                    {dialog.promptOptions.map((option) => (
+                      <ChipButton
+                        key={`confirm-option-${option}`}
+                        label={option}
+                        compact
+                        selected={promptSelections.includes(option)}
+                        onPress={() => handleSelectOption(option)}
+                      />
+                    ))}
+                  </View>
+                </View>
+              ) : null}
               <View style={styles.buttonRow}>
                 <Pressable
                   style={[styles.button, styles.cancelButton]}
@@ -99,7 +200,11 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
                   style={[
                     styles.button,
                     dialog.destructive ? styles.destructiveButton : styles.confirmButton,
+                    dialog.onConfirmInput && !promptValue.trim()
+                      ? styles.confirmButtonDisabled
+                      : null,
                   ]}
+                  disabled={dialog.onConfirmInput && !promptValue.trim()}
                   onPress={handleConfirm}
                 >
                   <Text style={[styles.buttonText, styles.confirmButtonText]}>
@@ -155,6 +260,29 @@ const createStyles = (themeColors: typeof colors) =>
       lineHeight: 20,
       marginBottom: 4,
     },
+    promptInput: {
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      borderRadius: radius.sm,
+      backgroundColor: themeColors.background,
+      color: themeColors.textStrong,
+      minHeight: 42,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    promptOptionsContainer: {
+      gap: 8,
+    },
+    promptOptionsLabel: {
+      color: themeColors.textMuted,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    promptOptionsWrap: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
     buttonRow: {
       flexDirection: 'row',
       gap: 12,
@@ -181,6 +309,9 @@ const createStyles = (themeColors: typeof colors) =>
       backgroundColor: themeColors.accent,
       borderWidth: 1,
       borderColor: themeColors.accent,
+    },
+    confirmButtonDisabled: {
+      opacity: 0.55,
     },
     destructiveButton: {
       backgroundColor: themeColors.danger,

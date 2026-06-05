@@ -16,6 +16,10 @@
 - Keep explanations short. Code speaks louder than prose.
 - After completing a task, summarize changes in a brief bullet list — file name and what changed. Nothing more.
 - If a task is complete and nothing is unclear, do not ask follow-up questions.
+- Do not narrate what you are about to do before doing it.
+- Do not explain each step while executing it.
+- When done, output only: the changed code, then a bullet list of files changed and why.
+- Internal reasoning is permitted but must not be surfaced in the response.
 
 This repository is a cross-platform gym app with shared domain logic and a React Native mobile client.
 

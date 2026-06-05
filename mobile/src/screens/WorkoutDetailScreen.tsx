@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -27,11 +27,14 @@ import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
 import MuscleMapThumb from '../components/MuscleMapThumb';
 import AppButton from '../components/ui/AppButton';
-import ChipButton from '../components/ui/ChipButton';
 import ScreenHeader from '../components/ui/ScreenHeader';
 import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
 import { useToast } from '../components/ui/AppToastProvider';
-import { showDeleteConfirmDialog } from '../components/ui/ConfirmDialog';
+import {
+  showConfirmDialog,
+  showDeleteConfirmDialog,
+  showInputConfirmDialog,
+} from '../components/ui/ConfirmDialog';
 
 const getExerciseMuscleGroup = (name: string): MuscleGroup | undefined =>
   resolveExerciseMuscleGroup(name);
@@ -42,10 +45,6 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   const { programId, workoutId, workoutName } = route.params;
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newExerciseName, setNewExerciseName] = useState('');
-  const [newExerciseMuscleGroups, setNewExerciseMuscleGroups] = useState<
-    MuscleGroup[] | null
-  >(null);
   const [isCreatingExercise, setIsCreatingExercise] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(workoutName);
@@ -55,14 +54,6 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   const { showError } = useErrorDialog();
   const { showToast } = useToast();
   const muscleGroupOptions = getMuscleGroups();
-  const suggestedGroups = useMemo(
-    () => suggestMuscleGroupsFromInput(newExerciseName),
-    [newExerciseName],
-  );
-  const autoMappedGroups = useMemo(
-    () => (newExerciseMuscleGroups === null ? suggestedGroups : newExerciseMuscleGroups),
-    [newExerciseMuscleGroups, suggestedGroups],
-  );
 
   useEffect(() => {
     setEditName(workoutName);
@@ -86,14 +77,22 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
     }
   };
 
-  const handleCreateExercise = async () => {
-    if (!newExerciseName.trim() || isCreatingExercise) return;
+  const handleCreateExercise = async (
+    exerciseName: string,
+    selectedGroups?: string[],
+  ) => {
+    const normalizedName = exerciseName.trim();
+    if (!normalizedName || isCreatingExercise) return;
 
     setIsCreatingExercise(true);
     try {
-      const resolvedGroups = autoMappedGroups.length > 0 ? autoMappedGroups : null;
+      const fallbackGroups = suggestMuscleGroupsFromInput(normalizedName);
+      const normalizedSelections = (selectedGroups ?? fallbackGroups).filter((group): group is MuscleGroup =>
+        muscleGroupOptions.includes(group as MuscleGroup),
+      );
+      const resolvedGroups = normalizedSelections.length > 0 ? normalizedSelections : null;
       const newExercise = await api.createExercise(workoutId, {
-        name: newExerciseName,
+        name: normalizedName,
         sets: 4,
         rest_seconds: 120,
         custom_muscle_groups: resolvedGroups,
@@ -101,14 +100,45 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
       });
 
       setExercises((currentExercises) => [...currentExercises, newExercise]);
-      setNewExerciseName('');
-      setNewExerciseMuscleGroups(null);
     } catch (err) {
       console.error('Failed to create exercise:', err);
       showError({ message: 'Failed to create exercise' });
     } finally {
       setIsCreatingExercise(false);
     }
+  };
+
+  const handleOpenCreateExercisePrompt = () => {
+    if (isCreatingExercise) return;
+
+    showInputConfirmDialog({
+      title: 'Create Exercise',
+      message: 'Enter a name for your custom exercise.',
+      placeholder: 'Exercise name',
+      promptOptions: muscleGroupOptions,
+      promptOptionsLabel: 'Muscle groups',
+      autoSuggestSelections: (inputValue) => suggestMuscleGroupsFromInput(inputValue),
+      selectionMode: 'multi',
+      confirmText: 'Confirm',
+      cancelText: 'Cancel',
+      onConfirmInput: handleCreateExercise,
+    });
+  };
+
+  const handleOpenAddExercisePrompt = () => {
+    showConfirmDialog({
+      title: 'Add Exercise',
+      message: '',
+      confirmText: 'Create exercise',
+      cancelText: 'From catalog',
+      onConfirm: handleOpenCreateExercisePrompt,
+      onCancel: () =>
+        navigation.navigate('ExercisesCatalog', {
+          programId,
+          workoutId,
+          workoutName,
+        }),
+    });
   };
 
   const handleUpdateExercise = async (
@@ -137,17 +167,6 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
     }
     const resolved = getExerciseMuscleGroup(exercise.name);
     return resolved ? [resolved] : [];
-  };
-
-  const toggleGroupSelection = (
-    selected: MuscleGroup[] | null | undefined,
-    group: MuscleGroup,
-  ): MuscleGroup[] => {
-    const current = selected ?? [];
-    if (current.includes(group)) {
-      return current.filter((entry) => entry !== group);
-    }
-    return [...current, group];
   };
 
   const handleDeleteExercise = async (id: string) => {
@@ -271,6 +290,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
     <View style={styles.container}>
       <ScreenHeader
         onBackPress={() => navigation.goBack()}
+        rightActions={<AppButton title="+ Add" size="sm" onPress={handleOpenAddExercisePrompt} disabled={isCreatingExercise} />}
         titleNode={
           editing ? (
             <TextInput
@@ -379,71 +399,6 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
             />
           )}
 
-
-          <View style={styles.createExercise}>
-          <TextInput
-            style={styles.input}
-            placeholder="Create a custom exercise"
-            placeholderTextColor={themeColors.textMuted}
-            value={newExerciseName}
-            editable={!isCreatingExercise}
-            onChangeText={setNewExerciseName}
-          />
-          <AppButton
-            title={isCreatingExercise ? 'Creating...' : '+ Create Exercise'}
-            onPress={handleCreateExercise}
-            loading={isCreatingExercise}
-            disabled={isCreatingExercise || !newExerciseName.trim()}
-            style={styles.createExerciseButton}
-          />
-        </View>
-
-          {newExerciseName.trim().length > 0 && !isCreatingExercise ? (
-            <View style={styles.customGroupCreateBox}>
-              <Text style={styles.customGroupLabel}>
-                Optional muscle groups for custom exercise
-              </Text>
-              {suggestedGroups.length > 0 ? (
-                <View />
-              ) : null}
-              <View style={styles.customGroupChipsWrap}>
-                <ChipButton
-                  label="None"
-                  selected={autoMappedGroups.length === 0}
-                  compact
-                  onPress={() => setNewExerciseMuscleGroups([])}
-                  disabled={isCreatingExercise}
-                />
-                {muscleGroupOptions.map((group) => (
-                  <ChipButton
-                    key={`new-${group}`}
-                    label={group}
-                    selected={autoMappedGroups.includes(group)}
-                    compact
-                    onPress={() =>
-                      setNewExerciseMuscleGroups((prev) =>
-                        toggleGroupSelection(prev ?? [], group),
-                      )
-                    }
-                    disabled={isCreatingExercise}
-                  />
-                ))}
-              </View>
-            </View>
-          ) : null}
-
-          <AppButton
-            title="Add exercises from the catalog"
-            onPress={() =>
-              navigation.navigate('ExercisesCatalog', {
-                programId,
-                workoutId,
-                workoutName,
-              })
-            }
-            style={styles.catalogButton}
-          />
-
           <AppButton
             title="Delete Workout"
             variant="danger"
@@ -498,36 +453,6 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       marginBottom: 16,
       
-    },
-    createExercise: {
-      flexDirection: 'row',
-      gap: 10,
-      marginBottom: 10,
-    },
-    customGroupCreateBox: {
-      marginBottom: 16,
-      padding: 10,
-      borderWidth: 1,
-      borderColor: themeColors.border,
-      borderRadius: radius.sm,
-      backgroundColor: themeColors.surface,
-      gap: 8,
-    },
-    input: {
-      flex: 1,
-      padding: 10,
-      borderWidth: 1,
-      borderColor: themeColors.border,
-      borderRadius: radius.sm,
-      color: themeColors.textStrong,
-      backgroundColor: themeColors.surface,
-    },
-    createExerciseButton: {
-      paddingHorizontal: 12,
-    },
-    catalogButton: {
-      marginTop: 8,
-      marginBottom: 16,
     },
     list: {
       flex: 1,
@@ -602,16 +527,6 @@ const createStyles = (themeColors: typeof colors) =>
     },
     exerciseControls: {
       gap: 12,
-    },
-    customGroupLabel: {
-      color: themeColors.textMuted,
-      fontSize: 12,
-      fontWeight: '600',
-    },
-    customGroupChipsWrap: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 6,
     },
     deleteButtonInList: {
       marginTop: 0,
