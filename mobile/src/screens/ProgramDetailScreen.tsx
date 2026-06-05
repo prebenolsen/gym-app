@@ -254,9 +254,11 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
               accessibilityRole="button"
               accessibilityLabel="Toggle favorite program"
             >
-              <Text style={styles.favoriteStarText}>
-                {program?.is_favorite_program ? '★' : '☆'}
-              </Text>
+              <Ionicons
+                name={program?.is_favorite_program ? 'star' : 'star-outline'}
+                size={26}
+                color={themeColors.accent}
+              />
             </TouchableOpacity>
             {editing ? (
               <TextInput
@@ -277,6 +279,7 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
             )}
           </View>
         )}
+        rightActions={<AppButton title="+ Create" size="sm" onPress={handleAddWorkout} />}
       />
 
       <View style={styles.section}>
@@ -353,8 +356,6 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
           )}
 
           <View style={styles.listFooterActions}>
-            <AppButton title="+ Create" onPress={handleAddWorkout} style={styles.addWorkoutButton} />
-
             <AppButton
               title="Delete Program"
               variant="danger"
@@ -381,18 +382,12 @@ const createStyles = (themeColors: typeof colors) =>
       flex: 1,
     },
     favoriteStarButton: {
-      width: 28,
-      height: 28,
+      width: 44,
+      height: 44,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    favoriteStarText: {
-      color: themeColors.accent,
-      fontSize: 27,
-      fontWeight: '800',
-      lineHeight: 27,
-      includeFontPadding: false,
-    },
+
     title: {
       fontSize: 22,
       fontWeight: '700',
@@ -437,10 +432,6 @@ const createStyles = (themeColors: typeof colors) =>
       fontWeight: 'bold',
       color: themeColors.textStrong,
       
-    },
-    addWorkoutButton: {
-      width: '100%',
-      marginTop: 8,
     },
     list: {
       flex: 1,

@@ -94,7 +94,8 @@ const createStyles = (themeColors: typeof colors) =>
       minWidth: 0,
     },
     backButton: {
-      alignSelf: 'flex-start',
+      padding: 10,
+      marginLeft: -10,
     },
     titleWrap: {
       flex: 1,

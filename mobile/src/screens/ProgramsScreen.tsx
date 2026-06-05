@@ -25,7 +25,7 @@ import AppButton from '../components/ui/AppButton';
 import ScreenHeader from '../components/ui/ScreenHeader';
 import { useToast } from '../components/ui/AppToastProvider';
 import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
-import { showDeleteConfirmDialog } from '../components/ui/ConfirmDialog';
+import { showConfirmDialog, showDeleteConfirmDialog } from '../components/ui/ConfirmDialog';
 
 const TIME_PER_SET_SECONDS = { low: 30, high: 45 };
 const HISTORY_LOOKBACK_MONTHS = 18;
@@ -269,6 +269,19 @@ const ProgramsScreen = ({ navigation, route }: any) => {
     }
   };
 
+  const handleOpenAddProgramPrompt = () => {
+    showConfirmDialog({
+      title: 'Add Program',
+      message: 'Choose how you want to add a program.',
+      confirmText: 'Create program',
+      cancelText: 'Import program',
+      onConfirm: handleCreateProgram,
+      onCancel: () => {
+        navigation.navigate('ProgramsCatalog');
+      },
+    });
+  };
+
   const handleDeleteProgram = async (id: string, name: string) => {
     showDeleteConfirmDialog(
       'Delete Program',
@@ -380,15 +393,7 @@ const ProgramsScreen = ({ navigation, route }: any) => {
       <ScreenHeader
         title="Programs"
         rightActions={(
-          <View style={styles.headerActions}>
-            <AppButton
-              title="Import"
-              variant="secondary"
-              size="sm"
-              onPress={() => navigation.navigate('ProgramsCatalog')}
-            />
-            <AppButton title="+ Create" size="sm" onPress={handleCreateProgram} />
-          </View>
+          <AppButton title="+ Create" size="sm" onPress={handleOpenAddProgramPrompt} />
         )}
       />
 
@@ -426,10 +431,6 @@ const createStyles = (themeColors: typeof colors) =>
     container: {
       flex: 1,
       backgroundColor: themeColors.background,
-    },
-    headerActions: {
-      flexDirection: 'row',
-      gap: 8,
     },
     list: {
       flex: 1,
