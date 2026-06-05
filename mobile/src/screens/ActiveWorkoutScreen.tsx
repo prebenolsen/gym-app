@@ -23,6 +23,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
+import AppButton from '../components/ui/AppButton';
 import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
 import { showConfirmDialog } from '../components/ui/ConfirmDialog';
 import {
@@ -846,38 +847,36 @@ const ActiveWorkoutScreen = ({ navigation, route }: any) => {
       <View style={styles.header}>
         <Text style={styles.title}>{title}</Text>
         <View style={styles.headerActionsRow}>
-          <TouchableOpacity style={styles.cancelButton} onPress={handleCancelWorkout}>
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
+          <AppButton title="Cancel" variant="outlineDanger" size="sm" style={styles.headerActionButton} onPress={handleCancelWorkout} />
           {currentExercise && (
             <>
-              <TouchableOpacity
-                style={styles.secondaryButton}
+              <AppButton
+                title="History"
+                variant="outline"
+                size="sm"
+                style={styles.headerActionButton}
                 onPress={() =>
                   navigation.navigate('ExerciseHistory', {
                     exerciseId: currentExercise.id,
                     exerciseName: currentExercise.name,
                   })
                 }
-              >
-                <Text style={styles.secondaryButtonText}>History</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.secondaryButton}
+              />
+              <AppButton
+                title="Notes"
+                variant="outline"
+                size="sm"
+                style={styles.headerActionButton}
                 onPress={() =>
                   navigation.navigate('ExerciseNotes', {
                     exerciseId: currentExercise.id,
                     exerciseName: currentExercise.name,
                   })
                 }
-              >
-                <Text style={styles.secondaryButtonText}>Notes</Text>
-              </TouchableOpacity>
+              />
             </>
           )}
-          <TouchableOpacity style={styles.finishButton} onPress={handleFinishWorkout}>
-            <Text style={styles.finishButtonText}>Finish</Text>
-          </TouchableOpacity>
+          <AppButton title="Finish" variant="outlineSuccess" size="sm" style={styles.headerActionButton} onPress={handleFinishWorkout} />
         </View>
       </View>
 
@@ -1445,56 +1444,8 @@ const createStyles = (themeColors: typeof colors) =>
       height: 5,
       backgroundColor: themeColors.accent,
     },
-    cancelButton: {
-      backgroundColor: 'transparent',
-      borderWidth: 1,
-      borderColor: themeColors.danger,
-      borderRadius: radius.sm,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 8,
-      paddingHorizontal: 8,
+    headerActionButton: {
       minWidth: 80,
-    },
-    cancelButtonText: {
-      color: themeColors.danger,
-      fontWeight: '700',
-      fontSize: 12,
-      
-    },
-    secondaryButton: {
-      backgroundColor: 'transparent',
-      borderWidth: 1,
-      borderColor: themeColors.textStrong,
-      borderRadius: radius.sm,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 8,
-      paddingHorizontal: 8,
-      minWidth: 80,
-    },
-    secondaryButtonText: {
-      color: themeColors.textStrong,
-      fontWeight: '700',
-      fontSize: 10,
-      
-    },
-    finishButton: {
-      backgroundColor: 'transparent',
-      borderWidth: 1,
-      borderColor: themeColors.success,
-      borderRadius: radius.sm,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 8,
-      paddingHorizontal: 8,
-      minWidth: 80,
-    },
-    finishButtonText: {
-      color: themeColors.success,
-      fontWeight: '700',
-      fontSize: 12,
-      
     },
     emptyTitle: {
       color: themeColors.textStrong,

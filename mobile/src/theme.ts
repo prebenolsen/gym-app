@@ -1,5 +1,3 @@
-import type { TextStyle, ViewStyle } from 'react-native';
-
 export type ThemeMode = 'light' | 'dark';
 export type AccentColor = 'auburn' | 'emerald';
 
@@ -173,50 +171,6 @@ export const radius = {
   md: 12,
   pill: 999,
 };
-
-type AppButtonStyles = {
-  mainButton: ViewStyle;
-  mainButtonText: TextStyle;
-  deleteButton: ViewStyle;
-  deleteButtonText: TextStyle;
-};
-
-export const buttonTokens = {
-  height: 44,
-  horizontalPadding: 16,
-  borderRadius: radius.sm,
-  fontSize: 14,
-  fontWeight: '700' as const,
-};
-
-export const getButtonStyles = (themeColors: typeof colors): AppButtonStyles => ({
-  mainButton: {
-    backgroundColor: themeColors.accent,
-    borderRadius: buttonTokens.borderRadius,
-    height: buttonTokens.height,
-    paddingHorizontal: buttonTokens.horizontalPadding,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mainButtonText: {
-    color: themeColors.textOnAccent,
-    fontSize: buttonTokens.fontSize,
-    fontWeight: buttonTokens.fontWeight,
-  },
-  deleteButton: {
-    backgroundColor: themeColors.danger,
-    borderRadius: buttonTokens.borderRadius,
-    height: buttonTokens.height,
-    paddingHorizontal: buttonTokens.horizontalPadding,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deleteButtonText: {
-    color: '#FFFFFF',
-    fontSize: buttonTokens.fontSize,
-    fontWeight: buttonTokens.fontWeight,
-  },
-});
 
 export const shadow = {
   card: {

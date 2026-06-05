@@ -18,7 +18,8 @@ import { BarChart, LineChart } from 'react-native-gifted-charts';
 import { usePreferences } from '../context/PreferencesContext';
 import type { DateFormat } from '../context/PreferencesContext';
 import { useApi } from '../hooks/useApi';
-import { getButtonStyles, radius, shadow } from '../theme';
+import { radius, shadow } from '../theme';
+import AppButton from '../components/ui/AppButton';
 import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
 import { useToast } from '../components/ui/AppToastProvider';
 import { showDeleteConfirmDialog } from '../components/ui/ConfirmDialog';
@@ -1499,9 +1500,7 @@ export default function WeightTrackerScreen() {
           stored privately and never shared.
         </Text>
 
-        <TouchableOpacity style={styles.primaryBtn} onPress={handleOb1Next}>
-          <Text style={styles.primaryBtnText}>Next</Text>
-        </TouchableOpacity>
+        <AppButton title="Next" onPress={handleOb1Next} />
       </ScrollView>
     );
   }
@@ -1542,9 +1541,7 @@ export default function WeightTrackerScreen() {
           You can add up to 3 custom metrics (e.g. Sleep Score, Creatine, or Alcohol) under Metric Settings after setup.
         </Text>
 
-        <TouchableOpacity style={styles.primaryBtn} onPress={handleOb2Next}>
-          <Text style={styles.primaryBtnText}>Next</Text>
-        </TouchableOpacity>
+        <AppButton title="Next" onPress={handleOb2Next} />
 
         <TouchableOpacity
           style={styles.ghostBtn}
@@ -1590,12 +1587,7 @@ export default function WeightTrackerScreen() {
           </TouchableOpacity>
         ))}
 
-        <TouchableOpacity
-          style={[styles.primaryBtn, { marginTop: 32 }]}
-          onPress={handleOb3Next}
-        >
-          <Text style={styles.primaryBtnText}>Next</Text>
-        </TouchableOpacity>
+        <AppButton title="Next" style={{ marginTop: 32 }} onPress={handleOb3Next} />
 
         <TouchableOpacity
           style={styles.ghostBtn}
@@ -1644,12 +1636,7 @@ export default function WeightTrackerScreen() {
           </TouchableOpacity>
         ))}
 
-        <TouchableOpacity
-          style={[styles.primaryBtn, { marginTop: 32 }]}
-          onPress={handleOb4Next}
-        >
-          <Text style={styles.primaryBtnText}>Next</Text>
-        </TouchableOpacity>
+        <AppButton title="Next" style={{ marginTop: 32 }} onPress={handleOb4Next} />
 
         <TouchableOpacity
           style={styles.ghostBtn}
@@ -1694,12 +1681,7 @@ export default function WeightTrackerScreen() {
         {obSaving ? (
           <ActivityIndicator color={C.accent} style={{ marginTop: 24 }} />
         ) : (
-          <TouchableOpacity
-            style={[styles.primaryBtn, { marginTop: 32 }]}
-            onPress={() => handleFinishOnboarding()}
-          >
-            <Text style={styles.primaryBtnText}>Let's go!</Text>
-          </TouchableOpacity>
+          <AppButton title="Let's go!" style={{ marginTop: 32 }} onPress={() => handleFinishOnboarding()} />
         )}
 
         <TouchableOpacity
@@ -2447,30 +2429,18 @@ export default function WeightTrackerScreen() {
               {savingSettings ? (
                 <ActivityIndicator color={C.accent} style={{ marginTop: 16 }} />
               ) : (
-                <TouchableOpacity
-                  style={[styles.primaryBtn, { marginTop: 20 }]}
-                  onPress={handleSaveSettings}
-                >
-                  <Text style={styles.primaryBtnText}>Save Settings</Text>
-                </TouchableOpacity>
+                <AppButton title="Save Settings" style={{ marginTop: 20 }} onPress={handleSaveSettings} />
               )}
 
-              <TouchableOpacity
-                style={[styles.destructiveBtn, { marginTop: 24 }]}
-                onPress={handleResetTracker}
-              >
-                <Text style={styles.destructiveBtnText}>Delete All Data</Text>
-              </TouchableOpacity>
+              <AppButton title="Delete All Data" variant="danger" style={{ marginTop: 24 }} onPress={handleResetTracker} />
 
-              <TouchableOpacity
-                style={[styles.secondaryBtn, { marginTop: 10 }]}
+              <AppButton
+                title={exportingData ? 'Preparing Export...' : 'Export My Data'}
+                variant="outline"
+                style={{ marginTop: 10 }}
                 onPress={handleExportData}
                 disabled={exportingData}
-              >
-                <Text style={styles.secondaryBtnText}>
-                  {exportingData ? 'Preparing Export...' : 'Export My Data'}
-                </Text>
-              </TouchableOpacity>
+              />
             </View>
           )}
 
@@ -2479,13 +2449,7 @@ export default function WeightTrackerScreen() {
 
         {/* ── Bottom action bar ── */}
         <View style={styles.bottomActions}>
-          <TouchableOpacity
-            onPress={() => openLogModal()}
-            style={styles.logEntryButton}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.logEntryButtonText}>Log Entry</Text>
-          </TouchableOpacity>
+          <AppButton title="Log Entry" style={styles.logEntryButton} onPress={() => openLogModal()} />
         </View>
 
         {/* ── Log Entry Modal ── */}
@@ -2655,9 +2619,7 @@ export default function WeightTrackerScreen() {
                 <ActivityIndicator color={C.accent} style={{ marginVertical: 20 }} />
               ) : (
                 <>
-                  <TouchableOpacity style={[styles.primaryBtn, { marginTop: 8, marginBottom: 8 }]} onPress={handleSaveLog}>
-                    <Text style={styles.primaryBtnText}>Save</Text>
-                  </TouchableOpacity>
+                  <AppButton title="Save" style={{ marginTop: 8, marginBottom: 8 }} onPress={handleSaveLog} />
                   {entries.find((e) => e.entry_date === logDate) && (
                     <TouchableOpacity
                       style={{ alignItems: 'center', paddingVertical: 10, marginBottom: 8 }}
@@ -2738,9 +2700,7 @@ export default function WeightTrackerScreen() {
         {savingNewMetric ? (
           <ActivityIndicator color={C.accent} style={{ marginTop: 16 }} />
         ) : (
-          <TouchableOpacity style={[styles.primaryBtn, { marginTop: 16 }]} onPress={handleCreate}>
-            <Text style={styles.primaryBtnText}>Create Metric</Text>
-          </TouchableOpacity>
+          <AppButton title="Create Metric" style={{ marginTop: 16 }} onPress={handleCreate} />
         )}
       </ModalSheet>
     );
@@ -2793,9 +2753,7 @@ export default function WeightTrackerScreen() {
         {creatingGoal ? (
           <ActivityIndicator color={C.accent} style={{ marginTop: 16 }} />
         ) : (
-          <TouchableOpacity style={[styles.primaryBtn, { marginTop: 12 }]} onPress={handleCreateNewGoal}>
-            <Text style={styles.primaryBtnText}>Start New Goal</Text>
-          </TouchableOpacity>
+          <AppButton title="Start New Goal" style={{ marginTop: 12 }} onPress={handleCreateNewGoal} />
         )}
       </ModalSheet>
     );
@@ -2825,12 +2783,7 @@ export default function WeightTrackerScreen() {
               </ScrollView>
             </View>
 
-        <TouchableOpacity
-          style={[styles.primaryBtn, { marginTop: 12 }]}
-          onPress={() => setShowExportModal(false)}
-        >
-          <Text style={styles.primaryBtnText}>Done</Text>
-        </TouchableOpacity>
+        <AppButton title="Done" style={{ marginTop: 12 }} onPress={() => setShowExportModal(false)} />
       </ModalSheet>
     );
   }
@@ -3328,12 +3281,6 @@ const createStyles = (C: ReturnType<typeof usePreferences>['colors']) =>
       fontSize: 15,
       color: C.textStrong,
     },
-    primaryBtn: {
-      ...getButtonStyles(C).mainButton,
-    },
-    primaryBtnText: {
-      ...getButtonStyles(C).mainButtonText,
-    },
     ghostBtn: {
       paddingVertical: 12,
       alignItems: 'center',
@@ -3352,32 +3299,7 @@ const createStyles = (C: ReturnType<typeof usePreferences>['colors']) =>
       borderTopColor: C.border,
     },
     logEntryButton: {
-      ...getButtonStyles(C).mainButton,
       width: '100%',
-    },
-    logEntryButtonText: {
-      ...getButtonStyles(C).mainButtonText,
-    },
-    destructiveBtn: {
-      ...getButtonStyles(C).deleteButton,
-    },
-    destructiveBtnText: {
-      ...getButtonStyles(C).deleteButtonText,
-    },
-    secondaryBtn: {
-      height: 44,
-      borderRadius: radius.sm,
-      borderWidth: 1,
-      borderColor: C.border,
-      backgroundColor: C.surface,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 14,
-    },
-    secondaryBtnText: {
-      fontSize: 15,
-      fontWeight: '600',
-      color: C.textStrong,
     },
     goalCard: {
       flexDirection: 'row',

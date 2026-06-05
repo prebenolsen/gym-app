@@ -12,7 +12,15 @@ import {
 import { colors, radius } from '../../theme';
 import { usePreferences } from '../../context/PreferencesContext';
 
-type AppButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
+type AppButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'danger'
+  | 'ghost'
+  | 'outline'
+  | 'outlineAccent'
+  | 'outlineDanger'
+  | 'outlineSuccess';
 type AppButtonSize = 'sm' | 'md' | 'lg';
 
 type AppButtonProps = {
@@ -29,6 +37,10 @@ const SPINNER_COLOR_BY_VARIANT = {
   secondary: 'accent',
   danger: 'textOnAccent',
   ghost: 'accent',
+  outline: 'textStrong',
+  outlineAccent: 'accent',
+  outlineDanger: 'danger',
+  outlineSuccess: 'success',
 } as const;
 
 export default function AppButton({
@@ -112,6 +124,22 @@ const createStyles = (themeColors: typeof colors) =>
       backgroundColor: 'transparent',
       borderColor: 'transparent',
     },
+    outlineButton: {
+      backgroundColor: 'transparent',
+      borderColor: themeColors.border,
+    },
+    outlineAccentButton: {
+      backgroundColor: 'transparent',
+      borderColor: themeColors.accent,
+    },
+    outlineDangerButton: {
+      backgroundColor: 'transparent',
+      borderColor: themeColors.danger,
+    },
+    outlineSuccessButton: {
+      backgroundColor: 'transparent',
+      borderColor: themeColors.success,
+    },
     baseText: {
       fontWeight: '700',
     },
@@ -135,5 +163,17 @@ const createStyles = (themeColors: typeof colors) =>
     },
     ghostText: {
       color: themeColors.accent,
+    },
+    outlineText: {
+      color: themeColors.textStrong,
+    },
+    outlineAccentText: {
+      color: themeColors.accent,
+    },
+    outlineDangerText: {
+      color: themeColors.danger,
+    },
+    outlineSuccessText: {
+      color: themeColors.success,
     },
   });

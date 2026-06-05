@@ -15,7 +15,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { usePreferences } from '../context/PreferencesContext';
 import { useApi } from '../hooks/useApi';
-import { colors, getButtonStyles, radius, shadow } from '../theme';
+import { colors, radius, shadow } from '../theme';
 import BrandLogo from '../components/BrandLogo';
 import { APP_INFO } from '../constants/appInfo';
 import { useToast } from '../components/ui/AppToastProvider';
@@ -29,6 +29,7 @@ import {
   playSoundById,
 } from '../lib/restTimerSounds';
 import type { DateFormat } from '../context/PreferencesContext';
+import AppButton from '../components/ui/AppButton';
 import ChipButton from '../components/ui/ChipButton';
 import SegmentedControl from '../components/ui/SegmentedControl';
 
@@ -443,9 +444,11 @@ const SettingsScreen = ({ navigation }: any) => {
             {savingPersonalMetrics ? (
               <ActivityIndicator color={themeColors.accent} style={{ marginTop: 12 }} />
             ) : (
-              <TouchableOpacity style={[styles.primaryButton, { marginTop: 10 }]} onPress={handleSavePersonalMetrics}>
-                <Text style={styles.primaryButtonText}>Save Personal Metrics</Text>
-              </TouchableOpacity>
+              <AppButton
+                title="Save Personal Metrics"
+                style={styles.metricSaveButton}
+                onPress={handleSavePersonalMetrics}
+              />
             )}
           </>
         )}
@@ -653,9 +656,7 @@ const SettingsScreen = ({ navigation }: any) => {
         <Text style={styles.title}>Account</Text>
         <Text style={styles.accountEmail}>{user?.email ?? 'No email available'}</Text>
 
-        <TouchableOpacity style={styles.primaryButton} onPress={() => signOut()}>
-          <Text style={styles.primaryButtonText}>Log Out</Text>
-        </TouchableOpacity>
+        <AppButton title="Log Out" onPress={() => signOut()} />
 
         <Text style={styles.section}>Change Password</Text>
         <TextInput
@@ -674,13 +675,9 @@ const SettingsScreen = ({ navigation }: any) => {
           onChangeText={setConfirmPassword}
           placeholderTextColor={themeColors.textMuted}
         />
-        <TouchableOpacity style={styles.secondaryButton} onPress={handleChangePassword}>
-          <Text style={styles.secondaryButtonText}>Update Password</Text>
-        </TouchableOpacity>
+        <AppButton title="Update Password" variant="outlineAccent" onPress={handleChangePassword} />
 
-        <TouchableOpacity style={styles.dangerButton} onPress={handleDeleteAccount}>
-          <Text style={styles.dangerButtonText}>Delete Account</Text>
-        </TouchableOpacity>
+        <AppButton title="Delete Account" variant="danger" style={styles.deleteAccountButton} onPress={handleDeleteAccount} />
       </View>
 
       <View style={styles.card}>
@@ -695,12 +692,11 @@ const SettingsScreen = ({ navigation }: any) => {
         <Text style={styles.aboutLineMuted}>This release is in {APP_INFO.stage}.</Text>
         <Text style={styles.aboutLine}>Developed by {APP_INFO.author}</Text>
 
-        <TouchableOpacity
-          style={styles.secondaryButton}
+        <AppButton
+          title="Send Feedback or Report a Bug"
+          variant="outlineAccent"
           onPress={handleOpenFeedback}
-        >
-          <Text style={styles.secondaryButtonText}>Send Feedback or Report a Bug</Text>
-        </TouchableOpacity>
+        />
       </View>
     </ScrollView>
   );
@@ -821,31 +817,11 @@ const createStyles = (themeColors: typeof colors) =>
       marginBottom: 10,
       
     },
-    primaryButton: {
-      ...getButtonStyles(themeColors).mainButton,
-      flex: 1,
+    metricSaveButton: {
+      marginTop: 10,
     },
-    primaryButtonText: {
-      ...getButtonStyles(themeColors).mainButtonText,
-    },
-    secondaryButton: {
-      borderColor: themeColors.accent,
-      borderWidth: 1,
-      borderRadius: radius.sm,
-      paddingVertical: 12,
-      alignItems: 'center',
-    },
-    secondaryButtonText: {
-      color: themeColors.accent,
-      fontWeight: '700',
-      
-    },
-    dangerButton: {
-      ...getButtonStyles(themeColors).deleteButton,
+    deleteAccountButton: {
       marginTop: 18,
-    },
-    dangerButtonText: {
-      ...getButtonStyles(themeColors).deleteButtonText,
     },
     soundSectionContainer: {
       flexDirection: 'row',

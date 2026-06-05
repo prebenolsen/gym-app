@@ -8,9 +8,10 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, getButtonStyles, radius } from '../theme';
+import { colors, radius } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
 import { useToast } from '../components/ui/AppToastProvider';
+import AppButton from '../components/ui/AppButton';
 
 const FeedbackScreen = ({ navigation }: any) => {
   const { colors: themeColors } = usePreferences();
@@ -56,12 +57,8 @@ const FeedbackScreen = ({ navigation }: any) => {
           />
 
           <View style={styles.actions}>
-            <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-              <Text style={styles.submitButtonText}>Submit</Text>
-            </TouchableOpacity>
+            <AppButton title="Cancel" variant="outline" style={styles.actionButton} onPress={() => navigation.goBack()} />
+            <AppButton title="Submit" style={styles.actionButton} onPress={handleSubmit} />
           </View>
         </View>
       </ScrollView>
@@ -142,25 +139,8 @@ const createStyles = (themeColors: typeof colors) =>
       gap: 10,
       marginTop: 4,
     },
-    cancelButton: {
+    actionButton: {
       flex: 1,
-      borderColor: themeColors.border,
-      borderWidth: 1,
-      borderRadius: radius.sm,
-      paddingVertical: 12,
-      alignItems: 'center',
-      backgroundColor: themeColors.background,
-    },
-    cancelButtonText: {
-      color: themeColors.textMuted,
-      fontWeight: '700',
-    },
-    submitButton: {
-      ...getButtonStyles(themeColors).mainButton,
-      flex: 1,
-    },
-    submitButtonText: {
-      ...getButtonStyles(themeColors).mainButtonText,
     },
   });
 
