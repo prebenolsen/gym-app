@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +21,11 @@ import { colors, radius, shadow } from '../theme';
 import { useApi } from '../hooks/useApi';
 import { usePreferences } from '../context/PreferencesContext';
 import MuscleMapThumb from '../components/MuscleMapThumb';
+import AppButton from '../components/ui/AppButton';
+import ScreenHeader from '../components/ui/ScreenHeader';
+import { useToast } from '../components/ui/AppToastProvider';
+import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
+import { showDeleteConfirmDialog } from '../components/ui/ConfirmDialog';
 
 const TIME_PER_SET_SECONDS = { low: 30, high: 45 };
 const HISTORY_LOOKBACK_MONTHS = 18;
@@ -162,22 +166,16 @@ const ProgramsScreen = ({ navigation }: any) => {
     Record<string, number | null>
   >({});
   const [loading, setLoading] = useState(true);
-  const [showMessage, setShowMessage] = useState(false);
 
   const api = useApi();
+  const { showToast } = useToast();
+  const { showError } = useErrorDialog();
 
   useFocusEffect(
     useCallback(() => {
       fetchPrograms();
     }, []),
   );
-
-  useEffect(() => {
-    if (showMessage) {
-      const timer = setTimeout(() => setShowMessage(false), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [showMessage]);
 
   const fetchPrograms = async () => {
     setLoading(true);
@@ -260,30 +258,32 @@ const ProgramsScreen = ({ navigation }: any) => {
       const nextProgramName = getNextProgramName(programs);
       const newProgram = await api.createProgram({ name: nextProgramName });
       setPrograms([...programs, newProgram]);
-      setShowMessage(true);
+      showToast({
+        type: 'success',
+        duration: 'short',
+        message: 'Program created successfully.',
+      });
     } catch (err) {
       console.error('Failed to create program:', err);
-      Alert.alert('Error', 'Failed to create program');
+      showError({ message: 'Failed to create program' });
     }
   };
 
   const handleDeleteProgram = async (id: string, name: string) => {
-    Alert.alert('Delete Program', `Delete "${name}" and all its workouts?`, [
-      { text: 'Cancel' },
-      {
-        text: 'Delete',
-        onPress: async () => {
-          try {
-            await api.deleteProgram(id);
-            setPrograms(programs.filter((p) => p.id !== id));
-          } catch (err) {
-            console.error('Failed to delete program:', err);
-            Alert.alert('Error', 'Failed to delete program');
-          }
-        },
-        style: 'destructive',
+    showDeleteConfirmDialog(
+      'Delete Program',
+      `Delete "${name}" and all its workouts?`,
+      async () => {
+        try {
+          await api.deleteProgram(id);
+          setPrograms(programs.filter((p) => p.id !== id));
+          showToast({ type: 'success', duration: 'short', message: 'Program deleted.' });
+        } catch (err) {
+          console.error('Failed to delete program:', err);
+          showError({ message: 'Failed to delete program' });
+        }
       },
-    ]);
+    );
   };
 
   if (loading) {
@@ -296,30 +296,20 @@ const ProgramsScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Programs</Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ProgramsCatalog')}
-            style={styles.btnSecondary}
-          >
-            <Text style={styles.btnSecondaryText}>Import</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleCreateProgram} style={styles.btnPrimary}>
-            <Text style={styles.btnText}>+ Create</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {showMessage && (
-        <TouchableOpacity
-          style={styles.notification}
-          onPress={() => setShowMessage(false)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.notificationText}>Program created successfully!</Text>
-        </TouchableOpacity>
-      )}
+      <ScreenHeader
+        title="Programs"
+        rightActions={(
+          <View style={styles.headerActions}>
+            <AppButton
+              title="Import"
+              variant="secondary"
+              size="sm"
+              onPress={() => navigation.navigate('ProgramsCatalog')}
+            />
+            <AppButton title="+ Create" size="sm" onPress={handleCreateProgram} />
+          </View>
+        )}
+      />
 
       <ScrollView
         style={styles.list}
@@ -418,49 +408,9 @@ const createStyles = (themeColors: typeof colors) =>
       flex: 1,
       backgroundColor: themeColors.background,
     },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: 16,
-      backgroundColor: themeColors.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: themeColors.border,
-    },
     headerActions: {
       flexDirection: 'row',
       gap: 8,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: themeColors.textStrong,
-      
-    },
-    btnPrimary: {
-      backgroundColor: themeColors.accent,
-      paddingHorizontal: 12,
-      paddingVertical: 12,
-      borderRadius: radius.sm,
-    },
-    btnSecondary: {
-      backgroundColor: themeColors.accentSoft,
-      paddingHorizontal: 12,
-      paddingVertical: 12,
-      borderRadius: radius.sm,
-      borderWidth: 1,
-      borderColor: themeColors.border,
-    },
-    btnText: {
-      color: '#fff',
-      fontWeight: '600',
-      fontSize: 12,
-      
-    },
-    btnSecondaryText: {
-      color: themeColors.textStrong,
-      fontWeight: '600',
-      fontSize: 12,
     },
     list: {
       flex: 1,
@@ -564,22 +514,6 @@ const createStyles = (themeColors: typeof colors) =>
       fontStyle: 'italic',
       paddingVertical: 4,
       paddingHorizontal: 12,
-      
-    },
-    notification: {
-      backgroundColor: themeColors.success,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      marginHorizontal: 16,
-      marginBottom: 12,
-      marginTop: 8,
-      borderRadius: radius.sm,
-      alignItems: 'center',
-    },
-    notificationText: {
-      color: '#fff',
-      fontWeight: '600',
-      fontSize: 14,
       
     },
   });

@@ -9,6 +9,7 @@ import {
 } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
+import ChipButton from '../components/ui/ChipButton';
 
 const ExercisesScreen = ({ navigation }: any) => {
   const { colors: themeColors } = usePreferences();
@@ -71,31 +72,20 @@ const ExercisesScreen = ({ navigation }: any) => {
             showsHorizontalScrollIndicator={false}
             style={styles.chipsRow}
           >
-            <TouchableOpacity
-              style={[styles.chip, !selectedMuscleGroup && styles.chipActive]}
+            <ChipButton
+              label="All"
+              selected={!selectedMuscleGroup}
+              compact
               onPress={() => setSelectedMuscleGroup(null)}
-            >
-              <Text
-                style={[styles.chipText, !selectedMuscleGroup && styles.chipTextActive]}
-              >
-                All
-              </Text>
-            </TouchableOpacity>
+            />
             {getMuscleGroups().map((group) => (
-              <TouchableOpacity
+              <ChipButton
                 key={group}
-                style={[styles.chip, selectedMuscleGroup === group && styles.chipActive]}
+                label={group}
+                selected={selectedMuscleGroup === group}
+                compact
                 onPress={() => setSelectedMuscleGroup(group)}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    selectedMuscleGroup === group && styles.chipTextActive,
-                  ]}
-                >
-                  {group}
-                </Text>
-              </TouchableOpacity>
+              />
             ))}
           </ScrollView>
         </View>
@@ -108,34 +98,20 @@ const ExercisesScreen = ({ navigation }: any) => {
             showsHorizontalScrollIndicator={false}
             style={styles.chipsRow}
           >
-            <TouchableOpacity
-              style={[styles.chip, selectedEquipment.size === 0 && styles.chipActive]}
+            <ChipButton
+              label="All"
+              selected={selectedEquipment.size === 0}
+              compact
               onPress={() => setSelectedEquipment(new Set())}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  selectedEquipment.size === 0 && styles.chipTextActive,
-                ]}
-              >
-                All
-              </Text>
-            </TouchableOpacity>
+            />
             {getEquipment().map((equip) => (
-              <TouchableOpacity
+              <ChipButton
                 key={equip}
-                style={[styles.chip, selectedEquipment.has(equip) && styles.chipActive]}
+                label={equip}
+                selected={selectedEquipment.has(equip)}
+                compact
                 onPress={() => toggleEquipment(equip)}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    selectedEquipment.has(equip) && styles.chipTextActive,
-                  ]}
-                >
-                  {equip}
-                </Text>
-              </TouchableOpacity>
+              />
             ))}
           </ScrollView>
         </View>
@@ -148,34 +124,20 @@ const ExercisesScreen = ({ navigation }: any) => {
             showsHorizontalScrollIndicator={false}
             style={styles.chipsRow}
           >
-            <TouchableOpacity
-              style={[styles.chip, selectedMovementType.size === 0 && styles.chipActive]}
+            <ChipButton
+              label="All"
+              selected={selectedMovementType.size === 0}
+              compact
               onPress={() => setSelectedMovementType(new Set())}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  selectedMovementType.size === 0 && styles.chipTextActive,
-                ]}
-              >
-                All
-              </Text>
-            </TouchableOpacity>
+            />
             {['compound', 'isolation'].map((type) => (
-              <TouchableOpacity
+              <ChipButton
                 key={type}
-                style={[styles.chip, selectedMovementType.has(type) && styles.chipActive]}
+                label={type.charAt(0).toUpperCase() + type.slice(1)}
+                selected={selectedMovementType.has(type)}
+                compact
                 onPress={() => toggleMovementType(type)}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    selectedMovementType.has(type) && styles.chipTextActive,
-                  ]}
-                >
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                </Text>
-              </TouchableOpacity>
+              />
             ))}
           </ScrollView>
         </View>
@@ -240,29 +202,6 @@ const createStyles = (themeColors: typeof colors) =>
     chipsRow: {
       flexDirection: 'row',
       marginBottom: 8,
-    },
-    chip: {
-      paddingVertical: 6,
-      paddingHorizontal: 12,
-      marginRight: 8,
-      borderWidth: 1.5,
-      borderColor: themeColors.border,
-      backgroundColor: themeColors.surface,
-      borderRadius: 16,
-    },
-    chipActive: {
-      backgroundColor: themeColors.accentSoft,
-      borderColor: themeColors.accent,
-    },
-    chipText: {
-      fontSize: 12,
-      fontWeight: '500',
-      color: themeColors.textMuted,
-      
-    },
-    chipTextActive: {
-      color: themeColors.accent,
-      
     },
     exercisesSection: {
       backgroundColor: themeColors.surface,

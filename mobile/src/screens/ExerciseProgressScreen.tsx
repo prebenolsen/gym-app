@@ -14,6 +14,8 @@ import { LineChart } from 'react-native-gifted-charts';
 import { useApi } from '../hooks/useApi';
 import { usePreferences } from '../context/PreferencesContext';
 import { colors, radius, shadow } from '../theme';
+import ChipButton from '../components/ui/ChipButton';
+import SegmentedControl from '../components/ui/SegmentedControl';
 
 type ViewMode = 'max-weight' | 'total-volume';
 type RangeKey = '2w' | '1m' | '3m' | '6m' | '12m' | 'all';
@@ -151,40 +153,15 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Toggle */}
-        <View style={styles.toggle}>
-          <TouchableOpacity
-            style={[
-              styles.toggleBtn,
-              viewMode === 'max-weight' && styles.toggleBtnActive,
-            ]}
-            onPress={() => setViewMode('max-weight')}
-          >
-            <Text
-              style={[
-                styles.toggleBtnText,
-                viewMode === 'max-weight' && styles.toggleBtnTextActive,
-              ]}
-            >
-              Max Weight
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.toggleBtn,
-              viewMode === 'total-volume' && styles.toggleBtnActive,
-            ]}
-            onPress={() => setViewMode('total-volume')}
-          >
-            <Text
-              style={[
-                styles.toggleBtnText,
-                viewMode === 'total-volume' && styles.toggleBtnTextActive,
-              ]}
-            >
-              Total Volume
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <SegmentedControl
+          style={styles.toggle}
+          options={[
+            { value: 'max-weight', label: 'Max Weight' },
+            { value: 'total-volume', label: 'Total Volume' },
+          ]}
+          selectedValue={viewMode}
+          onChange={setViewMode}
+        />
 
         <View style={styles.rangeSection}>
           <ScrollView
@@ -195,17 +172,13 @@ const ExerciseProgressScreen = ({ route, navigation }: any) => {
             {RANGE_OPTIONS.map((option) => {
               const active = range === option.key;
               return (
-                <TouchableOpacity
+                <ChipButton
                   key={option.key}
-                  style={[styles.rangeChip, active && styles.rangeChipActive]}
+                  label={option.label}
+                  selected={active}
+                  compact
                   onPress={() => setRange(option.key)}
-                >
-                  <Text
-                    style={[styles.rangeChipText, active && styles.rangeChipTextActive]}
-                  >
-                    {option.label}
-                  </Text>
-                </TouchableOpacity>
+                />
               );
             })}
           </ScrollView>
@@ -385,29 +358,7 @@ const createStyles = (themeColors: typeof colors) =>
       textAlign: 'center',
     },
     toggle: {
-      flexDirection: 'row',
-      borderWidth: 1,
-      borderColor: themeColors.border,
-      borderRadius: radius.sm,
-      overflow: 'hidden',
       marginBottom: 16,
-    },
-    toggleBtn: {
-      flex: 1,
-      paddingVertical: 10,
-      alignItems: 'center',
-      backgroundColor: themeColors.surface,
-    },
-    toggleBtnActive: {
-      backgroundColor: themeColors.accent,
-    },
-    toggleBtnText: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: themeColors.textMuted,
-    },
-    toggleBtnTextActive: {
-      color: '#fff',
     },
     rangeSection: {
       marginBottom: 16,
@@ -418,27 +369,6 @@ const createStyles = (themeColors: typeof colors) =>
       alignItems: 'center',
       flexGrow: 1,
       paddingRight: 4,
-    },
-    rangeChip: {
-      borderWidth: 1,
-      borderColor: themeColors.border,
-      backgroundColor: themeColors.surface,
-      borderRadius: radius.pill,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-    },
-    rangeChipActive: {
-      borderColor: themeColors.accent,
-      backgroundColor: themeColors.accent,
-    },
-    rangeChipText: {
-      color: themeColors.textMuted,
-      fontWeight: '700',
-      fontSize: 12,
-      
-    },
-    rangeChipTextActive: {
-      color: '#fff',
     },
     metricsGrid: {
       flexDirection: 'row',

@@ -1,8 +1,9 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { PROGRAM_TEMPLATES, type ProgramTemplate } from '@gym-app/shared';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
+import AppButton from '../components/ui/AppButton';
+import ScreenHeader from '../components/ui/ScreenHeader';
 
 const TIME_PER_SET_SECONDS = { low: 30, high: 45 };
 
@@ -50,17 +51,11 @@ const ProgramsCatalogScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
-        </TouchableOpacity>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Program Templates</Text>
-          <Text style={styles.subtitle}>
-            Choose a template to add all workouts and exercises at once
-          </Text>
-        </View>
-      </View>
+      <ScreenHeader
+        title="Program Templates"
+        subtitle="Choose a template to add all workouts and exercises at once"
+        onBackPress={() => navigation.goBack()}
+      />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {PROGRAM_TEMPLATES.map((template: ProgramTemplate) => {
@@ -104,14 +99,13 @@ const ProgramsCatalogScreen = ({ navigation }: any) => {
                 ))}
               </View>
 
-              <TouchableOpacity
-                style={styles.btnImport}
+              <AppButton
+                title="View & Import Program"
+                style={styles.importButton}
                 onPress={() =>
                   navigation.navigate('ProgramTemplate', { templateId: template.id })
                 }
-              >
-                <Text style={styles.btnImportText}>View &amp; Import Program</Text>
-              </TouchableOpacity>
+              />
             </View>
           );
         })}
@@ -125,28 +119,6 @@ const createStyles = (themeColors: typeof colors) =>
     container: {
       flex: 1,
       backgroundColor: themeColors.background,
-    },
-    header: {
-      backgroundColor: themeColors.surface,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: themeColors.border,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    backBtn: {
-    },
-    title: {
-      fontSize: 22,
-      fontWeight: 'bold',
-      color: themeColors.textStrong,
-      
-    },
-    subtitle: {
-      fontSize: 13,
-      color: themeColors.textMuted,
     },
     content: {
       flex: 1,
@@ -223,17 +195,7 @@ const createStyles = (themeColors: typeof colors) =>
       fontSize: 12,
       color: themeColors.textMuted,
     },
-    btnImport: {
-      backgroundColor: themeColors.accent,
-      borderRadius: radius.sm,
-      padding: 12,
-      alignItems: 'center',
-    },
-    btnImportText: {
-      color: '#fff',
-      fontWeight: '700',
-      fontSize: 14,
-      
+    importButton: {
     },
   });
 

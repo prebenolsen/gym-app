@@ -11,9 +11,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { type Workout, type Exercise, type Program } from '@gym-app/shared';
-import { colors, getButtonStyles, radius, shadow } from '../theme';
+import { colors, radius, shadow } from '../theme';
 import { useApi } from '../hooks/useApi';
 import { usePreferences } from '../context/PreferencesContext';
+import AppButton from '../components/ui/AppButton';
+import ScreenHeader from '../components/ui/ScreenHeader';
+import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
+import { useToast } from '../components/ui/AppToastProvider';
+import { showDeleteConfirmDialog } from '../components/ui/ConfirmDialog';
 
 const PROGRAM_NAME_PATTERN = /^Program\s+\d+$/;
 const TIME_PER_SET_SECONDS = { low: 30, high: 45 };
@@ -63,6 +68,8 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
   const [editName, setEditName] = useState(initialProgramName);
 
   const api = useApi();
+  const { showError } = useErrorDialog();
+  const { showToast } = useToast();
   const resolvedProgramName = (program?.name ?? editName ?? '').trim();
   const showRenameHint = PROGRAM_NAME_PATTERN.test(resolvedProgramName);
 
@@ -121,7 +128,7 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
       setEstimatedDurationByWorkout((prev) => ({ ...prev, [newWorkout.id]: '0m' }));
     } catch (err) {
       console.error('Failed to create workout:', err);
-      Alert.alert('Error', 'Failed to create workout');
+      showError({ message: 'Failed to create workout' });
     }
   };
 
@@ -157,7 +164,7 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
       setEditName(updated.name);
     } catch (err) {
       console.error('Failed to rename program:', err);
-      Alert.alert('Error', 'Failed to rename program');
+      showError({ message: 'Failed to rename program' });
       setEditName(program.name);
     }
   };
@@ -173,29 +180,27 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
       setProgram(updated);
     } catch (err) {
       console.error('Failed to toggle favorite program:', err);
-      Alert.alert('Error', 'Failed to update favorite');
+      showError({ message: 'Failed to update favorite' });
     }
   };
 
   const handleDeleteProgram = () => {
     if (!program) return;
 
-    Alert.alert('Delete Program', `Delete "${program.name}" and all its workouts?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await api.deleteProgram(program.id);
-            navigation.goBack();
-          } catch (err) {
-            console.error('Failed to delete program:', err);
-            Alert.alert('Error', 'Failed to delete program');
-          }
-        },
+    showDeleteConfirmDialog(
+      'Delete Program',
+      `Delete "${program.name}" and all its workouts?`,
+      async () => {
+        try {
+          await api.deleteProgram(program.id);
+          showToast({ type: 'success', duration: 'short', message: 'Program deleted.' });
+          navigation.goBack();
+        } catch (err) {
+          console.error('Failed to delete program:', err);
+          showError({ message: 'Failed to delete program' });
+        }
       },
-    ]);
+    );
   };
 
   const handleReorderWorkouts = async (reorderedWorkouts: Workout[]) => {
@@ -214,7 +219,7 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
     } catch (err) {
       console.error('Failed to reorder workouts:', err);
       setWorkouts(previousWorkouts);
-      Alert.alert('Error', 'Failed to reorder workouts');
+      showError({ message: 'Failed to reorder workouts' });
     }
   };
 
@@ -241,42 +246,40 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
-        </TouchableOpacity>
-        <View style={[styles.titleRow, { flex: 1 }]}>
-          <TouchableOpacity
-            style={styles.favoriteStarButton}
-            onPress={handleToggleFavorite}
-            accessibilityRole="button"
-            accessibilityLabel="Toggle favorite program"
-          >
-            <Text style={styles.favoriteStarText}>
-              {program?.is_favorite_program ? '★' : '☆'}
-            </Text>
-          </TouchableOpacity>
-          {editing ? (
-            <TextInput
-              style={styles.titleInput}
-              value={editName}
-              onChangeText={setEditName}
-              onBlur={handleRenameProgram}
-              autoFocus
-              onSubmitEditing={handleRenameProgram}
-            />
-          ) : (
-            <View style={styles.titleTextGroup}>
-              <Text style={styles.title} onPress={() => setEditing(true)}>
-                {editName}
+      <ScreenHeader
+        onBackPress={() => navigation.goBack()}
+        titleNode={(
+          <View style={styles.titleRow}>
+            <TouchableOpacity
+              style={styles.favoriteStarButton}
+              onPress={handleToggleFavorite}
+              accessibilityRole="button"
+              accessibilityLabel="Toggle favorite program"
+            >
+              <Text style={styles.favoriteStarText}>
+                {program?.is_favorite_program ? '★' : '☆'}
               </Text>
-              {showRenameHint ? (
-                <Text style={styles.renameHint}>Click to rename</Text>
-              ) : null}
-            </View>
-          )}
-        </View>
-      </View>
+            </TouchableOpacity>
+            {editing ? (
+              <TextInput
+                style={styles.titleInput}
+                value={editName}
+                onChangeText={setEditName}
+                onBlur={handleRenameProgram}
+                autoFocus
+                onSubmitEditing={handleRenameProgram}
+              />
+            ) : (
+              <View style={styles.titleTextGroup}>
+                <Text style={styles.title} onPress={() => setEditing(true)}>
+                  {editName}
+                </Text>
+                {showRenameHint ? <Text style={styles.renameHint}>Click to rename</Text> : null}
+              </View>
+            )}
+          </View>
+        )}
+      />
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
@@ -352,16 +355,14 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
           )}
 
           <View style={styles.listFooterActions}>
-            <TouchableOpacity onPress={handleAddWorkout} style={styles.addWorkoutButton}>
-              <Text style={styles.btnText}>+ Add</Text>
-            </TouchableOpacity>
+            <AppButton title="+ Add" onPress={handleAddWorkout} style={styles.addWorkoutButton} />
 
-            <TouchableOpacity
-              style={[styles.deleteButton, styles.deleteButtonInList]}
+            <AppButton
+              title="Delete Program"
+              variant="danger"
               onPress={handleDeleteProgram}
-            >
-              <Text style={styles.deleteButtonText}>Delete Program</Text>
-            </TouchableOpacity>
+              style={styles.deleteButtonInList}
+            />
           </View>
         </ScrollView>
       </View>
@@ -375,21 +376,11 @@ const createStyles = (themeColors: typeof colors) =>
       flex: 1,
       backgroundColor: themeColors.background,
     },
-    header: {
-      backgroundColor: themeColors.surface,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: themeColors.border,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    backButton: {},
     titleRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
+      flex: 1,
     },
     favoriteStarButton: {
       padding: 2,
@@ -428,13 +419,6 @@ const createStyles = (themeColors: typeof colors) =>
       paddingBottom: 8,
       
     },
-    deleteButton: {
-      ...getButtonStyles(themeColors).deleteButton,
-    },
-    
-    deleteButtonText: {
-      ...getButtonStyles(themeColors).deleteButtonText,
-    },
     section: {
       flex: 1,
       padding: 16,
@@ -453,12 +437,8 @@ const createStyles = (themeColors: typeof colors) =>
       
     },
     addWorkoutButton: {
-      ...getButtonStyles(themeColors).mainButton,
       width: '100%',
       marginTop: 8,
-    },
-    btnText: {
-      ...getButtonStyles(themeColors).mainButtonText,
     },
     list: {
       flex: 1,

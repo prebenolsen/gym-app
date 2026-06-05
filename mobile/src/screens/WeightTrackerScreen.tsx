@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   FlatList,
-  Modal,
   ActivityIndicator,
   StyleSheet,
   Switch,
@@ -20,6 +19,10 @@ import { usePreferences } from '../context/PreferencesContext';
 import type { DateFormat } from '../context/PreferencesContext';
 import { useApi } from '../hooks/useApi';
 import { getButtonStyles, radius, shadow } from '../theme';
+import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
+import { useToast } from '../components/ui/AppToastProvider';
+import { showDeleteConfirmDialog } from '../components/ui/ConfirmDialog';
+import ModalSheet from '../components/ui/ModalSheet';
 import type {
   WeightTrackerProfile,
   WeightTrackerEntry,
@@ -388,6 +391,8 @@ export default function WeightTrackerScreen() {
     dateFormat,
   } = usePreferences();
   const api = useApi();
+  const { showError } = useErrorDialog();
+  const { showToast } = useToast();
   const navigation = useNavigation();
   const styles = useMemo(() => createStyles(C), [C]);
   const logDateWheelRef = useRef<FlatList<LogDateOption>>(null);
@@ -1080,7 +1085,7 @@ export default function WeightTrackerScreen() {
 
       setShowLogModal(false);
     } catch (err) {
-      Alert.alert('Error', 'Could not save entry. Please try again.');
+      showError({ message: 'Could not save entry. Please try again.' });
     } finally {
       setSavingLog(false);
     }
@@ -1088,24 +1093,17 @@ export default function WeightTrackerScreen() {
 
   // ─── delete entry ──────────────────────────────────────────
   const handleDeleteEntry = (entry: WeightTrackerEntry) => {
-    Alert.alert(
+    showDeleteConfirmDialog(
       'Delete Entry',
       `Remove the entry for ${dateLabel(entry.entry_date)}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.deleteWeightTrackerEntry(entry.entry_date, selectedGoalId ?? undefined);
-              setEntries((prev) => prev.filter((e) => e.id !== entry.id));
-            } catch {
-              Alert.alert('Error', 'Could not delete entry.');
-            }
-          },
-        },
-      ],
+      async () => {
+        try {
+          await api.deleteWeightTrackerEntry(entry.entry_date, selectedGoalId ?? undefined);
+          setEntries((prev) => prev.filter((e) => e.id !== entry.id));
+        } catch {
+          showError({ message: 'Could not delete entry.' });
+        }
+      },
     );
   };
 
@@ -1120,9 +1118,9 @@ export default function WeightTrackerScreen() {
       });
 
       setProfile(updated);
-      Alert.alert('Saved', 'Your profile has been updated.');
+      showToast({ type: 'success', duration: 'short', message: 'Your profile has been updated.' });
     } catch {
-      Alert.alert('Error', 'Could not save settings.');
+      showError({ message: 'Could not save settings.' });
     } finally {
       setSavingSettings(false);
     }
@@ -1131,29 +1129,23 @@ export default function WeightTrackerScreen() {
 
   // ─── reset / delete all data ───────────────────────────────
   const handleResetTracker = () => {
-    Alert.alert(
+    showDeleteConfirmDialog(
       'Delete All Data',
       'This will permanently delete all your weight entries and profile data. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete Everything',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.resetWeightTracker();
-              setProfile(null);
-              setGoals([]);
-              setSelectedGoalId(null);
-              setEntries([]);
-              setCustomMetricValues([]);
-              (navigation as any).navigate('Home');
-            } catch {
-              Alert.alert('Error', 'Could not reset data. Please try again.');
-            }
-          },
-        },
-      ],
+      async () => {
+        try {
+          await api.resetWeightTracker();
+          setProfile(null);
+          setGoals([]);
+          setSelectedGoalId(null);
+          setEntries([]);
+          setCustomMetricValues([]);
+          (navigation as any).navigate('Home');
+        } catch {
+          showError({ message: 'Could not reset data. Please try again.' });
+        }
+      },
+      'Delete Everything',
     );
   };
 
@@ -1230,7 +1222,7 @@ export default function WeightTrackerScreen() {
       setExportCsvText(csv);
       setShowExportModal(true);
     } catch {
-      Alert.alert('Error', 'Could not export your data. Please try again.');
+      showError({ message: 'Could not export your data. Please try again.' });
     } finally {
       setExportingData(false);
     }
@@ -1250,40 +1242,33 @@ export default function WeightTrackerScreen() {
       );
       setSelectedGoalId(activated.id);
     } catch {
-      Alert.alert('Error', 'Could not switch goal.');
+      showError({ message: 'Could not switch goal.' });
     }
   };
 
   const handleDeleteGoal = (goal: GoalProject) => {
-    Alert.alert(
+    showDeleteConfirmDialog(
       'Delete Goal',
       `Delete this goal? All entries and custom metric values for ${goalTypeLabel(goal.goal_type)} will be removed.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.deleteWeightTrackerGoal(goal.id);
+      async () => {
+        try {
+          await api.deleteWeightTrackerGoal(goal.id);
 
-              const remainingGoals = goals.filter((item) => item.id !== goal.id);
-              const nextSelectedGoalId =
-                selectedGoalId === goal.id
-                  ? remainingGoals.find((item) => item.is_active)?.id ?? remainingGoals[0]?.id ?? null
-                  : selectedGoalId;
+          const remainingGoals = goals.filter((item) => item.id !== goal.id);
+          const nextSelectedGoalId =
+            selectedGoalId === goal.id
+              ? remainingGoals.find((item) => item.is_active)?.id ?? remainingGoals[0]?.id ?? null
+              : selectedGoalId;
 
-              setGoals(remainingGoals);
-              setSelectedGoalId(nextSelectedGoalId);
-              setEntries((prev) => prev.filter((entry) => entry.goal_id !== goal.id));
-              setCustomMetricValues((prev) => prev.filter((value) => value.goal_id !== goal.id));
-              setShowGoalDropdown(false);
-            } catch {
-              Alert.alert('Error', 'Could not delete goal.');
-            }
-          },
-        },
-      ],
+          setGoals(remainingGoals);
+          setSelectedGoalId(nextSelectedGoalId);
+          setEntries((prev) => prev.filter((entry) => entry.goal_id !== goal.id));
+          setCustomMetricValues((prev) => prev.filter((value) => value.goal_id !== goal.id));
+          setShowGoalDropdown(false);
+        } catch {
+          showError({ message: 'Could not delete goal.' });
+        }
+      },
     );
   };
 
@@ -1312,7 +1297,7 @@ export default function WeightTrackerScreen() {
       setShowNewGoalModal(false);
       setShowGoalDropdown(false);
     } catch {
-      Alert.alert('Error', 'Could not start a new goal.');
+      showError({ message: 'Could not start a new goal.' });
     } finally {
       setCreatingGoal(false);
     }
@@ -1393,7 +1378,7 @@ export default function WeightTrackerScreen() {
       seedSettingsMirrors(saved, goal);
       setView('main');
     } catch {
-      Alert.alert('Error', 'Could not save profile. Please try again.');
+      showError({ message: 'Could not save profile. Please try again.' });
     } finally {
       setObSaving(false);
     }
@@ -1548,7 +1533,7 @@ export default function WeightTrackerScreen() {
               value={val}
               onValueChange={(v) => (set as (v: boolean) => void)(v)}
               trackColor={{ true: C.accent }}
-              thumbColor="#fff"
+              thumbColor={C.switchThumb}
             />
           </View>
         ))}
@@ -2405,7 +2390,7 @@ export default function WeightTrackerScreen() {
                     value={val}
                     onValueChange={(v) => (set as (v: boolean) => void)(v)}
                     trackColor={{ true: C.accent }}
-                    thumbColor="#fff"
+                    thumbColor={C.switchThumb}
                   />
                 </View>
               ))}
@@ -2422,22 +2407,20 @@ export default function WeightTrackerScreen() {
                   </View>
                   <TouchableOpacity
                     onPress={() => {
-                      Alert.alert('Remove Metric', `Remove "${m.name}"? All logged values for this metric will be deleted.`, [
-                        { text: 'Cancel', style: 'cancel' },
-                        {
-                          text: 'Remove',
-                          style: 'destructive',
-                          onPress: async () => {
-                            try {
-                              await api.deleteCustomMetric(m.id);
-                              setCustomMetrics((prev) => prev.filter((x) => x.id !== m.id));
-                              setCustomMetricValues((prev) => prev.filter((v) => v.metric_id !== m.id));
-                            } catch {
-                              Alert.alert('Error', 'Could not remove metric.');
-                            }
-                          },
+                      showDeleteConfirmDialog(
+                        'Remove Metric',
+                        `Remove "${m.name}"? All logged values for this metric will be deleted.`,
+                        async () => {
+                          try {
+                            await api.deleteCustomMetric(m.id);
+                            setCustomMetrics((prev) => prev.filter((x) => x.id !== m.id));
+                            setCustomMetricValues((prev) => prev.filter((v) => v.metric_id !== m.id));
+                          } catch {
+                            showError({ message: 'Could not remove metric.' });
+                          }
                         },
-                      ]);
+                        'Remove',
+                      );
                     }}
                   >
                     <Ionicons name="trash-outline" size={16} color={C.textMuted} />
@@ -2529,22 +2512,8 @@ export default function WeightTrackerScreen() {
     };
 
     return (
-      <Modal
-        visible={showLogModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowLogModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Log Entry</Text>
-              <TouchableOpacity onPress={() => setShowLogModal(false)}>
-                <Ionicons name="close" size={24} color={C.textMuted} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ModalSheet visible={showLogModal} title="Log Entry" onClose={() => setShowLogModal(false)}>
+        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
               {/* Date picker */}
               <Text style={styles.fieldLabel}>Date</Text>
               <View style={styles.dateWheelWrap}>
@@ -2663,7 +2632,7 @@ export default function WeightTrackerScreen() {
                         value={(logCustomValues[m.id] as boolean) ?? false}
                         onValueChange={(v) => setLogCustomValues((prev) => ({ ...prev, [m.id]: v }))}
                         trackColor={{ true: C.accent }}
-                        thumbColor="#fff"
+                        thumbColor={C.switchThumb}
                       />
                     </View>
                   ) : (
@@ -2700,15 +2669,13 @@ export default function WeightTrackerScreen() {
                         }
                       }}
                     >
-                      <Text style={{ color: '#e57373', fontSize: 14 }}>Delete this entry</Text>
+                      <Text style={{ color: C.danger, fontSize: 14 }}>Delete this entry</Text>
                     </TouchableOpacity>
                   )}
                 </>
               )}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+        </ScrollView>
+      </ModalSheet>
     );
   }
 
@@ -2726,27 +2693,18 @@ export default function WeightTrackerScreen() {
         setShowAddMetricModal(false);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Could not create metric.';
-        Alert.alert('Error', msg);
+        showError({ message: msg });
       } finally {
         setSavingNewMetric(false);
       }
     };
 
     return (
-      <Modal
+      <ModalSheet
         visible={showAddMetricModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowAddMetricModal(false)}
+        title="New Custom Metric"
+        onClose={() => setShowAddMetricModal(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>New Custom Metric</Text>
-              <TouchableOpacity onPress={() => setShowAddMetricModal(false)}>
-                <Ionicons name="close" size={24} color={C.textMuted} />
-              </TouchableOpacity>
-            </View>
 
             <Text style={styles.fieldLabel}>Metric Name</Text>
             <TextInput
@@ -2777,35 +2735,24 @@ export default function WeightTrackerScreen() {
               ))}
             </View>
 
-            {savingNewMetric ? (
-              <ActivityIndicator color={C.accent} style={{ marginTop: 16 }} />
-            ) : (
-              <TouchableOpacity style={[styles.primaryBtn, { marginTop: 16 }]} onPress={handleCreate}>
-                <Text style={styles.primaryBtnText}>Create Metric</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-      </Modal>
+        {savingNewMetric ? (
+          <ActivityIndicator color={C.accent} style={{ marginTop: 16 }} />
+        ) : (
+          <TouchableOpacity style={[styles.primaryBtn, { marginTop: 16 }]} onPress={handleCreate}>
+            <Text style={styles.primaryBtnText}>Create Metric</Text>
+          </TouchableOpacity>
+        )}
+      </ModalSheet>
     );
   }
 
   function renderNewGoalModal() {
     return (
-      <Modal
+      <ModalSheet
         visible={showNewGoalModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowNewGoalModal(false)}
+        title="Start New Goal"
+        onClose={() => setShowNewGoalModal(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Start New Goal</Text>
-              <TouchableOpacity onPress={() => setShowNewGoalModal(false)}>
-                <Ionicons name="close" size={24} color={C.textMuted} />
-              </TouchableOpacity>
-            </View>
 
             <Text style={styles.fieldLabel}>Goal</Text>
             <View style={styles.pillRow}>
@@ -2843,35 +2790,24 @@ export default function WeightTrackerScreen() {
               </>
             )}
 
-            {creatingGoal ? (
-              <ActivityIndicator color={C.accent} style={{ marginTop: 16 }} />
-            ) : (
-              <TouchableOpacity style={[styles.primaryBtn, { marginTop: 12 }]} onPress={handleCreateNewGoal}>
-                <Text style={styles.primaryBtnText}>Start New Goal</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-      </Modal>
+        {creatingGoal ? (
+          <ActivityIndicator color={C.accent} style={{ marginTop: 16 }} />
+        ) : (
+          <TouchableOpacity style={[styles.primaryBtn, { marginTop: 12 }]} onPress={handleCreateNewGoal}>
+            <Text style={styles.primaryBtnText}>Start New Goal</Text>
+          </TouchableOpacity>
+        )}
+      </ModalSheet>
     );
   }
 
   function renderExportModal() {
     return (
-      <Modal
+      <ModalSheet
         visible={showExportModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowExportModal(false)}
+        title="Export My Data"
+        onClose={() => setShowExportModal(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Export My Data</Text>
-              <TouchableOpacity onPress={() => setShowExportModal(false)}>
-                <Ionicons name="close" size={24} color={C.textMuted} />
-              </TouchableOpacity>
-            </View>
 
             <Text style={styles.formulaNote}>
               Tap inside the field, then use Select All and Copy on your phone.
@@ -2889,15 +2825,13 @@ export default function WeightTrackerScreen() {
               </ScrollView>
             </View>
 
-            <TouchableOpacity
-              style={[styles.primaryBtn, { marginTop: 12 }]}
-              onPress={() => setShowExportModal(false)}
-            >
-              <Text style={styles.primaryBtnText}>Done</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        <TouchableOpacity
+          style={[styles.primaryBtn, { marginTop: 12 }]}
+          onPress={() => setShowExportModal(false)}
+        >
+          <Text style={styles.primaryBtnText}>Done</Text>
+        </TouchableOpacity>
+      </ModalSheet>
     );
   }
 }
@@ -2940,7 +2874,7 @@ const createStyles = (C: ReturnType<typeof usePreferences>['colors']) =>
       gap: 6,
     },
     logBtnText: {
-      color: '#fff',
+      color: C.textOnAccent,
       fontWeight: '600',
       fontSize: 14,
     },
@@ -3487,29 +3421,6 @@ const createStyles = (C: ReturnType<typeof usePreferences>['colors']) =>
     },
 
     // ── Log modal ──
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: '#00000066',
-      justifyContent: 'flex-end',
-    },
-    modalSheet: {
-      backgroundColor: C.background,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      padding: 20,
-      maxHeight: '90%',
-    },
-    modalHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 16,
-    },
-    modalTitle: {
-      fontSize: 18,
-      fontWeight: '700',
-      color: C.textStrong,
-    },
     exportInput: {
       minHeight: 220,
       maxHeight: 360,

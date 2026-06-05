@@ -18,6 +18,9 @@ import { usePreferences } from '../context/PreferencesContext';
 import { useApi } from '../hooks/useApi';
 import { radius, shadow } from '../theme';
 import type { WeightTrackerGender, WeightTrackerGoal } from '@gym-app/shared';
+import AppButton from '../components/ui/AppButton';
+import ChipButton from '../components/ui/ChipButton';
+import SegmentedControl from '../components/ui/SegmentedControl';
 
 type UnitSystem = 'metric' | 'us';
 type AgeInputMode = 'birthdate' | 'age';
@@ -286,9 +289,7 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
                 <Text style={styles.welcomeTitle}>Welcome</Text>
                 <Text style={styles.welcomeSubtitle}>Let's get started</Text>
 
-                <TouchableOpacity style={[styles.primaryButton, styles.welcomeButton]} onPress={() => goToStep(1)}>
-                  <Text style={styles.primaryButtonText}>Get started</Text>
-                </TouchableOpacity>
+                <AppButton title="Get started" style={styles.welcomeButton} onPress={() => goToStep(1)} />
               </View>
             </View>
 
@@ -300,43 +301,29 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
                 </Text>
 
                 <Text style={styles.label}>Units</Text>
-                <View style={styles.segmentRow}>
-                  <TouchableOpacity
-                    style={[styles.segment, unitSystem === 'metric' && styles.segmentActive]}
-                    onPress={() => setUnitSystem('metric')}
-                  >
-                    <Text style={[styles.segmentText, unitSystem === 'metric' && styles.segmentTextActive]}>
-                      Metric (kg · cm)
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.segment, unitSystem === 'us' && styles.segmentActive]}
-                    onPress={() => setUnitSystem('us')}
-                  >
-                    <Text style={[styles.segmentText, unitSystem === 'us' && styles.segmentTextActive]}>
-                      US Units (lb · ft)
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                <SegmentedControl
+                  style={styles.segmentedRow}
+                  options={[
+                    { value: 'metric', label: 'Metric (kg · cm)' },
+                    { value: 'us', label: 'US Units (lb · ft)' },
+                  ]}
+                  selectedValue={unitSystem}
+                  onChange={setUnitSystem}
+                />
                 <Text style={styles.helperText}>
                   Metric uses kilograms/centimeters. US Units uses pounds/feet.
                 </Text>
 
                 <Text style={styles.label}>Birthdate or age</Text>
-                <View style={styles.segmentRow}>
-                  <TouchableOpacity
-                    style={[styles.segment, ageMode === 'birthdate' && styles.segmentActive]}
-                    onPress={() => setAgeMode('birthdate')}
-                  >
-                    <Text style={[styles.segmentText, ageMode === 'birthdate' && styles.segmentTextActive]}>Birthdate</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.segment, ageMode === 'age' && styles.segmentActive]}
-                    onPress={() => setAgeMode('age')}
-                  >
-                    <Text style={[styles.segmentText, ageMode === 'age' && styles.segmentTextActive]}>Age</Text>
-                  </TouchableOpacity>
-                </View>
+                <SegmentedControl
+                  style={styles.segmentedRow}
+                  options={[
+                    { value: 'birthdate', label: 'Birthdate' },
+                    { value: 'age', label: 'Age' },
+                  ]}
+                  selectedValue={ageMode}
+                  onChange={setAgeMode}
+                />
 
                 {ageMode === 'birthdate' ? (
                   <View style={styles.inputShell}>
@@ -363,15 +350,12 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
                 <Text style={styles.label}>Gender</Text>
                 <View style={styles.segmentRow}>
                   {(['male', 'female', 'other'] as WeightTrackerGender[]).map((option) => (
-                    <TouchableOpacity
+                    <ChipButton
                       key={option}
-                      style={[styles.segment, gender === option && styles.segmentActive]}
+                      label={option.charAt(0).toUpperCase() + option.slice(1)}
+                      selected={gender === option}
                       onPress={() => setGender(gender === option ? null : option)}
-                    >
-                      <Text style={[styles.segmentText, gender === option && styles.segmentTextActive]}>
-                        {option.charAt(0).toUpperCase() + option.slice(1)}
-                      </Text>
-                    </TouchableOpacity>
+                    />
                   ))}
                 </View>
 
@@ -400,12 +384,13 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
                 </View>
 
                 <View style={styles.buttonRow}>
-                  <TouchableOpacity style={styles.secondaryButton} onPress={() => goToStep(0)}>
-                    <Text style={styles.secondaryButtonText}>Back</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.primaryButton} onPress={handleNextFromAboutYou}>
-                    <Text style={styles.primaryButtonText}>Next</Text>
-                  </TouchableOpacity>
+                  <AppButton
+                    title="Back"
+                    variant="secondary"
+                    style={styles.rowButton}
+                    onPress={() => goToStep(0)}
+                  />
+                  <AppButton title="Next" style={styles.rowButton} onPress={handleNextFromAboutYou} />
                 </View>
               </View>
             </View>
@@ -436,12 +421,13 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
                 ))}
 
                 <View style={styles.buttonRow}>
-                  <TouchableOpacity style={styles.secondaryButton} onPress={() => goToStep(1)}>
-                    <Text style={styles.secondaryButtonText}>Back</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.primaryButton} onPress={() => goToStep(3)}>
-                    <Text style={styles.primaryButtonText}>Next</Text>
-                  </TouchableOpacity>
+                  <AppButton
+                    title="Back"
+                    variant="secondary"
+                    style={styles.rowButton}
+                    onPress={() => goToStep(1)}
+                  />
+                  <AppButton title="Next" style={styles.rowButton} onPress={() => goToStep(3)} />
                 </View>
               </View>
             </View>
@@ -466,12 +452,17 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
                   <ActivityIndicator color={themeColors.accent} style={styles.savingIndicator} />
                 ) : (
                   <View style={styles.buttonRow}>
-                    <TouchableOpacity style={styles.secondaryButton} onPress={() => goToStep(2)}>
-                      <Text style={styles.secondaryButtonText}>Back</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.primaryButton} onPress={handleFinish}>
-                      <Text style={styles.primaryButtonText}>Go to dashboard</Text>
-                    </TouchableOpacity>
+                    <AppButton
+                      title="Back"
+                      variant="secondary"
+                      style={styles.rowButton}
+                      onPress={() => goToStep(2)}
+                    />
+                    <AppButton
+                      title="Go to dashboard"
+                      style={styles.rowButton}
+                      onPress={handleFinish}
+                    />
                   </View>
                 )}
               </View>
@@ -617,58 +608,16 @@ const createStyles = (themeColors: ReturnType<typeof usePreferences>['colors']) 
       gap: 8,
       marginBottom: 2,
     },
-    segment: {
-      borderWidth: 1,
-      borderColor: themeColors.border,
-      borderRadius: radius.sm,
-      paddingHorizontal: 11,
-      paddingVertical: 8,
-      backgroundColor: themeColors.background,
-    },
-    segmentActive: {
-      borderColor: themeColors.accent,
-      backgroundColor: themeColors.accentSoft,
-    },
-    segmentText: {
-      color: themeColors.textMuted,
-      fontWeight: '600',
-      fontSize: 13,
-    },
-    segmentTextActive: {
-      color: themeColors.accent,
+    segmentedRow: {
+      marginBottom: 2,
     },
     buttonRow: {
       flexDirection: 'row',
       gap: 10,
       marginTop: 10,
     },
-    primaryButton: {
+    rowButton: {
       flex: 1,
-      backgroundColor: themeColors.accent,
-      borderRadius: radius.sm,
-      paddingVertical: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: 44,
-    },
-    primaryButtonText: {
-      color: themeColors.textOnAccent,
-      fontWeight: '700',
-    },
-    secondaryButton: {
-      flex: 1,
-      borderWidth: 1,
-      borderColor: themeColors.border,
-      borderRadius: radius.sm,
-      paddingVertical: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: 44,
-      backgroundColor: themeColors.surface,
-    },
-    secondaryButtonText: {
-      color: themeColors.textStrong,
-      fontWeight: '700',
     },
     goalCard: {
       borderWidth: 1,

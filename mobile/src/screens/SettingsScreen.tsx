@@ -18,6 +18,9 @@ import { useApi } from '../hooks/useApi';
 import { colors, getButtonStyles, radius, shadow } from '../theme';
 import BrandLogo from '../components/BrandLogo';
 import { APP_INFO } from '../constants/appInfo';
+import { useToast } from '../components/ui/AppToastProvider';
+import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
+import { showDeleteConfirmDialog } from '../components/ui/ConfirmDialog';
 import {
   COMPLETION_SOUNDS,
   COUNTDOWN_SOUNDS,
@@ -26,6 +29,8 @@ import {
   playSoundById,
 } from '../lib/restTimerSounds';
 import type { DateFormat } from '../context/PreferencesContext';
+import ChipButton from '../components/ui/ChipButton';
+import SegmentedControl from '../components/ui/SegmentedControl';
 
 const DATE_FORMAT_OPTIONS: ReadonlyArray<{ key: DateFormat; label: string }> = [
   { key: 'eu', label: 'DD/MM/YYYY' },
@@ -146,6 +151,8 @@ const SettingsScreen = () => {
   } = usePreferences();
   const api = useApi();
   const styles = createStyles(themeColors);
+  const { showToast } = useToast();
+  const { showError } = useErrorDialog();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [completionSoundOpen, setCompletionSoundOpen] = useState(false);
@@ -242,9 +249,9 @@ const SettingsScreen = () => {
         birthdate: normalizedBirthdate,
         gender: personalGender,
       });
-      Alert.alert('Saved', 'Personal metrics were updated.');
+      showToast({ type: 'success', duration: 'short', message: 'Personal metrics were updated.' });
     } catch {
-      Alert.alert('Error', 'Could not save personal metrics.');
+      showError({ message: 'Could not save personal metrics.' });
     } finally {
       setSavingPersonalMetrics(false);
     }
@@ -262,33 +269,29 @@ const SettingsScreen = () => {
 
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) {
-      Alert.alert('Error', error.message);
+      showError({ message: error.message });
       return;
     }
 
     setNewPassword('');
     setConfirmPassword('');
-    Alert.alert('Success', 'Password updated.');
+    showToast({ type: 'success', duration: 'short', message: 'Password updated.' });
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert('Delete account', 'Delete your account and all data permanently?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await api.deleteAccount();
-            await signOut();
-          } catch (err) {
-            const message =
-              err instanceof Error ? err.message : 'Failed to delete account';
-            Alert.alert('Error', message);
-          }
-        },
+    showDeleteConfirmDialog(
+      'Delete account',
+      'Delete your account and all data permanently?',
+      async () => {
+        try {
+          await api.deleteAccount();
+          await signOut();
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Failed to delete account';
+          showError({ message });
+        }
       },
-    ]);
+    );
   };
 
   const handleOpenFeedback = () => {
@@ -307,7 +310,7 @@ const SettingsScreen = () => {
     setFeedbackSubmitted(true);
     setShowFeedbackForm(false);
     setFeedbackText('');
-    Alert.alert('Thanks!', 'Your feedback has been recorded.');
+    showToast({ type: 'success', duration: 'short', message: 'Thanks! Your feedback has been recorded.' });
   };
 
   return (
@@ -330,68 +333,41 @@ const SettingsScreen = () => {
 
         <Text style={styles.section}>Accent Color</Text>
         <View style={styles.chipRow}>
-          <TouchableOpacity
-            style={[styles.chip, accent === 'auburn' && styles.chipActive]}
+          <ChipButton
+            label="Auburn"
+            selected={accent === 'auburn'}
             onPress={() => setAccent('auburn')}
-          >
-            <Text style={[styles.chipText, accent === 'auburn' && styles.chipTextActive]}>
-              Auburn
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.chip, accent === 'emerald' && styles.chipActive]}
+          />
+          <ChipButton
+            label="Emerald"
+            selected={accent === 'emerald'}
             onPress={() => setAccent('emerald')}
-          >
-            <Text
-              style={[styles.chipText, accent === 'emerald' && styles.chipTextActive]}
-            >
-              Emerald
-            </Text>
-          </TouchableOpacity>
+          />
         </View>
 
         <Text style={styles.section}>Unit System</Text>
-        <View style={styles.chipRow}>
-          <TouchableOpacity
-            style={[styles.chip, unit === 'kg' && styles.chipActive]}
-            onPress={() => setUnit('kg')}
-          >
-            <Text style={[styles.chipText, unit === 'kg' && styles.chipTextActive]}>
-              Metric (kg · cm)
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.chip, unit === 'lb' && styles.chipActive]}
-            onPress={() => setUnit('lb')}
-          >
-            <Text style={[styles.chipText, unit === 'lb' && styles.chipTextActive]}>
-              US Units (lb · ft)
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <SegmentedControl
+          style={styles.unitControl}
+          options={[
+            { value: 'kg', label: 'Metric (kg · cm)' },
+            { value: 'lb', label: 'US Units (lb · ft)' },
+          ]}
+          selectedValue={unit}
+          onChange={setUnit}
+          compact
+        />
 
         <Text style={styles.section}>Date Format</Text>
-        <View style={styles.dateFormatTileRow}>
-          {DATE_FORMAT_OPTIONS.map((option) => (
-            <TouchableOpacity
-              key={option.key}
-              style={[
-                styles.dateFormatTile,
-                dateFormat === option.key && styles.dateFormatTileActive,
-              ]}
-              onPress={() => setDateFormat(option.key)}
-            >
-              <Text
-                style={[
-                  styles.dateFormatTileText,
-                  dateFormat === option.key && styles.dateFormatTileTextActive,
-                ]}
-              >
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <SegmentedControl
+          style={styles.dateFormatControl}
+          options={DATE_FORMAT_OPTIONS.map((option) => ({
+            value: option.key,
+            label: option.label,
+          }))}
+          selectedValue={dateFormat}
+          onChange={setDateFormat}
+          compact
+        />
 
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
@@ -438,22 +414,16 @@ const SettingsScreen = () => {
             />
 
             <Text style={styles.section}>Age / Birthdate</Text>
-            <View style={styles.ageModeRow}>
-              <TouchableOpacity
-                style={[styles.chip, personalAgeMode === 'birthdate' && styles.chipActive]}
-                onPress={() => setPersonalAgeMode('birthdate')}
-              >
-                <Text style={[styles.chipText, personalAgeMode === 'birthdate' && styles.chipTextActive]}>
-                  Birthdate
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.chip, personalAgeMode === 'age' && styles.chipActive]}
-                onPress={() => setPersonalAgeMode('age')}
-              >
-                <Text style={[styles.chipText, personalAgeMode === 'age' && styles.chipTextActive]}>Age</Text>
-              </TouchableOpacity>
-            </View>
+            <SegmentedControl
+              style={styles.ageModeRow}
+              options={[
+                { value: 'birthdate', label: 'Birthdate' },
+                { value: 'age', label: 'Age' },
+              ]}
+              selectedValue={personalAgeMode}
+              onChange={setPersonalAgeMode}
+              compact
+            />
 
             {personalAgeMode === 'age' ? (
               <TextInput
@@ -479,15 +449,12 @@ const SettingsScreen = () => {
             <Text style={styles.section}>Gender</Text>
             <View style={styles.chipRow}>
               {(['male', 'female', 'other'] as WeightTrackerGender[]).map((gender) => (
-                <TouchableOpacity
+                <ChipButton
                   key={gender}
-                  style={[styles.chip, personalGender === gender && styles.chipActive]}
+                  label={gender.charAt(0).toUpperCase() + gender.slice(1)}
+                  selected={personalGender === gender}
                   onPress={() => setPersonalGender(personalGender === gender ? null : gender)}
-                >
-                  <Text style={[styles.chipText, personalGender === gender && styles.chipTextActive]}>
-                    {gender.charAt(0).toUpperCase() + gender.slice(1)}
-                  </Text>
-                </TouchableOpacity>
+                />
               ))}
             </View>
 
@@ -898,57 +865,13 @@ const createStyles = (themeColors: typeof colors) =>
       flexDirection: 'row',
       gap: 10,
     },
-    chip: {
-      borderWidth: 1,
-      borderColor: themeColors.border,
-      backgroundColor: themeColors.background,
-      borderRadius: radius.pill,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-    },
-    chipActive: {
-      borderColor: themeColors.accent,
-      backgroundColor: themeColors.accentSoft,
-    },
-    chipText: {
-      color: themeColors.textMuted,
-      fontWeight: '700',
-      
-    },
-    chipTextActive: {
-      color: themeColors.accent,
-    },
-    dateFormatTileRow: {
-      flexDirection: 'row',
-      gap: 8,
+    unitControl: {
       marginBottom: 8,
     },
-    dateFormatTile: {
-      flex: 1,
-      borderWidth: 1,
-      borderColor: themeColors.border,
-      borderRadius: radius.md,
-      paddingVertical: 12,
-      paddingHorizontal: 8,
-      alignItems: 'center',
-      backgroundColor: themeColors.background,
-    },
-    dateFormatTileActive: {
-      borderColor: themeColors.accent,
-      backgroundColor: themeColors.accentSoft,
-    },
-    dateFormatTileText: {
-      color: themeColors.textMuted,
-      fontWeight: '700',
-      fontSize: 12,
-      textAlign: 'center',
-    },
-    dateFormatTileTextActive: {
-      color: themeColors.accent,
+    dateFormatControl: {
+      marginBottom: 8,
     },
     ageModeRow: {
-      flexDirection: 'row',
-      gap: 10,
       marginBottom: 10,
     },
     input: {

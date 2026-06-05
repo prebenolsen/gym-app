@@ -3,22 +3,25 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { WORKOUT_TEMPLATES, type WorkoutTemplate } from '@gym-app/shared';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
+import AppButton from '../components/ui/AppButton';
+import ScreenHeader from '../components/ui/ScreenHeader';
+import { useToast } from '../components/ui/AppToastProvider';
+import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
 
 const WorkoutsCatalogScreen = ({ route, navigation }: any) => {
   const { programId } = route.params;
   const { colors: themeColors } = usePreferences();
   const styles = createStyles(themeColors);
   const api = useApi();
+  const { showToast } = useToast();
+  const { showError } = useErrorDialog();
 
   const [importing, setImporting] = useState<string | null>(null);
 
@@ -36,10 +39,14 @@ const WorkoutsCatalogScreen = ({ route, navigation }: any) => {
     setImporting(template.id);
     try {
       await api.createWorkoutWithExercises(programId, template);
-      Alert.alert('Success', `"${template.name}" has been added to your program!`);
+      showToast({
+        type: 'success',
+        duration: 'short',
+        message: `"${template.name}" has been added to your program!`,
+      });
     } catch (err) {
       console.error('Failed to import template:', err);
-      Alert.alert('Error', 'Failed to import workout template. Please try again.');
+      showError({ message: 'Failed to import workout template. Please try again.' });
     } finally {
       setImporting(null);
     }
@@ -47,15 +54,11 @@ const WorkoutsCatalogScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Workout Templates</Text>
-        <Text style={styles.subtitle}>
-          Choose a workout template to add to your program
-        </Text>
-      </View>
+      <ScreenHeader
+        title="Workout Templates"
+        subtitle="Choose a workout template to add to your program"
+        onBackPress={() => navigation.goBack()}
+      />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {WORKOUT_TEMPLATES.map((template: WorkoutTemplate) => (
@@ -85,17 +88,13 @@ const WorkoutsCatalogScreen = ({ route, navigation }: any) => {
               </View>
             ))}
 
-            <TouchableOpacity
-              style={[styles.btnImport, importing !== null && styles.btnImportDisabled]}
+            <AppButton
+              title="Import Template"
+              style={styles.importButton}
               onPress={() => handleImportTemplate(template)}
+              loading={importing === template.id}
               disabled={importing !== null}
-            >
-              {importing === template.id ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.btnImportText}>Import Template</Text>
-              )}
-            </TouchableOpacity>
+            />
           </View>
         ))}
       </ScrollView>
@@ -108,27 +107,6 @@ const createStyles = (themeColors: typeof colors) =>
     container: {
       flex: 1,
       backgroundColor: themeColors.background,
-    },
-    header: {
-      backgroundColor: themeColors.surface,
-      padding: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: themeColors.border,
-      gap: 4,
-    },
-    backButton: {
-      alignSelf: 'flex-start',
-      marginBottom: 8,
-    },
-    title: {
-      fontSize: 22,
-      fontWeight: 'bold',
-      color: themeColors.textStrong,
-      
-    },
-    subtitle: {
-      fontSize: 13,
-      color: themeColors.textMuted,
     },
     content: {
       flex: 1,
@@ -210,21 +188,8 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.accent,
       fontWeight: '600',
     },
-    btnImport: {
-      backgroundColor: themeColors.accent,
-      borderRadius: radius.sm,
-      padding: 12,
-      alignItems: 'center',
+    importButton: {
       marginTop: 14,
-    },
-    btnImportDisabled: {
-      opacity: 0.6,
-    },
-    btnImportText: {
-      color: '#fff',
-      fontWeight: '700',
-      fontSize: 14,
-      
     },
     errorText: {
       color: themeColors.textStrong,

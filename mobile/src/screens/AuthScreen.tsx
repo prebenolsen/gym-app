@@ -7,7 +7,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   Alert,
   ImageBackground,
 } from 'react-native';
@@ -16,6 +15,9 @@ import { useAuth } from '../context/AuthContext';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
 import BrandLogo from '../components/BrandLogo';
+import AppButton from '../components/ui/AppButton';
+import { useToast } from '../components/ui/AppToastProvider';
+import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
 
 type Mode = 'login' | 'signup' | 'forgot';
 
@@ -23,6 +25,8 @@ const AuthScreen = () => {
   const { colors: themeColors } = usePreferences();
   const styles = createStyles(themeColors);
   const { signIn, signUp } = useAuth();
+  const { showToast } = useToast();
+  const { showError } = useErrorDialog();
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -42,14 +46,16 @@ const AuthScreen = () => {
       try {
         const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail);
         if (error) throw error;
-        Alert.alert(
-          'Check your email',
-          'If this email exists, a reset link has been sent.',
-        );
+        showToast({
+          type: 'info',
+          duration: 'long',
+          title: 'Check your email',
+          message: 'If this email exists, a reset link has been sent.',
+        });
         setMode('login');
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to send reset email';
-        Alert.alert('Error', message);
+        showError({ message });
       } finally {
         setLoading(false);
       }
@@ -78,15 +84,17 @@ const AuthScreen = () => {
         await signIn(normalizedEmail, password);
       } else {
         await signUp(normalizedEmail, password);
-        Alert.alert(
-          'Account created',
-          'Your account was created. If email confirmation is enabled, please verify your email.',
-        );
+        showToast({
+          type: 'success',
+          duration: 'long',
+          title: 'Account created',
+          message: 'If email confirmation is enabled, please verify your email.',
+        });
         setMode('login');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Authentication failed';
-      Alert.alert('Error', message);
+      showError({ message });
     } finally {
       setLoading(false);
     }
@@ -149,23 +157,18 @@ const AuthScreen = () => {
             />
           )}
 
-          <TouchableOpacity
-            style={[styles.primaryButton, loading && styles.disabledButton]}
-            disabled={loading}
+          <AppButton
+            title={
+              mode === 'login'
+                ? 'Sign In'
+                : mode === 'signup'
+                  ? 'Create Account'
+                  : 'Send Reset Email'
+            }
             onPress={handleSubmit}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.primaryButtonText}>
-                {mode === 'login'
-                  ? 'Sign In'
-                  : mode === 'signup'
-                    ? 'Create Account'
-                    : 'Send Reset Email'}
-              </Text>
-            )}
-          </TouchableOpacity>
+            loading={loading}
+            style={styles.primaryActionButton}
+          />
 
           <View style={styles.links}>
             {mode !== 'login' && (
@@ -234,21 +237,8 @@ const createStyles = (themeColors: typeof colors) =>
       paddingVertical: 10,
       marginBottom: 10,
     },
-    primaryButton: {
-      backgroundColor: themeColors.accent,
-      borderRadius: radius.sm,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 12,
+    primaryActionButton: {
       marginTop: 6,
-    },
-    disabledButton: {
-      opacity: 0.7,
-    },
-    primaryButtonText: {
-      color: themeColors.textOnAccent,
-      fontWeight: '700',
-      
     },
     links: {
       marginTop: 22,

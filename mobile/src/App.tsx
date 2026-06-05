@@ -29,6 +29,10 @@ import OnboardingSetupScreen from './screens/OnboardingSetupScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { PreferencesProvider, usePreferences } from './context/PreferencesContext';
 import { useApi } from './hooks/useApi';
+import { AppToastProvider } from './components/ui/AppToastProvider';
+import { ErrorDialogProvider } from './components/ui/ErrorDialogProvider';
+import { ConfirmDialogProvider, useConfirmDialog } from './components/ui/ConfirmDialogProvider';
+import { setConfirmDialogHook } from './components/ui/ConfirmDialog';
 import { Ionicons } from '@expo/vector-icons';
 import type { NavigationState, PartialState, Route } from '@react-navigation/native';
 
@@ -153,11 +157,27 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PreferencesProvider>
         <AuthProvider>
-          <AppRoutes />
+          <AppToastProvider>
+            <ErrorDialogProvider>
+              <ConfirmDialogProvider>
+                <ConfirmDialogInitializer>
+                  <AppRoutes />
+                </ConfirmDialogInitializer>
+              </ConfirmDialogProvider>
+            </ErrorDialogProvider>
+          </AppToastProvider>
         </AuthProvider>
       </PreferencesProvider>
     </GestureHandlerRootView>
   );
+}
+
+function ConfirmDialogInitializer({ children }: { children: React.ReactNode }) {
+  const confirmDialog = useConfirmDialog();
+  useEffect(() => {
+    setConfirmDialogHook(confirmDialog);
+  }, [confirmDialog]);
+  return <>{children}</>;
 }
 
 const AppRoutes = () => {

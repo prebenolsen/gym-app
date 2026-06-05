@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +17,8 @@ import NumberSpinner from '../components/NumberSpinner';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
+import { useToast } from '../components/ui/AppToastProvider';
+import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
 
 interface EditableExercise {
   name: string;
@@ -45,6 +46,8 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
   const { colors: themeColors } = usePreferences();
   const styles = createStyles(themeColors);
   const api = useApi();
+  const { showToast } = useToast();
+  const { showError } = useErrorDialog();
 
   const template = PROGRAM_TEMPLATES.find((t) => t.id === templateId);
 
@@ -109,18 +112,14 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
           })),
         })),
       });
-      Alert.alert('Success', `"${template.name}" has been imported to your programs!`, [
-        {
-          text: 'Go to Programs',
-          onPress: () => {
-            // Navigate back to the Programs tab root
-            navigation.getParent()?.navigate('ProgramsList');
-          },
-        },
-      ]);
+      showToast({
+        type: 'success',
+        duration: 'short',
+        message: `"${template.name}" has been imported to your programs!`,
+      });
     } catch (err) {
       console.error('Failed to import template:', err);
-      Alert.alert('Error', 'Failed to import program. Please try again.');
+      showError({ message: 'Failed to import program. Please try again.' });
     } finally {
       setImporting(false);
     }
@@ -144,7 +143,7 @@ const ProgramTemplateScreen = ({ route, navigation }: any) => {
           disabled={importing}
         >
           {importing ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color={themeColors.textOnAccent} />
           ) : (
             <Text style={styles.btnImportText}>Import Program</Text>
           )}
@@ -246,7 +245,7 @@ const createStyles = (themeColors: typeof colors) =>
       opacity: 0.6,
     },
     btnImportText: {
-      color: '#fff',
+      color: themeColors.textOnAccent,
       fontWeight: '700',
       fontSize: 14,
       
@@ -306,7 +305,7 @@ const createStyles = (themeColors: typeof colors) =>
       marginLeft: 'auto',
     },
     btnRemoveText: {
-      color: '#fff',
+      color: themeColors.textOnAccent,
       fontWeight: 'bold',
       fontSize: 12,
     },

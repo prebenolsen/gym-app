@@ -23,6 +23,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useApi } from '../hooks/useApi';
 import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
+import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
+import { showConfirmDialog } from '../components/ui/ConfirmDialog';
 import {
   playCompletionBeep,
   playCountdownBeep,
@@ -133,6 +135,7 @@ const SWIPE_THRESHOLD = 60;
 
 const ActiveWorkoutScreen = ({ navigation, route }: any) => {
   const api = useApi();
+  const { showError } = useErrorDialog();
   const {
     colors: themeColors,
     unit,
@@ -581,7 +584,7 @@ const ActiveWorkoutScreen = ({ navigation, route }: any) => {
       setPendingDefaultRestSeconds(null);
     } catch (err) {
       console.error('Failed to save workout set:', err);
-      Alert.alert('Error', 'Failed to save set');
+      showError({ message: 'Failed to save set' });
     } finally {
       setSavingSet(null);
     }
@@ -602,7 +605,7 @@ const ActiveWorkoutScreen = ({ navigation, route }: any) => {
       setPendingDefaultRestSeconds(null);
     } catch (err) {
       console.error('Failed to update default rest timer:', err);
-      Alert.alert('Error', 'Failed to save default rest timer');
+      showError({ message: 'Failed to save default rest timer' });
     }
   };
 
@@ -619,7 +622,7 @@ const ActiveWorkoutScreen = ({ navigation, route }: any) => {
       );
     } catch (err) {
       console.error('Failed to update default set count:', err);
-      Alert.alert('Error', 'Failed to save default set count');
+      showError({ message: 'Failed to save default set count' });
     }
   };
 
@@ -707,48 +710,48 @@ const ActiveWorkoutScreen = ({ navigation, route }: any) => {
   const handleCancelWorkout = () => {
     if (!session) return;
 
-    Alert.alert('Cancel workout', 'Cancel this active workout?', [
-      { text: 'Back', style: 'cancel' },
-      {
-        text: 'Cancel workout',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            setRestSecondsLeft(0);
-            setPendingDefaultRestSeconds(null);
-            lastRestSoundSecondRef.current = 0;
-            await api.cancelWorkoutSession(session.id);
-            await loadContext();
-          } catch (err) {
-            console.error('Failed to cancel workout:', err);
-            Alert.alert('Error', 'Failed to cancel workout');
-          }
-        },
+    showConfirmDialog({
+      title: 'Cancel workout',
+      message: 'Cancel this active workout?',
+      cancelText: 'Back',
+      confirmText: 'Cancel workout',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          setRestSecondsLeft(0);
+          setPendingDefaultRestSeconds(null);
+          lastRestSoundSecondRef.current = 0;
+          await api.cancelWorkoutSession(session.id);
+          await loadContext();
+        } catch (err) {
+          console.error('Failed to cancel workout:', err);
+          showError({ message: 'Failed to cancel workout' });
+        }
       },
-    ]);
+    });
   };
 
   const handleFinishWorkout = () => {
     if (!session) return;
 
-    Alert.alert('Finish workout', 'Finish this active workout?', [
-      { text: 'Back', style: 'cancel' },
-      {
-        text: 'Finish',
-        onPress: async () => {
-          try {
-            setRestSecondsLeft(0);
-            setPendingDefaultRestSeconds(null);
-            lastRestSoundSecondRef.current = 0;
-            await api.finishWorkoutSession(session.id);
-            await loadContext();
-          } catch (err) {
-            console.error('Failed to finish workout:', err);
-            Alert.alert('Error', 'Failed to finish workout');
-          }
-        },
+    showConfirmDialog({
+      title: 'Finish workout',
+      message: 'Finish this active workout?',
+      cancelText: 'Back',
+      confirmText: 'Finish',
+      onConfirm: async () => {
+        try {
+          setRestSecondsLeft(0);
+          setPendingDefaultRestSeconds(null);
+          lastRestSoundSecondRef.current = 0;
+          await api.finishWorkoutSession(session.id);
+          await loadContext();
+        } catch (err) {
+          console.error('Failed to finish workout:', err);
+          showError({ message: 'Failed to finish workout' });
+        }
       },
-    ]);
+    });
   };
 
   const swipeX = useRef(new Animated.Value(0)).current;
@@ -1245,7 +1248,7 @@ const createStyles = (themeColors: typeof colors) =>
       backgroundColor: themeColors.danger,
     },
     saveSetButtonText: {
-      color: '#fff',
+      color: themeColors.textOnAccent,
       fontWeight: '700',
       fontSize: 12,
       
@@ -1357,7 +1360,7 @@ const createStyles = (themeColors: typeof colors) =>
       justifyContent: 'center',
     },
     inlineSetPromptYesButtonText: {
-      color: '#fff',
+      color: themeColors.textOnAccent,
       fontSize: 12,
       fontWeight: '700',
     },
@@ -1415,7 +1418,7 @@ const createStyles = (themeColors: typeof colors) =>
       alignItems: 'center',
     },
     saveDefaultRestButtonText: {
-      color: '#fff',
+      color: themeColors.textOnAccent,
       fontWeight: '700',
       fontSize: 12,
       

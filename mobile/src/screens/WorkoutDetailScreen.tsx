@@ -23,9 +23,14 @@ import {
 } from '@gym-app/shared';
 import NumberSpinner from '../components/NumberSpinner';
 import { useApi } from '../hooks/useApi';
-import { colors, getButtonStyles, radius, shadow } from '../theme';
+import { colors, radius, shadow } from '../theme';
 import { usePreferences } from '../context/PreferencesContext';
 import MuscleMapThumb from '../components/MuscleMapThumb';
+import AppButton from '../components/ui/AppButton';
+import ScreenHeader from '../components/ui/ScreenHeader';
+import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
+import { useToast } from '../components/ui/AppToastProvider';
+import { showDeleteConfirmDialog } from '../components/ui/ConfirmDialog';
 
 const getExerciseMuscleGroup = (name: string): MuscleGroup | undefined =>
   resolveExerciseMuscleGroup(name);
@@ -46,6 +51,8 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   const [isDraggingExercise, setIsDraggingExercise] = useState(false);
 
   const api = useApi();
+  const { showError } = useErrorDialog();
+  const { showToast } = useToast();
   const muscleGroupOptions = getMuscleGroups();
   const suggestedGroups = useMemo(
     () => suggestMuscleGroupsFromInput(newExerciseName),
@@ -97,7 +104,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
       setNewExerciseMuscleGroups(null);
     } catch (err) {
       console.error('Failed to add exercise:', err);
-      Alert.alert('Error', 'Failed to add exercise');
+      showError({ message: 'Failed to add exercise' });
     } finally {
       setIsAddingExercise(false);
     }
@@ -143,22 +150,15 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
   };
 
   const handleDeleteExercise = async (id: string) => {
-    Alert.alert('Delete Exercise', 'Delete this exercise?', [
-      { text: 'Cancel' },
-      {
-        text: 'Delete',
-        onPress: async () => {
-          try {
-            await api.deleteExercise(id);
-            setExercises(exercises.filter((e) => e.id !== id));
-          } catch (err) {
-            console.error('Failed to delete exercise:', err);
-            Alert.alert('Error', 'Failed to delete exercise');
-          }
-        },
-        style: 'destructive',
-      },
-    ]);
+    showDeleteConfirmDialog('Delete Exercise', 'Delete this exercise?', async () => {
+      try {
+        await api.deleteExercise(id);
+        setExercises(exercises.filter((e) => e.id !== id));
+      } catch (err) {
+        console.error('Failed to delete exercise:', err);
+        showError({ message: 'Failed to delete exercise' });
+      }
+    });
   };
 
   const handleStartWorkout = async () => {
@@ -206,7 +206,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                   }
                 } catch (replaceErr) {
                   console.error('Failed to replace active workout session:', replaceErr);
-                  Alert.alert('Error', 'Failed to replace active workout session');
+                  showError({ message: 'Failed to replace active workout session' });
                 }
               },
             },
@@ -217,27 +217,25 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
       }
 
       console.error('Failed to start workout session:', err);
-      Alert.alert('Error', 'Failed to start workout session');
+      showError({ message: 'Failed to start workout session' });
     }
   };
 
   const handleDeleteWorkout = async () => {
-    Alert.alert('Delete Workout', `Delete "${editName}" and all its exercises?`, [
-      { text: 'Cancel' },
-      {
-        text: 'Delete',
-        onPress: async () => {
-          try {
-            await api.deleteWorkout(workoutId);
-            navigation.goBack();
-          } catch (err) {
-            console.error('Failed to delete workout:', err);
-            Alert.alert('Error', 'Failed to delete workout');
-          }
-        },
-        style: 'destructive',
+    showDeleteConfirmDialog(
+      'Delete Workout',
+      `Delete "${editName}" and all its exercises?`,
+      async () => {
+        try {
+          await api.deleteWorkout(workoutId);
+          showToast({ type: 'success', duration: 'short', message: 'Workout deleted.' });
+          navigation.goBack();
+        } catch (err) {
+          console.error('Failed to delete workout:', err);
+          showError({ message: 'Failed to delete workout' });
+        }
       },
-    ]);
+    );
   };
 
   const handleReorderExercises = async (reorderedExercises: Exercise[]) => {
@@ -256,7 +254,7 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
     } catch (err) {
       console.error('Failed to reorder exercises:', err);
       setExercises(previousExercises);
-      Alert.alert('Error', 'Failed to reorder exercises');
+      showError({ message: 'Failed to reorder exercises' });
     }
   };
 
@@ -270,24 +268,24 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color={themeColors.accent} />
-        </TouchableOpacity>
-        {editing ? (
-          <TextInput
-            style={styles.titleInput}
-            value={editName}
-            onChangeText={setEditName}
-            onBlur={() => setEditing(false)}
-            autoFocus
-          />
-        ) : (
-          <Text style={styles.title} onPress={() => setEditing(true)}>
-            {editName}
-          </Text>
-        )}
-      </View>
+      <ScreenHeader
+        onBackPress={() => navigation.goBack()}
+        titleNode={
+          editing ? (
+            <TextInput
+              style={styles.titleInput}
+              value={editName}
+              onChangeText={setEditName}
+              onBlur={() => setEditing(false)}
+              autoFocus
+            />
+          ) : (
+            <Text style={styles.title} onPress={() => setEditing(true)}>
+              {editName}
+            </Text>
+          )
+        }
+      />
 
       <View style={styles.section}>
         {/*<Text style={styles.sectionTitle}>Exercises</Text>*/}
@@ -390,14 +388,13 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
             editable={!isAddingExercise}
             onChangeText={setNewExerciseName}
           />
-          <TouchableOpacity
+          <AppButton
+            title={isAddingExercise ? 'Adding...' : '+ Add'}
             onPress={handleAddExercise}
-            style={[styles.btnPrimary, isAddingExercise && styles.btnPrimaryDisabled]}
-            activeOpacity={0.7}
+            loading={isAddingExercise}
             disabled={isAddingExercise}
-          >
-            <Text style={styles.btnText}>{isAddingExercise ? 'Adding...' : '+ Add'}</Text>
-          </TouchableOpacity>
+            style={styles.addExerciseButton}
+          />
         </View>
 
           {newExerciseName.trim().length > 0 && !isAddingExercise ? (
@@ -457,7 +454,8 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
             </View>
           ) : null}
 
-          <TouchableOpacity
+          <AppButton
+            title="Add exercises from the catalog"
             onPress={() =>
               navigation.navigate('ExercisesCatalog', {
                 programId,
@@ -465,28 +463,20 @@ const WorkoutDetailScreen = ({ route, navigation }: any) => {
                 workoutName,
               })
             }
-            style={[styles.btnPrimary, styles.catalogButton]}
-          >
-            <Text style={styles.btnText}>Add exercises from the catalog</Text>
-          </TouchableOpacity>
+            style={styles.catalogButton}
+          />
 
-          <TouchableOpacity
+          <AppButton
+            title="Delete Workout"
+            variant="danger"
             onPress={handleDeleteWorkout}
-            style={[styles.deleteButton, styles.deleteButtonInList]}
-          >
-            <Text style={styles.deleteButtonText}>Delete Workout</Text>
-          </TouchableOpacity>
+            style={styles.deleteButtonInList}
+          />
         </NestableScrollContainer>
       </View>
 
       <View style={styles.bottomActions}>
-        <TouchableOpacity
-          onPress={handleStartWorkout}
-          style={styles.startWorkoutButton}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.startWorkoutButtonText}>Start workout</Text>
-        </TouchableOpacity>
+        <AppButton title="Start workout" onPress={handleStartWorkout} style={styles.startWorkoutButton} />
       </View>
     </View>
   );
@@ -498,17 +488,6 @@ const createStyles = (themeColors: typeof colors) =>
       flex: 1,
       backgroundColor: themeColors.background,
     },
-    header: {
-      backgroundColor: themeColors.surface,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: themeColors.border,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    backButton: {},
     title: {
       fontSize: 24,
       fontWeight: 'bold',
@@ -525,11 +504,7 @@ const createStyles = (themeColors: typeof colors) =>
       
     },
     startWorkoutButton: {
-      ...getButtonStyles(themeColors).mainButton,
       width: '100%',
-    },
-    startWorkoutButtonText: {
-      ...getButtonStyles(themeColors).mainButtonText,
     },
     section: {
       flex: 1,
@@ -565,19 +540,12 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
       backgroundColor: themeColors.surface,
     },
-    btnPrimary: {
-      ...getButtonStyles(themeColors).mainButton,
+    addExerciseButton: {
       paddingHorizontal: 12,
-    },
-    btnPrimaryDisabled: {
-      opacity: 0.55,
     },
     catalogButton: {
       marginTop: 8,
       marginBottom: 16,
-    },
-    btnText: {
-      ...getButtonStyles(themeColors).mainButtonText,
     },
     list: {
       flex: 1,
@@ -688,16 +656,9 @@ const createStyles = (themeColors: typeof colors) =>
     customGroupChipTextActive: {
       color: themeColors.accent,
     },
-    deleteButton: {
-      ...getButtonStyles(themeColors).deleteButton,
-      paddingHorizontal: 12,
-    },
     deleteButtonInList: {
       marginTop: 0,
       marginBottom: 20,
-    },
-    deleteButtonText: {
-      ...getButtonStyles(themeColors).deleteButtonText,
     },
     bottomActions: {
       paddingHorizontal: 16,
