@@ -16,6 +16,7 @@ type ConfirmDialogOptions = {
   cancelText?: string;
   destructive?: boolean;
   onConfirm: () => void | Promise<void>;
+  onCancel?: () => void | Promise<void>;
 };
 
 export const showConfirmDialog = ({
@@ -25,6 +26,7 @@ export const showConfirmDialog = ({
   cancelText = 'Cancel',
   destructive = false,
   onConfirm,
+  onCancel,
 }: ConfirmDialogOptions) => {
   if (!confirmDialogHook) {
     console.warn('ConfirmDialog hook not initialized. Make sure ConfirmDialogProvider is in the app tree.');
@@ -37,6 +39,7 @@ export const showConfirmDialog = ({
     cancelText,
     destructive,
     onConfirm,
+    onCancel,
   });
 };
 

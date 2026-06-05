@@ -172,8 +172,6 @@ const getDateFormatLabel = (format: DateFormat): string =>
 
 const todayIsoString = (): string => new Date().toISOString().split('T')[0];
 
-const normalizeDecimalInput = (value: string): string => value.trim().replace(',', '.');
-
 const toKg = (value: number, unitSystem: UnitSystem): number =>
   unitSystem === 'us' ? value / 2.2 : value;
 
@@ -309,17 +307,6 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
     }
   };
 
-  const handleWeightChange = (rawValue: string) => {
-    setWeightInput(rawValue);
-
-    const normalizedValue = normalizeDecimalInput(rawValue);
-    const isCompleteDecimalWeight = /^\d{2,3}\.\d$/.test(normalizedValue);
-    if (isCompleteDecimalWeight && !hiddenProfileCards.weight) {
-      Keyboard.dismiss();
-      dismissProfileCard('weight');
-    }
-  };
-
   const getProfileCardAnim = (card: ProfileCardKey) => {
     if (card === 'gender') return genderCardAnim;
     if (card === 'birthdate') return birthdateCardAnim;
@@ -415,7 +402,7 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
   };
 
   const handleConfirmHeight = () => {
-    const numericHeight = Number(normalizeDecimalInput(heightInput));
+    const numericHeight = Number(heightInput.replace(',', '.'));
     if (!Number.isFinite(numericHeight) || numericHeight <= 0) {
       Alert.alert('Invalid height', 'Please provide a valid height.');
       return;
@@ -425,13 +412,12 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
   };
 
   const handleConfirmWeight = () => {
-    const numericWeight = Number(normalizeDecimalInput(weightInput));
+    const numericWeight = Number(weightInput.replace(',', '.'));
     if (!Number.isFinite(numericWeight) || numericWeight <= 0) {
       Alert.alert('Invalid weight', 'Please provide a valid weight.');
       return;
     }
 
-    Keyboard.dismiss();
     dismissProfileCard('weight');
   };
 
@@ -441,8 +427,8 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
       return;
     }
 
-    const numericWeight = Number(normalizeDecimalInput(weightInput));
-    const numericHeight = Number(normalizeDecimalInput(heightInput));
+    const numericWeight = Number(weightInput.replace(',', '.'));
+    const numericHeight = Number(heightInput.replace(',', '.'));
     const numericAge = Number(ageInput);
 
     if (!Number.isFinite(numericWeight) || numericWeight <= 0) {
@@ -821,10 +807,8 @@ export default function OnboardingSetupScreen({ onComplete, onSkip }: Onboarding
                             <TextInput
                               style={[styles.input, styles.inputWithRightHint]}
                               value={weightInput}
-                              onChangeText={handleWeightChange}
-                              onSubmitEditing={handleConfirmWeight}
+                              onChangeText={setWeightInput}
                               keyboardType="decimal-pad"
-                              returnKeyType="done"
                               placeholderTextColor={themeColors.textMuted}
                             />
                             <Text style={styles.inputRightHint}>{unitSystem === 'metric' ? 'kg' : 'lb'}</Text>

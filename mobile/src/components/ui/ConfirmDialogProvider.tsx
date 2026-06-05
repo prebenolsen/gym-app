@@ -24,6 +24,7 @@ type ConfirmDialogState = {
   cancelText: string;
   destructive: boolean;
   onConfirm: () => void | Promise<void>;
+  onCancel?: () => void | Promise<void>;
 };
 
 type ConfirmDialogContextValue = {
@@ -57,9 +58,16 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
     }
   }, [dialog]);
 
-  const handleCancel = useCallback(() => {
+  const handleCancel = useCallback((runCancelAction = false) => {
+    if (!dialog) return;
+
+    const onCancel = dialog.onCancel;
     setDialog(null);
-  }, []);
+
+    if (runCancelAction && onCancel) {
+      void onCancel();
+    }
+  }, [dialog]);
 
   const contextValue = useMemo(() => ({ showConfirm }), [showConfirm]);
 
@@ -67,16 +75,21 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
     <ConfirmDialogContext.Provider value={contextValue}>
       {children}
       {dialog && (
-        <Modal visible={!!dialog} transparent animationType="fade" onRequestClose={handleCancel}>
+        <Modal
+          visible={!!dialog}
+          transparent
+          animationType="fade"
+          onRequestClose={() => handleCancel(false)}
+        >
           <View style={styles.backdrop}>
-            <Pressable style={styles.backdropHitArea} onPress={handleCancel} />
+            <Pressable style={styles.backdropHitArea} onPress={() => handleCancel(false)} />
             <View style={styles.dialog}>
               <Text style={styles.title}>{dialog.title}</Text>
               <Text style={styles.message}>{dialog.message}</Text>
               <View style={styles.buttonRow}>
                 <Pressable
                   style={[styles.button, styles.cancelButton]}
-                  onPress={handleCancel}
+                  onPress={() => handleCancel(true)}
                 >
                   <Text style={[styles.buttonText, styles.cancelButtonText]}>
                     {dialog.cancelText}
