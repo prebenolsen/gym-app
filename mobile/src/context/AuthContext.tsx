@@ -30,7 +30,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         console.error('Failed to get mobile auth session:', error);
       }
-      setSession(data.session ?? null);
+
+      const restoredSession = data.session ?? null;
+      if (restoredSession) {
+        const { error: userError } = await supabase.auth.getUser(restoredSession.access_token);
+        if (userError) {
+          console.warn('Discarding stale mobile auth session:', userError.message);
+          await supabase.auth.signOut({ scope: 'local' });
+          setSession(null);
+          setLoading(false);
+          return;
+        }
+      }
+
+      setSession(restoredSession);
       setLoading(false);
     };
 
@@ -61,7 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (error) throw error;
       },
       signOut: async () => {
-        const { error } = await supabase.auth.signOut();
+        const { error } = await supabase.auth.signOut({ scope: 'local' });
         if (error) throw error;
       },
     }),

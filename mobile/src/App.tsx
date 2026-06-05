@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { BottomTabBar, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -85,6 +85,29 @@ const SCREEN_FILE_NAME_BY_ROUTE: Record<string, string> = {
 
 const onboardingSkipStorageKey = (userId: string) =>
   `gym-app.mobile.onboarding-skipped.${userId}`;
+
+const isAuthError = (error: unknown): boolean => {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const candidate = error as {
+    kind?: string;
+    status?: number;
+    message?: string;
+  };
+
+  if (candidate.kind === 'auth' || candidate.status === 401 || candidate.status === 403) {
+    return true;
+  }
+
+  const message = candidate.message?.toLowerCase() ?? '';
+  return (
+    message.includes('invalid or expired authorization token') ||
+    message.includes('jwt expired') ||
+    message.includes('authentication failed')
+  );
+};
 
 const getDeepestActiveRouteName = (state: NestedNavigationState): string => {
   const activeIndex = state.index ?? 0;
@@ -192,15 +215,34 @@ function ConfirmDialogInitializer({ children }: { children: React.ReactNode }) {
 }
 
 const AppRoutes = () => {
-  const { session, loading } = useAuth();
+  const { session, loading, signOut } = useAuth();
   const { ready, colors, showFileDisplay } = usePreferences();
   const api = useApi();
   const [hasActiveSession, setHasActiveSession] = useState(false);
   const [loadingActiveSession, setLoadingActiveSession] = useState(true);
+  const [recoveringAuth, setRecoveringAuth] = useState(false);
   const [onboardingState, setOnboardingState] = useState<
     'loading' | 'required' | 'skipped' | 'complete'
   >('loading');
   const styles = createStyles(colors, showFileDisplay);
+
+  const clearStaleAuthState = useCallback(async () => {
+    if (!session || recoveringAuth) {
+      return;
+    }
+
+    setRecoveringAuth(true);
+    try {
+      if (session.user?.id) {
+        await AsyncStorage.removeItem(onboardingSkipStorageKey(session.user.id));
+      }
+      await signOut();
+    } catch (err) {
+      console.error('Failed to clear stale auth session:', err);
+    } finally {
+      setRecoveringAuth(false);
+    }
+  }, [recoveringAuth, session, signOut]);
 
   useEffect(() => {
     let isMounted = true;
@@ -229,6 +271,10 @@ const AppRoutes = () => {
         setOnboardingState(skippedFlag === 'true' ? 'skipped' : 'required');
       } catch (err) {
         console.error('Failed to resolve onboarding state:', err);
+        if (isAuthError(err)) {
+          await clearStaleAuthState();
+          return;
+        }
         if (isMounted) {
           setOnboardingState('required');
         }
@@ -240,7 +286,7 @@ const AppRoutes = () => {
     return () => {
       isMounted = false;
     };
-  }, [api, session?.user?.id]);
+  }, [api, clearStaleAuthState, session?.user?.id]);
 
   useEffect(() => {
     let isMounted = true;
@@ -261,6 +307,10 @@ const AppRoutes = () => {
         }
       } catch (err) {
         console.error('Failed to fetch active workout session:', err);
+        if (isAuthError(err)) {
+          await clearStaleAuthState();
+          return;
+        }
         if (isMounted) {
           setHasActiveSession(false);
         }
@@ -278,7 +328,7 @@ const AppRoutes = () => {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [api, session]);
+  }, [api, clearStaleAuthState, session]);
 
   const isActiveWorkoutEnabled = hasActiveSession && !loadingActiveSession;
 
