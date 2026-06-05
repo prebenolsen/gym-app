@@ -43,13 +43,6 @@ const FeedbackScreen = ({ navigation }: any) => {
             Tell us what is missing, confusing, or not working as expected. Your ideas help shape the next updates.
           </Text>
 
-          <View style={styles.promptsWrap}>
-            <Text style={styles.promptItem}>Are you missing a feature?</Text>
-            <Text style={styles.promptItem}>Any exercises you feel should be built-in?</Text>
-            <Text style={styles.promptItem}>Did something not work the way you expected?</Text>
-            <Text style={styles.promptItem}>Is there a flow that feels slow or confusing?</Text>
-          </View>
-
           <Text style={styles.inputLabel}>Your message</Text>
           <TextInput
             style={styles.feedbackInput}
@@ -128,23 +121,6 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textMuted,
       fontSize: 14,
       lineHeight: 21,
-    },
-    promptsWrap: {
-      backgroundColor: themeColors.background,
-      borderWidth: 1,
-      borderColor: themeColors.border,
-      borderRadius: radius.sm,
-      padding: 12,
-      gap: 8,
-    },
-    promptsTitle: {
-      color: themeColors.textStrong,
-      fontWeight: '700',
-      fontSize: 13,
-    },
-    promptItem: {
-      color: themeColors.textMuted,
-      fontSize: 13,
     },
     inputLabel: {
       marginTop: 6,
