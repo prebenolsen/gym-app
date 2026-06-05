@@ -311,15 +311,25 @@ const calcBMR = (
   age: number,
   gender: WeightTrackerGender,
 ): number => {
+  const mifflinGenderOffset =
+    gender === 'male' ? 5 : gender === 'female' ? -161 : -78;
+  const harrisGenderOffset =
+    gender === 'male'
+      ? { weight: 13.397, height: 4.799, age: 5.677, base: 88.362 }
+      : gender === 'female'
+        ? { weight: 9.247, height: 3.098, age: 4.33, base: 447.593 }
+        : { weight: 11.322, height: 3.9485, age: 5.0035, base: 267.9775 };
+
   switch (formula) {
     case 'mifflin_st_jeor':
-      return gender === 'male'
-        ? 10 * weightKg + 6.25 * heightCm - 5 * age + 5
-        : 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
+      return 10 * weightKg + 6.25 * heightCm - 5 * age + mifflinGenderOffset;
     case 'harris_benedict':
-      return gender === 'male'
-        ? 13.397 * weightKg + 4.799 * heightCm - 5.677 * age + 88.362
-        : 9.247 * weightKg + 3.098 * heightCm - 4.33 * age + 447.593;
+      return (
+        harrisGenderOffset.weight * weightKg +
+        harrisGenderOffset.height * heightCm -
+        harrisGenderOffset.age * age +
+        harrisGenderOffset.base
+      );
     case 'katch_mcardle':
       // Without body-fat %, lean mass is approximated at 75 % of weight
       return 370 + 21.6 * (weightKg * 0.75);
@@ -1486,7 +1496,7 @@ export default function WeightTrackerScreen() {
 
         <Text style={styles.fieldLabel}>Gender — optional</Text>
         <View style={styles.pillRow}>
-          {(['male', 'female'] as WeightTrackerGender[]).map((g) => (
+          {(['male', 'female', 'other'] as WeightTrackerGender[]).map((g) => (
             <TouchableOpacity
               key={g}
               style={[styles.pill, obGender === g && styles.pillActive]}

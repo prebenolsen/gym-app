@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { BottomTabBar, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -24,6 +25,7 @@ import WorkoutHistoryDetailScreen from './screens/WorkoutHistoryDetailScreen';
 import AuthScreen from './screens/AuthScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import WeightTrackerScreen from './screens/WeightTrackerScreen';
+import OnboardingSetupScreen from './screens/OnboardingSetupScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { PreferencesProvider, usePreferences } from './context/PreferencesContext';
 import { useApi } from './hooks/useApi';
@@ -72,7 +74,11 @@ const SCREEN_FILE_NAME_BY_ROUTE: Record<string, string> = {
   Auth: 'AuthScreen.tsx',
   WeightTrackerStack: 'WeightTrackerScreen.tsx',
   WeightTracker: 'WeightTrackerScreen.tsx',
+  OnboardingSetup: 'OnboardingSetupScreen.tsx',
 };
+
+const onboardingSkipStorageKey = (userId: string) =>
+  `gym-app.mobile.onboarding-skipped.${userId}`;
 
 const getDeepestActiveRouteName = (state: NestedNavigationState): string => {
   const activeIndex = state.index ?? 0;
@@ -160,7 +166,50 @@ const AppRoutes = () => {
   const api = useApi();
   const [hasActiveSession, setHasActiveSession] = useState(false);
   const [loadingActiveSession, setLoadingActiveSession] = useState(true);
+  const [onboardingState, setOnboardingState] = useState<
+    'loading' | 'required' | 'skipped' | 'complete'
+  >('loading');
   const styles = createStyles(colors, showFileDisplay);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const resolveOnboarding = async () => {
+      if (!session?.user?.id) {
+        if (isMounted) {
+          setOnboardingState('loading');
+        }
+        return;
+      }
+
+      try {
+        const [profile, skippedFlag] = await Promise.all([
+          api.getWeightTrackerProfile(),
+          AsyncStorage.getItem(onboardingSkipStorageKey(session.user.id)),
+        ]);
+
+        if (!isMounted) return;
+
+        if (profile?.onboarding_complete) {
+          setOnboardingState('complete');
+          return;
+        }
+
+        setOnboardingState(skippedFlag === 'true' ? 'skipped' : 'required');
+      } catch (err) {
+        console.error('Failed to resolve onboarding state:', err);
+        if (isMounted) {
+          setOnboardingState('required');
+        }
+      }
+    };
+
+    resolveOnboarding();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [api, session?.user?.id]);
 
   useEffect(() => {
     let isMounted = true;
@@ -208,6 +257,25 @@ const AppRoutes = () => {
 
   if (!session) {
     return <AuthScreen />;
+  }
+
+  if (onboardingState === 'loading') {
+    return null;
+  }
+
+  if (onboardingState === 'required') {
+    return (
+      <OnboardingSetupScreen
+        onSkip={async () => {
+          await AsyncStorage.setItem(onboardingSkipStorageKey(session.user.id), 'true');
+          setOnboardingState('skipped');
+        }}
+        onComplete={async () => {
+          await AsyncStorage.removeItem(onboardingSkipStorageKey(session.user.id));
+          setOnboardingState('complete');
+        }}
+      />
+    );
   }
 
   return (
@@ -351,6 +419,30 @@ const AppRoutes = () => {
               tabBarButton: () => null,
             }}
           />
+          <Tab.Screen
+            name="OnboardingSetup"
+            options={{
+              tabBarButton: () => null,
+            }}
+          >
+            {({ navigation }) => (
+              <OnboardingSetupScreen
+                onSkip={async () => {
+                  await AsyncStorage.setItem(
+                    onboardingSkipStorageKey(session.user.id),
+                    'true',
+                  );
+                  setOnboardingState('skipped');
+                  navigation.navigate('Home');
+                }}
+                onComplete={async () => {
+                  await AsyncStorage.removeItem(onboardingSkipStorageKey(session.user.id));
+                  setOnboardingState('complete');
+                  navigation.navigate('Home');
+                }}
+              />
+            )}
+          </Tab.Screen>
           <Tab.Screen
             name="Settings"
             component={SettingsScreen}

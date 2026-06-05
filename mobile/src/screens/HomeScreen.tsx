@@ -182,6 +182,7 @@ const HomeScreen = ({ navigation }: any) => {
   const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null);
   const [workouts7Days, setWorkouts7Days] = useState<number>(0);
   const [weightGoalText, setWeightGoalText] = useState<string>('Goal: Not set');
+  const [onboardingComplete, setOnboardingComplete] = useState<boolean>(true);
   const [daysSinceByWorkout, setDaysSinceByWorkout] = useState<
     Record<string, number | null>
   >({});
@@ -286,6 +287,8 @@ const HomeScreen = ({ navigation }: any) => {
           api.getWeightTrackerGoals(),
         ]);
 
+        setOnboardingComplete(profile?.onboarding_complete ?? false);
+
         const activeGoal =
           goals.find((goal) => goal.is_active) ??
           null;
@@ -326,10 +329,12 @@ const HomeScreen = ({ navigation }: any) => {
           <TouchableOpacity
             style={styles.btnGetStarted}
             onPress={() =>
-              navigation.navigate('ProgramsStack', { screen: 'ProgramsList' })
+              onboardingComplete
+                ? navigation.navigate('ProgramsStack', { screen: 'ProgramsList' })
+                : navigation.navigate('OnboardingSetup')
             }
           >
-            <Text style={styles.btnGetStartedText}>Get started!</Text>
+            <Text style={styles.btnGetStartedText}>Get started</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

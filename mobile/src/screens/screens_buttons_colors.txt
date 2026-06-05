@@ -1,0 +1,189 @@
+# Mobile UI Audit Report: Buttons, Colors, Notifications
+
+Scope
+- Folder audited: mobile/src/screens
+- Focus: button types, color usage, notification/alert behavior, and standardization opportunities.
+
+## 1) Button Taxonomy (Observed)
+
+Primary action buttons
+- Purpose: create, save, import, submit, start, finish, continue.
+- Common style source: themeColors.accent + white/textOnAccent text.
+- Seen in: AuthScreen, ProgramsScreen, ProgramDetailScreen, WorkoutDetailScreen, OnboardingSetupScreen, ProgramTemplateScreen, WorkoutsCatalogScreen, ExercisesCatalogScreen, HomeScreen, ExerciseNotesScreen.
+
+Secondary/neutral buttons
+- Purpose: back, alternative action, optional flow actions.
+- Patterns:
+	- Outline with accent border + accent text.
+	- Surface/background fill with border.
+	- Neutral outline with textStrong border/text (ActiveWorkoutScreen).
+- Seen in: SettingsScreen, OnboardingSetupScreen, ProgramsScreen, ActiveWorkoutScreen, ExerciseProgressScreen, HomeScreen.
+
+Danger/destructive buttons
+- Purpose: delete account/program/workout/exercise, cancel/replace flow branches.
+- Common style source: themeColors.danger or getButtonStyles(...).deleteButton.
+- Seen in: SettingsScreen, ProgramDetailScreen, WorkoutDetailScreen, ProgramTemplateScreen, ActiveWorkoutScreen, WeightTrackerScreen.
+
+Chip/segment buttons
+- Purpose: filters, toggles, option selections.
+- Pattern: border + background swap between surface/accentSoft and accent text on active.
+- Seen in: ExercisesScreen, ExercisesCatalogScreen, ExerciseProgressScreen (range chips), CalendarScreen (day cells), SettingsScreen (unit/date format chips), OnboardingSetupScreen (segments, goal cards), WeightTrackerScreen.
+
+Icon-only/icon-leading buttons
+- Purpose: back navigation, reorder, utility actions.
+- Seen in: most detail screens using chevron-back; reorder controls in ProgramDetailScreen and WorkoutDetailScreen.
+
+Inline micro-actions
+- Purpose: small confirmations/prompts in context.
+- Seen in: ActiveWorkoutScreen inline set prompt (Yes/No), HomeScreen active session quick action text/button style.
+
+## 2) Color Usage Patterns
+
+Strong consistency (good)
+- Theme tokens dominate most screens: background, surface, border, textStrong, textMuted, accent, accentSoft, success, danger, warning.
+- Many screens use createStyles(themeColors), which keeps dark/light adaptability intact.
+
+Inconsistency hotspots
+- Mixed button systems:
+	- Some screens use shared getButtonStyles(...)
+	- Others manually define primaryButton/btnPrimary/btnImport etc with similar but duplicated values.
+- White text literals appear as both '#fff' and themeColors.textOnAccent.
+- ActiveWorkoutScreen secondary buttons use textStrong outlines, while other screens use accent outlines for secondary actions.
+
+Color token usage examples
+- Success green transient tile: ProgramsScreen notification.
+- Warning semantic color used in ActiveWorkoutScreen warning banner and confirm prompt.
+- Danger semantic color used for destructive actions across Settings, ProgramDetail, WorkoutDetail, ProgramTemplate, ActiveWorkout.
+
+## 3) Notification / Alert Inventory and Dismiss Behavior
+
+System alerts (Alert.alert)
+- Heavy use across the app for validation errors, confirms, and success notices.
+- Dismiss behavior: manual user action only (button tap).
+- Used in: AuthScreen, SettingsScreen, ProgramsScreen, ProgramDetailScreen, WorkoutDetailScreen, WorkoutsCatalogScreen, ProgramTemplateScreen, ExercisesCatalogScreen, ActiveWorkoutScreen, OnboardingSetupScreen, WeightTrackerScreen.
+
+Inline notification tile
+- ProgramsScreen: "Program created successfully!"
+	- Appears after create.
+	- Auto-dismisses after 5s via setTimeout.
+	- Also manually dismissible on tap.
+
+Inline warning banner (persistent by state)
+- ActiveWorkoutScreen: "Huge improvement, impressive or a typo?"
+	- Not timeout-driven.
+	- Visibility tied to warning state; persists until state changes.
+
+Inline decision prompt
+- ActiveWorkoutScreen set-count prompt with Yes/No buttons.
+	- Not timeout-driven.
+	- Dismisses only when user acts.
+
+Modal notifications/dialog-like UI
+- WeightTrackerScreen contains several Modal-driven sheets (log entry, add metric, new goal, export).
+	- Dismiss behavior: manual close/backdrop/request close.
+	- Not auto-dismissed.
+
+Auto-save indicator pattern
+- ExerciseNotesScreen uses saving ActivityIndicator, not a user-facing toast/banner.
+- Dismiss behavior: state-driven (disappears when save completes).
+
+## 4) Redundant Code / Reuse Gaps
+
+Button style duplication
+- Repeated shape/padding/radius/font-weight combinations under different names:
+	- primaryButton, btnPrimary, btnImport, startWorkoutButton, saveNoteButton, etc.
+- Similar secondary outlines repeated with minor color differences.
+
+Chip/segment duplication
+- Repeated chipActive/chipTextActive pairs across:
+	- ExercisesScreen
+	- ExercisesCatalogScreen
+	- ExerciseProgressScreen
+	- SettingsScreen
+	- OnboardingSetupScreen
+
+Alert call duplication
+- Repeated Alert.alert('Error', ...), Alert.alert('Success', ...), confirm-delete patterns.
+- Inconsistent title/body phrasing and action labels.
+
+Header duplication
+- Back button + title rows repeated in many screens with slight spacing/text-size differences.
+
+Modal shell duplication
+- WeightTrackerScreen modal wrappers repeat overlay/sheet/header patterns.
+
+## 5) Standardization Proposal (Reusable Library)
+
+Create a shared UI layer under mobile/src/components/ui:
+
+1. Buttons
+- AppButton
+	- Variants: primary, secondary, danger, ghost
+	- Sizes: sm, md, lg
+	- States: disabled, loading
+- IconButton
+	- For back/reorder/utility actions
+- ChipButton
+	- Props: selected, tone (accent/default), compact
+- SegmentedControl
+	- Controlled component for mode toggles and unit/date selectors
+
+2. Notifications
+- AppToastProvider + useToast()
+	- Queue toasts globally
+	- Types: success, error, warning, info
+	- Durations: short/long/sticky
+- InlineBanner
+	- Types: warning/info/success
+	- Optional dismiss action
+- ConfirmDialog helper
+	- Wrapper for common delete/confirm prompts to normalize labels and order
+
+3. Layout primitives
+- ScreenHeader
+	- Back button + title + optional right actions
+- SectionCard
+	- Consistent card shell: surface/border/radius/shadow
+- EmptyState
+	- Icon/title/subtitle/action pattern
+- ModalSheet
+	- Reusable modal overlay + sheet + title/close affordance
+
+4. Token policy
+- Prefer textOnAccent over literal #fff for action text.
+- Keep all semantic colors from theme (success/danger/warning/accent/accentSoft).
+- Ban ad-hoc hex in screens unless there is a strict asset/brand reason.
+
+## 6) Recommended Rollout Order
+
+Phase 1 (low-risk)
+- Implement AppButton and ScreenHeader.
+- Replace direct button style duplication in Auth, Programs, ProgramDetail, WorkoutDetail, Onboarding, WorkoutsCatalog, ProgramsCatalog.
+
+Phase 2 (medium)
+- Implement ChipButton + SegmentedControl.
+- Migrate Exercises/ExercisesCatalog/ExerciseProgress/Settings/Onboarding chips.
+
+Phase 3 (medium)
+- Implement AppToastProvider and ConfirmDialog helper.
+- Replace ProgramsScreen inline success tile + repeated Alert.alert confirm flows.
+
+Phase 4 (higher-touch)
+- Introduce ModalSheet and refactor WeightTrackerScreen modal shells.
+
+## 7) Priority Findings
+
+High
+- Notification behavior is inconsistent: one auto-dismiss tile, many blocking alerts, and stateful banners/modals with no unified UX contract.
+- Button semantics are inconsistent: same action level appears as filled, outline-accent, and outline-neutral styles depending on screen.
+
+Medium
+- Significant style duplication creates maintenance overhead and future drift risk.
+- Mixed text color token usage (#fff vs textOnAccent) weakens theme consistency.
+
+Low
+- Header spacing and typography vary by screen, creating slight visual fragmentation.
+
+## 8) Bottom Line
+
+The app already has strong theme token foundations, but component-level standardization is the main missing layer. A small reusable UI library (buttons + notifications + header + modal shell) would remove most redundancy, align action hierarchy, and make future screens cheaper to build and maintain.

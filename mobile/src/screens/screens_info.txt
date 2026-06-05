@@ -1,0 +1,120 @@
+GYM APP - MAIN MENU SCREEN MAP (PHASE 1)
+
+Bottom main menu (persistent tab bar)
+- Home (HomeScreen.tsx)
+- Programs (ProgramsScreen.tsx via ProgramsStack)
+- Active Workout (ActiveWorkoutScreen.tsx via ActiveWorkoutStack)
+- Calendar (CalendarScreen.tsx via CalendarStack)
+- Settings (SettingsScreen.tsx)
+
+Note
+- Active Workout tab is disabled unless there is an active workout session.
+
+
+1) Home (HomeScreen.tsx)
+Brief page summary
+- Dashboard overview with a motivational 7-day workout message.
+- Quick stat tiles and a "Favorite programs" section for fast drill-down.
+
+Clickable items and destination
+- "Get started!" (onboarding state) -> ProgramsStack / ProgramsList
+- "Resume Active Workout" card (if active session exists) -> ActiveWorkoutStack / ActiveWorkout
+- Stat tile "Programs" -> ProgramsStack / ProgramsList
+- Stat tile "Weight Tracker" -> WeightTrackerStack / WeightTracker
+- Stat tile "Exercises" -> ProgramsStack / ExerciseProgressList
+- Stat tile "Last 7 Days" -> CalendarStack / Calendar
+- Favorite program header row -> ProgramsStack / ProgramDetail
+- Favorite workout row -> ProgramsStack / WorkoutDetail
+
+
+2) Programs (ProgramsScreen.tsx)
+Brief page summary
+- Program library page with create/import actions, program cards, and workout rows.
+- Each program expands into workouts with quick metadata (days since, duration, exercise count).
+
+Clickable items and destination
+- "Import" -> ProgramsStack / ProgramsCatalog
+- "+ Create" -> creates program (no navigation)
+- Success message banner tap -> dismiss only (no navigation)
+- Program card tap -> ProgramsStack / ProgramDetail
+- Workout row tap -> ProgramsStack / WorkoutDetail
+
+
+3) Active Workout (ActiveWorkoutScreen.tsx)
+Brief page summary
+- Live workout execution view: current exercise, sets table, save/overwrite set, rest timer, and swipe between exercises.
+- Header controls for workout lifecycle and exercise-specific utilities.
+
+Clickable items and destination
+- "Cancel" -> cancels session, stays in ActiveWorkout screen
+- "History" -> ActiveWorkoutStack / ExerciseHistory (for current exercise)
+- "Notes" -> ActiveWorkoutStack / ExerciseNotes (for current exercise)
+- "Finish" -> finishes session, stays in ActiveWorkout screen
+- Swipe left/right in exercise region -> next/previous exercise index (same screen)
+- "+" add set -> inline set prompt only (no navigation)
+- "Save # / Overwrite #" -> saves set (no navigation)
+- Rest timer -5 / +5 / save default rest -> updates timer/settings (no navigation)
+
+
+4) Calendar (CalendarScreen.tsx)
+Brief page summary
+- Monthly calendar with workout-day indicators and selected-day workout list.
+- Acts as workout history browser by date.
+
+Clickable items and destination
+- "<" month button -> previous month (same screen)
+- ">" month button -> next month (same screen)
+- Day cell tap -> selects date (same screen)
+- Workout history card tap -> CalendarStack / WorkoutHistoryDetail
+
+
+5) Settings (SettingsScreen.tsx)
+Brief page summary
+- Configuration hub for appearance, units/date format, personal metrics, sounds, account actions, and app info/feedback.
+
+Clickable items and destination
+- Theme/accent/unit/date/sound/metric toggles and selectors -> in-place setting changes (no navigation)
+- "Save Personal Metrics" -> saves data (no navigation)
+- "Log Out" -> signs out -> app routes user to AuthScreen
+- "Update Password" -> password update action (no navigation)
+- "Delete Account" -> account deletion flow, then sign out -> AuthScreen
+- "Send Feedback or Report a Bug" -> opens inline feedback form (no navigation)
+- Feedback "Cancel" / "Submit" -> inline close/save (no navigation)
+
+
+TEXT-BASED ROUTE TREE (FROM MAIN MENU)
+
+MainTab
+|- Home
+|  |- Get started -> ProgramsStack > ProgramsList
+|  |- Resume Active Workout -> ActiveWorkoutStack > ActiveWorkout
+|  |- Programs tile -> ProgramsStack > ProgramsList
+|  |- Weight Tracker tile -> WeightTrackerStack > WeightTracker
+|  |- Exercises tile -> ProgramsStack > ExerciseProgressList
+|  |- Last 7 Days tile -> CalendarStack > Calendar
+|  |- Favorite program -> ProgramsStack > ProgramDetail
+|  \- Favorite workout -> ProgramsStack > WorkoutDetail
+|
+|- ProgramsStack
+|  \- ProgramsList
+|     |- Import -> ProgramsCatalog
+|     |- Program card -> ProgramDetail
+|     \- Workout row -> WorkoutDetail
+|
+|- ActiveWorkoutStack (only when active session exists)
+|  \- ActiveWorkout
+|     |- History -> ExerciseHistory
+|     \- Notes -> ExerciseNotes
+|
+|- CalendarStack
+|  \- Calendar
+|     \- Workout card -> WorkoutHistoryDetail
+|
+\- Settings
+	|- Log Out -> AuthScreen
+	\- Delete Account -> AuthScreen
+
+
+Cross-navigation note
+- The bottom tab bar remains available across these areas, so users can switch between Home, Programs, Calendar, and Settings at almost any time.
+- Active Workout is also in the tab bar, but only becomes selectable when a workout session is active.

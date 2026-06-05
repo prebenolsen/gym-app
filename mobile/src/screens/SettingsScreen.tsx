@@ -478,7 +478,7 @@ const SettingsScreen = () => {
 
             <Text style={styles.section}>Gender</Text>
             <View style={styles.chipRow}>
-              {(['male', 'female'] as WeightTrackerGender[]).map((gender) => (
+              {(['male', 'female', 'other'] as WeightTrackerGender[]).map((gender) => (
                 <TouchableOpacity
                   key={gender}
                   style={[styles.chip, personalGender === gender && styles.chipActive]}

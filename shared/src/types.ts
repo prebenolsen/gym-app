@@ -175,7 +175,7 @@ export interface ExerciseProgressHistory {
 // Weight Tracker
 // ─────────────────────────────────────────────────────────────
 
-export type WeightTrackerGender = 'male' | 'female';
+export type WeightTrackerGender = 'male' | 'female' | 'other';
 export type WeightTrackerGoal = 'lose' | 'gain' | 'track';
 export type WeightTrackerBmrFormula = 'mifflin_st_jeor' | 'harris_benedict' | 'katch_mcardle';
 export type WeightTrackerActivityLevel =
