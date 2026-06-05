@@ -1,5 +1,22 @@
 # Copilot Instructions
 
+## Agent Behavior
+
+- Before writing any code, state in one sentence what you are about to do and why.
+- If a task touches more than one file, list all affected files before changing any of them.
+- Never make unrequested changes. If you notice an unrelated issue, flag it in a "Side observations:" note at the end — do not fix it unless asked.
+- Do one thing at a time. If a request is ambiguous, ask one clarifying question before proceeding.
+- Never repeat code that already exists in context. Reference it by file and line number instead.
+- If you are unsure whether a component or utility already exists, search the codebase before creating a new one.
+- Prefer editing existing files over creating new ones.
+- Never scaffold boilerplate "just in case". Only write code that is immediately needed.
+
+## Response Format
+
+- Keep explanations short. Code speaks louder than prose.
+- After completing a task, summarize changes in a brief bullet list — file name and what changed. Nothing more.
+- If a task is complete and nothing is unclear, do not ask follow-up questions.
+
 This repository is a cross-platform gym app with shared domain logic and a React Native mobile client.
 
 ## This Is How We Do Things Here
