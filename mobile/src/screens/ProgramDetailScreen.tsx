@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,7 +17,7 @@ import AppButton from '../components/ui/AppButton';
 import ScreenHeader from '../components/ui/ScreenHeader';
 import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
 import { useToast } from '../components/ui/AppToastProvider';
-import { showDeleteConfirmDialog } from '../components/ui/ConfirmDialog';
+import { showConfirmDialog, showDeleteConfirmDialog } from '../components/ui/ConfirmDialog';
 
 const PROGRAM_NAME_PATTERN = /^Program\s+\d+$/;
 const TIME_PER_SET_SECONDS = { low: 30, high: 45 };
@@ -133,19 +132,18 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
   };
 
   const handleAddWorkout = () => {
-    Alert.alert('Add Workout', 'Choose how you want to add a workout', [
-      {
-        text: 'From Templates',
-        onPress: () => navigation.navigate('WorkoutsCatalog', { programId }),
+    showConfirmDialog({
+      title: 'Add Workout',
+      message: 'Choose how you want to add a workout.',
+      confirmText: 'Create empty workout',
+      cancelText: 'Import workout',
+      onConfirm: async () => {
+        await handleCreateWorkout();
       },
-      {
-        text: 'Create Empty',
-        onPress: () => {
-          void handleCreateWorkout();
-        },
+      onCancel: () => {
+        navigation.navigate('WorkoutsCatalog', { programId });
       },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+    });
   };
 
   const handleRenameProgram = async () => {
@@ -355,7 +353,7 @@ const ProgramDetailScreen = ({ route, navigation }: any) => {
           )}
 
           <View style={styles.listFooterActions}>
-            <AppButton title="+ Add" onPress={handleAddWorkout} style={styles.addWorkoutButton} />
+            <AppButton title="+ Create" onPress={handleAddWorkout} style={styles.addWorkoutButton} />
 
             <AppButton
               title="Delete Program"
