@@ -479,29 +479,29 @@ const AppRoutes = () => {
           <Tab.Screen
             name="CalendarStack"
             component={CalendarStackNavigator}
+            options={{
+              tabBarButton: () => null,
+            }}
+          />
+          <Tab.Screen
+            name="WeightTrackerStack"
+            component={WeightTrackerStackNavigator}
             listeners={({ navigation }) => ({
               tabPress: (event) => {
                 event.preventDefault();
-                navigation.navigate('CalendarStack', { screen: 'Calendar' });
+                navigation.navigate('WeightTrackerStack', { screen: 'WeightTracker' });
               },
             })}
             options={{
               tabBarIcon: ({ color, focused }) => (
                 <View style={createTabIconWrapperStyle(focused, colors.accent)}>
                   <Ionicons
-                    name={focused ? 'calendar' : 'calendar-outline'}
+                    name={focused ? 'body' : 'body-outline'}
                     size={28}
                     color={color}
                   />
                 </View>
               ),
-            }}
-          />
-          <Tab.Screen
-            name="WeightTrackerStack"
-            component={WeightTrackerStackNavigator}
-            options={{
-              tabBarButton: () => null,
             }}
           />
           <Tab.Screen

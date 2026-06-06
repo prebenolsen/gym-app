@@ -34,6 +34,16 @@ type ProgramWithWorkouts = {
   dominantMuscleGroups: Record<string, MuscleGroup[]>;
 };
 
+type LastWorkoutSummary = {
+  sessionId: string;
+  workoutId: string;
+  workoutName: string;
+  programName: string;
+  startedAt: string;
+  endedAt: string | null;
+  totalLiftedKg: number;
+};
+
 const TIME_PER_SET_SECONDS = { low: 30, high: 45 };
 const HISTORY_LOOKBACK_MONTHS = 18;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -175,8 +185,24 @@ const formatWeightGoalText = (
   return 'Goal: Not set';
 };
 
+const formatSessionDuration = (startIso: string, endIso: string | null): string => {
+  if (!endIso) return 'In progress';
+  const diffMs = new Date(endIso).getTime() - new Date(startIso).getTime();
+  const diffMinutes = Math.max(0, Math.floor(diffMs / 60000));
+  if (diffMinutes < 60) return `${diffMinutes}m`;
+  const hours = Math.floor(diffMinutes / 60);
+  const minutes = diffMinutes % 60;
+  return `${hours}h ${minutes}m`;
+};
+
+const formatRelativeDay = (isoDate: string): string => {
+  const days = getDaysSince(isoDate);
+  if (days === 0) return 'Today';
+  return `${days} days ago`;
+};
+
 const HomeScreen = ({ navigation }: any) => {
-  const { colors: themeColors } = usePreferences();
+  const { colors: themeColors, convertFromKg, unit, formatDateOnly } = usePreferences();
   const styles = createStyles(themeColors);
   const [stats, setStats] = useState<WorkoutStats | null>(null);
   const [programTree, setProgramTree] = useState<ProgramWithWorkouts[]>([]);
@@ -187,6 +213,7 @@ const HomeScreen = ({ navigation }: any) => {
   const [daysSinceByWorkout, setDaysSinceByWorkout] = useState<
     Record<string, number | null>
   >({});
+  const [lastWorkout, setLastWorkout] = useState<LastWorkoutSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   const api = useApi();
@@ -270,6 +297,56 @@ const HomeScreen = ({ navigation }: any) => {
           : null;
       });
 
+      const workoutMetaById = workoutsByProgram.reduce(
+        (acc, { program, workouts }) => {
+          workouts.forEach((workout) => {
+            acc[workout.id] = {
+              workoutName: workout.name,
+              programName: program.name,
+            };
+          });
+          return acc;
+        },
+        {} as Record<string, { workoutName: string; programName: string }>,
+      );
+
+      const finishedEntries = monthHistories
+        .flat()
+        .filter((entry) => entry.status === 'finished');
+
+      if (finishedEntries.length > 0) {
+        const latestFinished = finishedEntries.reduce((latest, entry) =>
+          new Date(entry.started_at).getTime() > new Date(latest.started_at).getTime()
+            ? entry
+            : latest,
+        );
+
+        try {
+          const detail = await api.getSessionDetails(latestFinished.id);
+          const totalLiftedKg = detail.sets.reduce(
+            (sum, set) =>
+              set.is_deleted ? sum : sum + Number(set.weight || 0) * Number(set.reps || 0),
+            0,
+          );
+          const mappedMeta = workoutMetaById[latestFinished.workout_id];
+
+          setLastWorkout({
+            sessionId: latestFinished.id,
+            workoutId: latestFinished.workout_id,
+            workoutName: mappedMeta?.workoutName ?? latestFinished.workout_name,
+            programName: mappedMeta?.programName ?? 'Unknown program',
+            startedAt: latestFinished.started_at,
+            endedAt: latestFinished.ended_at,
+            totalLiftedKg,
+          });
+        } catch (err) {
+          console.error('Failed to fetch last workout details:', err);
+          setLastWorkout(null);
+        }
+      } else {
+        setLastWorkout(null);
+      }
+
       setStats(statsData);
       setProgramTree(workoutsByProgram);
       setActiveSession(session);
@@ -301,6 +378,7 @@ const HomeScreen = ({ navigation }: any) => {
       }
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
+      setLastWorkout(null);
     } finally {
       setLoading(false);
     }
@@ -343,9 +421,11 @@ const HomeScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.screenWrapper}>
+      {/*
       <View style={styles.header}>
         <Text style={styles.headerMessage}>{getWorkoutMessage(workouts7Days)}</Text>
       </View>
+      */}
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {activeSession && (
           <TouchableOpacity
@@ -360,40 +440,6 @@ const HomeScreen = ({ navigation }: any) => {
         )}
 
         <View style={styles.statsGrid}>
-          <TouchableOpacity
-            style={styles.statCard}
-            onPress={() =>
-              navigation.navigate('ProgramsStack', { screen: 'ProgramsList' })
-            }
-          >
-            <Ionicons
-              name="clipboard-outline"
-              size={28}
-              color={themeColors.accent}
-              style={{ marginBottom: 6 }}
-            />
-            <Text style={styles.statValue}>{stats.total_programs}</Text>
-            <Text style={styles.statLabel}>
-              {getCountLabel(stats.total_programs, 'Program', 'Programs')}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.statCard}
-            onPress={() =>
-              navigation.navigate('WeightTrackerStack', { screen: 'WeightTracker' })
-            }
-          >
-            <Ionicons
-              name="body-outline"
-              size={28}
-              color={themeColors.accent}
-              style={{ marginBottom: 6 }}
-            />
-            <Text style={styles.statGoalValue}>{weightGoalText}</Text>
-            <Text style={styles.statLabel} numberOfLines={1}>Weight Tracker</Text>
-          </TouchableOpacity>
-
           <TouchableOpacity
             style={styles.statCard}
             onPress={() =>
@@ -426,6 +472,59 @@ const HomeScreen = ({ navigation }: any) => {
             <Text style={styles.statLabel}>Last 7 Days</Text>
           </TouchableOpacity>
         </View>
+
+        {lastWorkout && (
+          <TouchableOpacity
+            style={styles.lastWorkoutCard}
+            onPress={() =>
+              navigation.navigate('CalendarStack', {
+                screen: 'WorkoutHistoryDetail',
+                params: { sessionId: lastWorkout.sessionId },
+              })
+            }
+          >
+            <View style={styles.lastWorkoutHeaderRow}>
+              <Ionicons name="time-outline" size={20} color={themeColors.accent} />
+              <Text style={styles.lastWorkoutTitle}>Last Workout</Text>
+            </View>
+            <Text style={styles.lastWorkoutMeta} numberOfLines={1}>
+              {lastWorkout.programName}
+            </Text>
+            <Text style={styles.lastWorkoutName} numberOfLines={1}>
+              {lastWorkout.workoutName}
+            </Text>
+
+            <View style={styles.lastWorkoutStatsRow}>
+              <View style={styles.lastWorkoutStatBlock}>
+                <Text style={styles.lastWorkoutStatLabel}>Date</Text>
+                <Text style={styles.lastWorkoutMeta}>
+                  {formatDateOnly(lastWorkout.startedAt)}
+                </Text>
+              </View>
+              <View style={styles.lastWorkoutStatBlockCenter}>
+                <Text style={styles.lastWorkoutStatLabel}>When</Text>
+                <Text style={styles.lastWorkoutMeta}>
+                  {formatRelativeDay(lastWorkout.startedAt)}
+                </Text>
+              </View>
+              <View style={styles.lastWorkoutStatBlockRight}>
+                <View style={styles.lastWorkoutDurationStack}>
+                  <Text style={styles.lastWorkoutStatLabel}>Duration</Text>
+                  <Text style={styles.lastWorkoutMeta}>
+                    {formatSessionDuration(lastWorkout.startedAt, lastWorkout.endedAt)}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.lastWorkoutLiftedRow}>
+              <Text style={styles.lastWorkoutStatLabel}>Total lifted</Text>
+              <Text style={styles.lastWorkoutMetaStrong}>
+                {convertFromKg(lastWorkout.totalLiftedKg).toFixed(1)} {unit}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Favorite programs</Text>
@@ -587,6 +686,84 @@ const createStyles = (themeColors: typeof colors) =>
       color: themeColors.textStrong,
     },
     activeSessionBtn: {
+      fontSize: 14,
+      color: themeColors.accent,
+      fontWeight: '700',
+    },
+    lastWorkoutCard: {
+      backgroundColor: themeColors.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      padding: 14,
+      marginBottom: 16,
+      gap: 8,
+      ...shadow.card,
+    },
+    lastWorkoutHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 4,
+    },
+    lastWorkoutTitle: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: themeColors.textStrong,
+    },
+    lastWorkoutName: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: themeColors.textStrong,
+    },
+    lastWorkoutMeta: {
+      fontSize: 12,
+      color: themeColors.textMuted,
+      fontWeight: '600',
+    },
+    lastWorkoutStatsRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: 10,
+      marginTop: 2,
+    },
+    lastWorkoutStatBlock: {
+      flex: 1,
+      alignItems: 'flex-start',
+      gap: 2,
+    },
+    lastWorkoutStatBlockCenter: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 2,
+    },
+    lastWorkoutStatBlockRight: {
+      flex: 1,
+      alignItems: 'flex-end',
+      gap: 2,
+    },
+    lastWorkoutDurationStack: {
+      alignItems: 'center',
+      gap: 2,
+    },
+    lastWorkoutStatLabel: {
+      fontSize: 11,
+      color: themeColors.textMuted,
+      fontWeight: '700',
+      letterSpacing: 0.3,
+    },
+    lastWorkoutLiftedRow: {
+      marginTop: 2,
+      paddingTop: 8,
+      borderTopWidth: 1,
+      borderTopColor: themeColors.border,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+    },
+    lastWorkoutMetaStrong: {
       fontSize: 14,
       color: themeColors.accent,
       fontWeight: '700',
