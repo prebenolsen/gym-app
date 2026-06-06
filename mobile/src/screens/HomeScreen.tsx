@@ -845,14 +845,13 @@ const createStyles = (themeColors: typeof colors) =>
     },
     workoutRowTile: {
       alignItems: 'stretch',
-      paddingVertical: 12,
+      paddingVertical: 2,
       paddingHorizontal: 12,
       backgroundColor: themeColors.background,
       borderWidth: 1,
       borderColor: themeColors.border,
       borderRadius: radius.sm,
       marginBottom: 6,
-      minHeight: 146,
     },
     workoutRowTileContent: {
       flexDirection: 'row',
@@ -868,7 +867,6 @@ const createStyles = (themeColors: typeof colors) =>
     },
     workoutRowTileMain: {
       flex: 1,
-      minHeight: 118,
       justifyContent: 'space-between',
     },
     workoutRowTileName: {
