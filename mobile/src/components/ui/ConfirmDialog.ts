@@ -17,9 +17,19 @@ type ConfirmDialogOptions = {
   destructive?: boolean;
   onConfirm: () => void | Promise<void>;
   onConfirmInput?: (inputValue: string, selectedOptions?: string[]) => void | Promise<void>;
+  onConfirmSelection?: (selectedOptions: string[]) => void | Promise<void>;
+  onConfirmDualInput?: (
+    primaryInputValue: string,
+    secondaryInputValue: string,
+    selectedOptions?: string[],
+  ) => void | Promise<void>;
   onCancel?: () => void | Promise<void>;
   promptPlaceholder?: string;
   promptInitialValue?: string;
+  promptSecureTextEntry?: boolean;
+  promptSecondaryPlaceholder?: string;
+  promptSecondaryInitialValue?: string;
+  promptSecondarySecureTextEntry?: boolean;
   promptOptions?: string[];
   promptOptionsLabel?: string;
   promptInitialSelections?: string[];
@@ -35,9 +45,15 @@ export const showConfirmDialog = ({
   destructive = false,
   onConfirm,
   onConfirmInput,
+  onConfirmSelection,
+  onConfirmDualInput,
   onCancel,
   promptPlaceholder,
   promptInitialValue,
+  promptSecureTextEntry,
+  promptSecondaryPlaceholder,
+  promptSecondaryInitialValue,
+  promptSecondarySecureTextEntry,
   promptOptions,
   promptOptionsLabel,
   promptInitialSelections,
@@ -56,9 +72,15 @@ export const showConfirmDialog = ({
     destructive,
     onConfirm,
     onConfirmInput,
+    onConfirmSelection,
+    onConfirmDualInput,
     onCancel,
     promptPlaceholder,
     promptInitialValue,
+    promptSecureTextEntry,
+    promptSecondaryPlaceholder,
+    promptSecondaryInitialValue,
+    promptSecondarySecureTextEntry,
     promptOptions,
     promptOptionsLabel,
     promptInitialSelections,
@@ -130,5 +152,99 @@ export const showInputConfirmDialog = ({
     promptInitialSelections: initialSelections,
     promptAutoSuggestSelections: autoSuggestSelections,
     promptSelectionMode: selectionMode,
+  });
+};
+
+type SelectionConfirmDialogOptions = {
+  title: string;
+  message?: string;
+  confirmText?: string;
+  cancelText?: string;
+  options: string[];
+  optionsLabel?: string;
+  initialSelections?: string[];
+  selectionMode?: 'single' | 'multi';
+  destructive?: boolean;
+  onConfirmSelection: (selectedOptions: string[]) => void | Promise<void>;
+  onCancel?: () => void | Promise<void>;
+};
+
+export const showSelectionConfirmDialog = ({
+  title,
+  message = '',
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
+  options,
+  optionsLabel,
+  initialSelections,
+  selectionMode = 'single',
+  destructive = false,
+  onConfirmSelection,
+  onCancel,
+}: SelectionConfirmDialogOptions) => {
+  showConfirmDialog({
+    title,
+    message,
+    confirmText,
+    cancelText,
+    destructive,
+    onConfirm: () => {},
+    onConfirmSelection,
+    onCancel,
+    promptOptions: options,
+    promptOptionsLabel: optionsLabel,
+    promptInitialSelections: initialSelections,
+    promptSelectionMode: selectionMode,
+  });
+};
+
+type DualInputConfirmDialogOptions = {
+  title: string;
+  message?: string;
+  confirmText?: string;
+  cancelText?: string;
+  primaryPlaceholder?: string;
+  primaryInitialValue?: string;
+  primarySecureTextEntry?: boolean;
+  secondaryPlaceholder?: string;
+  secondaryInitialValue?: string;
+  secondarySecureTextEntry?: boolean;
+  onConfirmDualInput: (
+    primaryInputValue: string,
+    secondaryInputValue: string,
+    selectedOptions?: string[],
+  ) => void | Promise<void>;
+  onCancel?: () => void | Promise<void>;
+};
+
+export const showDualInputConfirmDialog = ({
+  title,
+  message = '',
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
+  primaryPlaceholder,
+  primaryInitialValue,
+  primarySecureTextEntry,
+  secondaryPlaceholder,
+  secondaryInitialValue,
+  secondarySecureTextEntry,
+  onConfirmDualInput,
+  onCancel,
+}: DualInputConfirmDialogOptions) => {
+  showConfirmDialog({
+    title,
+    message,
+    confirmText,
+    cancelText,
+    destructive: false,
+    onConfirm: () => {},
+    onConfirmDualInput,
+    onCancel,
+    promptPlaceholder: primaryPlaceholder,
+    promptInitialValue: primaryInitialValue,
+    promptSecureTextEntry: primarySecureTextEntry,
+    promptSecondaryPlaceholder: secondaryPlaceholder,
+    promptSecondaryInitialValue: secondaryInitialValue,
+    promptSecondarySecureTextEntry: secondarySecureTextEntry,
   });
 };

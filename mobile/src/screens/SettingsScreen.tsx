@@ -21,7 +21,11 @@ import BrandLogo from '../components/BrandLogo';
 import { APP_INFO } from '../constants/appInfo';
 import { useToast } from '../components/ui/AppToastProvider';
 import { useErrorDialog } from '../components/ui/ErrorDialogProvider';
-import { showDeleteConfirmDialog } from '../components/ui/ConfirmDialog';
+import {
+  showDeleteConfirmDialog,
+  showDualInputConfirmDialog,
+  showSelectionConfirmDialog,
+} from '../components/ui/ConfirmDialog';
 import {
   COMPLETION_SOUNDS,
   COUNTDOWN_SOUNDS,
@@ -33,6 +37,7 @@ import type { DateFormat } from '../context/PreferencesContext';
 import AppButton from '../components/ui/AppButton';
 import ChipButton from '../components/ui/ChipButton';
 import SegmentedControl from '../components/ui/SegmentedControl';
+import ModalSheet from '../components/ui/ModalSheet';
 
 const DATE_FORMAT_OPTIONS: ReadonlyArray<{ key: DateFormat; label: string }> = [
   { key: 'eu', label: 'DD/MM/YYYY' },
@@ -155,14 +160,15 @@ const SettingsScreen = ({ navigation }: any) => {
   const styles = createStyles(themeColors);
   const { showToast } = useToast();
   const { showError } = useErrorDialog();
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [completionSoundOpen, setCompletionSoundOpen] = useState(false);
   const [countdownSoundOpen, setCountdownSoundOpen] = useState(false);
   const [prepareSoundOpen, setPrepareSoundOpen] = useState(false);
 
   const [profileLoading, setProfileLoading] = useState(true);
   const [savingPersonalMetrics, setSavingPersonalMetrics] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportingData, setExportingData] = useState(false);
+  const [exportCsvText, setExportCsvText] = useState('');
   const [personalWeight, setPersonalWeight] = useState('');
   const [personalHeight, setPersonalHeight] = useState('');
   const [personalAgeMode, setPersonalAgeMode] = useState<'age' | 'birthdate'>('age');
@@ -256,25 +262,35 @@ const SettingsScreen = ({ navigation }: any) => {
     }
   };
 
-  const handleChangePassword = async () => {
-    if (newPassword.length < 8) {
-      Alert.alert('Weak password', 'Password must be at least 8 characters long.');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      Alert.alert('Password mismatch', 'Passwords do not match.');
-      return;
-    }
+  const handleChangePassword = () => {
+    showDualInputConfirmDialog({
+      title: 'Change password',
+      message: 'Enter your new password and confirm it.',
+      confirmText: 'Change password',
+      cancelText: 'Cancel',
+      primaryPlaceholder: 'New password',
+      secondaryPlaceholder: 'Confirm password',
+      primarySecureTextEntry: true,
+      secondarySecureTextEntry: true,
+      onConfirmDualInput: async (newPassword, confirmPassword) => {
+        if (newPassword.length < 8) {
+          Alert.alert('Weak password', 'Password must be at least 8 characters long.');
+          return;
+        }
+        if (newPassword !== confirmPassword) {
+          Alert.alert('Password mismatch', 'Passwords do not match.');
+          return;
+        }
 
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) {
-      showError({ message: error.message });
-      return;
-    }
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) {
+          showError({ message: error.message });
+          return;
+        }
 
-    setNewPassword('');
-    setConfirmPassword('');
-    showToast({ type: 'success', duration: 'short', message: 'Password updated.' });
+        showToast({ type: 'success', duration: 'short', message: 'Password updated.' });
+      },
+    });
   };
 
   const handleDeleteAccount = () => {
@@ -313,11 +329,118 @@ const SettingsScreen = ({ navigation }: any) => {
     );
   };
 
+  const handleManageAccountData = () => {
+    showSelectionConfirmDialog({
+      title: 'Manage account data',
+      message:
+        'Choose what you want to do:\n\n• Reset account: This will completely erase your workouts, exercises, weight tracker data, and settings. You will be taken to a fresh onboarding setup.\n\n• Delete account: Delete your account and all data permanently.\n\n• Export my data: Prepare a CSV export of your Weight Tracker data for copy/export.',
+      confirmText: 'Continue',
+      cancelText: 'Cancel',
+      options: ['Reset account', 'Delete account', 'Export my data'],
+      optionsLabel: '',
+      selectionMode: 'single',
+      onConfirmSelection: async (selectedOptions) => {
+        const selectedAction = selectedOptions[0];
+        if (selectedAction === 'Reset account') {
+          handleResetAccount();
+          return;
+        }
+        if (selectedAction === 'Delete account') {
+          handleDeleteAccount();
+          return;
+        }
+        if (selectedAction === 'Export my data') {
+          await handleExportData();
+        }
+      },
+    });
+  };
+
   const handleOpenFeedback = () => {
     navigation.navigate('Feedback');
   };
 
+  const handleExportData = async () => {
+    setExportingData(true);
+    try {
+      const csvEscape = (raw: string | number | boolean | null | undefined): string => {
+        if (raw == null) return '';
+        const value = String(raw);
+        if (!/[",\n]/.test(value)) return value;
+        return `"${value.replace(/"/g, '""')}"`;
+      };
+
+      const [latestGoals, latestMetrics] = await Promise.all([
+        api.getWeightTrackerGoals(),
+        api.getCustomMetrics(),
+      ]);
+
+      const sortedGoals = [...latestGoals].sort((a, b) => a.started_on.localeCompare(b.started_on));
+      const [entriesByGoal, valuesByGoal] = await Promise.all([
+        Promise.all(sortedGoals.map((goal) => api.getWeightTrackerEntries(3650, goal.id))),
+        Promise.all(sortedGoals.map((goal) => api.getCustomMetricValues(3650, goal.id))),
+      ]);
+
+      const allEntries = entriesByGoal.flat();
+      const allMetricValues = valuesByGoal.flat();
+      const goalTypeById = new Map(sortedGoals.map((goal) => [goal.id, goal.goal_type]));
+      const metricById = new Map(latestMetrics.map((metric) => [metric.id, metric]));
+      const metricValueByEntryMetric = new Map<string, (typeof allMetricValues)[number]>();
+
+      for (const metricValue of allMetricValues) {
+        metricValueByEntryMetric.set(
+          `${metricValue.goal_id}::${metricValue.entry_date}::${metricValue.metric_id}`,
+          metricValue,
+        );
+      }
+
+      const customMetricColumns = latestMetrics.map((metric) => metric.id);
+      const header = [
+        'entry_date',
+        'goal_type',
+        'weight_kg',
+        'steps',
+        'calories',
+        ...customMetricColumns.map((metricId, index) => {
+          const metricName = metricById.get(metricId)?.name?.trim();
+          return `custom_${metricName && metricName.length > 0 ? metricName : `metric_${index + 1}`}`;
+        }),
+      ];
+
+      const sortedEntries = [...allEntries].sort((a, b) => a.entry_date.localeCompare(b.entry_date));
+      const rows = sortedEntries.map((entry) => {
+        const baseValues: Array<string | number | boolean | null | undefined> = [
+          entry.entry_date,
+          goalTypeById.get(entry.goal_id) ?? '',
+          entry.weight_kg,
+          entry.steps,
+          entry.calories,
+        ];
+
+        const customValues = customMetricColumns.map((metricId) => {
+          const metric = metricById.get(metricId);
+          const value = metricValueByEntryMetric.get(`${entry.goal_id}::${entry.entry_date}::${metricId}`);
+          if (!metric || !value) return null;
+          if (metric.type === 'boolean') return value.value_boolean;
+          if (metric.type === 'integer') return value.value_integer;
+          return value.value_decimal;
+        });
+
+        return [...baseValues, ...customValues].map(csvEscape).join(',');
+      });
+
+      const csv = [header.map(csvEscape).join(','), ...rows].join('\n');
+      setExportCsvText(csv);
+      setShowExportModal(true);
+    } catch {
+      showError({ message: 'Could not export your data. Please try again.' });
+    } finally {
+      setExportingData(false);
+    }
+  };
+
   return (
+    <>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.card}>
         <Text style={styles.title}>Appearance</Text>
@@ -679,33 +802,14 @@ const SettingsScreen = ({ navigation }: any) => {
 
         <AppButton title="Log Out" onPress={() => signOut()} />
 
-        <Text style={styles.section}>Change Password</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="New password"
-          secureTextEntry
-          value={newPassword}
-          onChangeText={setNewPassword}
-          placeholderTextColor={themeColors.textMuted}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm password"
-          secureTextEntry
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          placeholderTextColor={themeColors.textMuted}
-        />
-        <AppButton title="Update Password" variant="outlineAccent" onPress={handleChangePassword} />
+        <AppButton title="Change Password" variant="outlineAccent" style={styles.deleteAccountButton} onPress={handleChangePassword} />
 
         <AppButton
-          title="Reset Account"
+          title="Manage Account Data"
           variant="danger"
           style={styles.deleteAccountButton}
-          onPress={handleResetAccount}
+          onPress={handleManageAccountData}
         />
-
-        <AppButton title="Delete Account" variant="danger" style={styles.deleteAccountButton} onPress={handleDeleteAccount} />
       </View>
 
       <View style={styles.card}>
@@ -727,6 +831,31 @@ const SettingsScreen = ({ navigation }: any) => {
         />
       </View>
     </ScrollView>
+
+    <ModalSheet
+      visible={showExportModal}
+      title="Export My Data"
+      onClose={() => setShowExportModal(false)}
+    >
+      <Text style={styles.settingHelp}>
+        Tap inside the field, then use Select All and Copy on your phone.
+      </Text>
+
+      <View style={styles.exportInput}>
+        <ScrollView
+          style={styles.exportScroll}
+          nestedScrollEnabled
+          showsVerticalScrollIndicator
+        >
+          <Text selectable style={styles.exportText}>
+            {exportCsvText}
+          </Text>
+        </ScrollView>
+      </View>
+
+      <AppButton title="Done" style={{ marginTop: 12 }} onPress={() => setShowExportModal(false)} />
+    </ModalSheet>
+    </>
   );
 };
 
@@ -848,8 +977,30 @@ const createStyles = (themeColors: typeof colors) =>
     metricSaveButton: {
       marginTop: 10,
     },
+    exportDataButton: {
+      marginTop: 10,
+    },
     deleteAccountButton: {
       marginTop: 18,
+    },
+    exportInput: {
+      minHeight: 220,
+      maxHeight: 360,
+      borderRadius: radius.sm,
+      borderWidth: 1,
+      borderColor: themeColors.border,
+      backgroundColor: themeColors.surface,
+      marginTop: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 10,
+    },
+    exportScroll: {
+      flex: 1,
+    },
+    exportText: {
+      color: themeColors.textStrong,
+      fontSize: 12,
+      lineHeight: 18,
     },
     soundSectionContainer: {
       flexDirection: 'row',

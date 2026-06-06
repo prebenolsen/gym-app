@@ -27,9 +27,19 @@ type ConfirmDialogState = {
   destructive: boolean;
   onConfirm: () => void | Promise<void>;
   onConfirmInput?: (inputValue: string, selectedOptions?: string[]) => void | Promise<void>;
+  onConfirmSelection?: (selectedOptions: string[]) => void | Promise<void>;
+  onConfirmDualInput?: (
+    primaryInputValue: string,
+    secondaryInputValue: string,
+    selectedOptions?: string[],
+  ) => void | Promise<void>;
   onCancel?: () => void | Promise<void>;
   promptPlaceholder?: string;
   promptInitialValue?: string;
+  promptSecureTextEntry?: boolean;
+  promptSecondaryPlaceholder?: string;
+  promptSecondaryInitialValue?: string;
+  promptSecondarySecureTextEntry?: boolean;
   promptOptions?: string[];
   promptOptionsLabel?: string;
   promptInitialSelections?: string[];
@@ -48,6 +58,7 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
   const styles = createStyles(themeColors);
   const [dialog, setDialog] = useState<ConfirmDialogState | null>(null);
   const [promptValue, setPromptValue] = useState('');
+  const [promptSecondaryValue, setPromptSecondaryValue] = useState('');
   const [promptSelections, setPromptSelections] = useState<string[]>([]);
   const [isPromptSelectionManual, setIsPromptSelectionManual] = useState(false);
   const idRef = React.useRef(0);
@@ -65,6 +76,7 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
   React.useEffect(() => {
     if (!dialog) {
       setPromptValue('');
+      setPromptSecondaryValue('');
       setPromptSelections([]);
       setIsPromptSelectionManual(false);
       return;
@@ -72,6 +84,7 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
 
     const initialValue = dialog.promptInitialValue ?? '';
     setPromptValue(initialValue);
+    setPromptSecondaryValue(dialog.promptSecondaryInitialValue ?? '');
 
     if (dialog.promptAutoSuggestSelections) {
       setPromptSelections(dialog.promptAutoSuggestSelections(initialValue));
@@ -111,7 +124,15 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
     if (!dialog) return;
     const activeDialogId = dialog.id;
     try {
-      if (dialog.onConfirmInput) {
+      if (dialog.onConfirmDualInput) {
+        await dialog.onConfirmDualInput(
+          promptValue.trim(),
+          promptSecondaryValue.trim(),
+          promptSelections,
+        );
+      } else if (dialog.onConfirmSelection) {
+        await dialog.onConfirmSelection(promptSelections);
+      } else if (dialog.onConfirmInput) {
         await dialog.onConfirmInput(promptValue.trim(), promptSelections);
       } else {
         await dialog.onConfirm();
@@ -124,7 +145,7 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
         return null;
       });
     }
-  }, [dialog, promptSelections, promptValue]);
+  }, [dialog, promptSecondaryValue, promptSelections, promptValue]);
 
   const handleCancel = useCallback((runCancelAction = false) => {
     if (!dialog) return;
@@ -162,25 +183,42 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
                   placeholder={dialog.promptPlaceholder ?? ''}
                   placeholderTextColor={themeColors.textMuted}
                   autoFocus
-                  autoCapitalize="words"
+                  autoCapitalize={dialog.promptSecureTextEntry ? 'none' : 'words'}
                   autoCorrect={false}
+                  secureTextEntry={dialog.promptSecureTextEntry}
                 />
               ) : null}
-              {dialog.onConfirmInput && dialog.promptOptions?.length ? (
+              {dialog.onConfirmDualInput ? (
+                <>
+                  <TextInput
+                    style={styles.promptInput}
+                    value={promptValue}
+                    onChangeText={setPromptValue}
+                    placeholder={dialog.promptPlaceholder ?? ''}
+                    placeholderTextColor={themeColors.textMuted}
+                    autoFocus
+                    autoCapitalize={dialog.promptSecureTextEntry ? 'none' : 'words'}
+                    autoCorrect={false}
+                    secureTextEntry={dialog.promptSecureTextEntry}
+                  />
+                  <TextInput
+                    style={styles.promptInput}
+                    value={promptSecondaryValue}
+                    onChangeText={setPromptSecondaryValue}
+                    placeholder={dialog.promptSecondaryPlaceholder ?? ''}
+                    placeholderTextColor={themeColors.textMuted}
+                    autoCapitalize={dialog.promptSecondarySecureTextEntry ? 'none' : 'words'}
+                    autoCorrect={false}
+                    secureTextEntry={dialog.promptSecondarySecureTextEntry}
+                  />
+                </>
+              ) : null}
+              {(dialog.onConfirmInput || dialog.onConfirmSelection) && dialog.promptOptions?.length ? (
                 <View style={styles.promptOptionsContainer}>
                   {dialog.promptOptionsLabel ? (
                     <Text style={styles.promptOptionsLabel}>{dialog.promptOptionsLabel}</Text>
                   ) : null}
                   <View style={styles.promptOptionsWrap}>
-                    <ChipButton
-                      label="None"
-                      compact
-                      selected={promptSelections.length === 0}
-                      onPress={() => {
-                        setIsPromptSelectionManual(true);
-                        setPromptSelections([]);
-                      }}
-                    />
                     {dialog.promptOptions.map((option) => (
                       <ChipButton
                         key={`confirm-option-${option}`}
@@ -206,11 +244,17 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
                   style={[
                     styles.button,
                     dialog.destructive ? styles.destructiveButton : styles.confirmButton,
-                    dialog.onConfirmInput && !promptValue.trim()
+                    ((dialog.onConfirmInput && !promptValue.trim()) ||
+                      (dialog.onConfirmDualInput && (!promptValue.trim() || !promptSecondaryValue.trim())) ||
+                      (dialog.onConfirmSelection && promptSelections.length === 0))
                       ? styles.confirmButtonDisabled
                       : null,
                   ]}
-                  disabled={dialog.onConfirmInput && !promptValue.trim()}
+                  disabled={
+                    (dialog.onConfirmInput && !promptValue.trim()) ||
+                    (dialog.onConfirmDualInput && (!promptValue.trim() || !promptSecondaryValue.trim())) ||
+                    (dialog.onConfirmSelection && promptSelections.length === 0)
+                  }
                   onPress={handleConfirm}
                 >
                   <Text style={[styles.buttonText, styles.confirmButtonText]}>

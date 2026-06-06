@@ -12,7 +12,7 @@ import {
   Alert,
   Dimensions,
 } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { BarChart, LineChart } from 'react-native-gifted-charts';
 import { usePreferences } from '../context/PreferencesContext';
@@ -394,7 +394,6 @@ export default function WeightTrackerScreen() {
   const api = useApi();
   const { showError } = useErrorDialog();
   const { showToast } = useToast();
-  const navigation = useNavigation();
   const styles = useMemo(() => createStyles(C), [C]);
   const logDateWheelRef = useRef<FlatList<LogDateOption>>(null);
   const previousObDateFormatRef = useRef<DateFormat>(dateFormat);
@@ -441,10 +440,6 @@ export default function WeightTrackerScreen() {
   const [editSWeight,      setEditSWeight]      = useState(true);
   const [editSSteps,       setEditSSteps]       = useState(true);
   const [editSCal,         setEditSCal]         = useState(true);
-  const [savingSettings,   setSavingSettings]   = useState(false);
-  const [showExportModal,  setShowExportModal]  = useState(false);
-  const [exportingData,    setExportingData]    = useState(false);
-  const [exportCsvText,    setExportCsvText]    = useState('');
 
   // ── custom metric creation ─────────────────────────────────
   const [showAddMetricModal,  setShowAddMetricModal]  = useState(false);
@@ -1108,127 +1103,41 @@ export default function WeightTrackerScreen() {
     );
   };
 
-  // ─── save profile settings ─────────────────────────────────
-  const handleSaveSettings = async () => {
-    setSavingSettings(true);
+  // ─── save metric settings instantly on toggle ─────────────
+  const handleMetricToggle = async (
+    metric: 'weight' | 'steps' | 'calories',
+    nextValue: boolean,
+  ) => {
+    const previous = {
+      weight: editSWeight,
+      steps: editSSteps,
+      calories: editSCal,
+    };
+
+    const next = {
+      weight: metric === 'weight' ? nextValue : previous.weight,
+      steps: metric === 'steps' ? nextValue : previous.steps,
+      calories: metric === 'calories' ? nextValue : previous.calories,
+    };
+
+    setEditSWeight(next.weight);
+    setEditSSteps(next.steps);
+    setEditSCal(next.calories);
+
     try {
       const updated = await api.upsertWeightTrackerProfile({
-        show_weight:   editSWeight,
-        show_steps:    editSSteps,
-        show_calories: editSCal,
+        show_weight: next.weight,
+        show_steps: next.steps,
+        show_calories: next.calories,
       });
-
       setProfile(updated);
-      showToast({ type: 'success', duration: 'short', message: 'Your profile has been updated.' });
     } catch {
-      showError({ message: 'Could not save settings.' });
-    } finally {
-      setSavingSettings(false);
+      setEditSWeight(previous.weight);
+      setEditSSteps(previous.steps);
+      setEditSCal(previous.calories);
+      showError({ message: 'Could not update metric settings.' });
     }
   };
-
-
-  // ─── reset / delete all data ───────────────────────────────
-  const handleResetTracker = () => {
-    showDeleteConfirmDialog(
-      'Delete All Data',
-      'This will permanently delete all your weight entries and profile data. This cannot be undone.',
-      async () => {
-        try {
-          await api.resetWeightTracker();
-          setProfile(null);
-          setGoals([]);
-          setSelectedGoalId(null);
-          setEntries([]);
-          setCustomMetricValues([]);
-          (navigation as any).navigate('Home');
-        } catch {
-          showError({ message: 'Could not reset data. Please try again.' });
-        }
-      },
-      'Delete Everything',
-    );
-  };
-
-  const handleExportData = async () => {
-    setExportingData(true);
-    try {
-      const csvEscape = (raw: string | number | boolean | null | undefined): string => {
-        if (raw == null) return '';
-        const value = String(raw);
-        if (!/[",\n]/.test(value)) return value;
-        return `"${value.replace(/"/g, '""')}"`;
-      };
-
-      const [latestGoals, latestMetrics] = await Promise.all([
-        api.getWeightTrackerGoals(),
-        api.getCustomMetrics(),
-      ]);
-
-      const sortedGoals = [...latestGoals].sort((a, b) => a.started_on.localeCompare(b.started_on));
-      const [entriesByGoal, valuesByGoal] = await Promise.all([
-        Promise.all(sortedGoals.map((goal) => api.getWeightTrackerEntries(3650, goal.id))),
-        Promise.all(sortedGoals.map((goal) => api.getCustomMetricValues(3650, goal.id))),
-      ]);
-
-      const allEntries = entriesByGoal.flat();
-      const allMetricValues = valuesByGoal.flat();
-      const goalTypeById = new Map(sortedGoals.map((goal) => [goal.id, goal.goal_type]));
-      const metricById = new Map(latestMetrics.map((metric) => [metric.id, metric]));
-      const metricValueByEntryMetric = new Map<string, WeightTrackerCustomMetricValue>();
-
-      for (const metricValue of allMetricValues) {
-        metricValueByEntryMetric.set(
-          `${metricValue.goal_id}::${metricValue.entry_date}::${metricValue.metric_id}`,
-          metricValue,
-        );
-      }
-
-      const customMetricColumns = latestMetrics.map((metric) => metric.id);
-      const header = [
-        'entry_date',
-        'goal_type',
-        'weight_kg',
-        'steps',
-        'calories',
-        ...customMetricColumns.map((metricId, index) => {
-          const metricName = metricById.get(metricId)?.name?.trim();
-          return `custom_${metricName && metricName.length > 0 ? metricName : `metric_${index + 1}`}`;
-        }),
-      ];
-
-      const sortedEntries = [...allEntries].sort((a, b) => a.entry_date.localeCompare(b.entry_date));
-      const rows = sortedEntries.map((entry) => {
-        const baseValues: Array<string | number | boolean | null | undefined> = [
-          entry.entry_date,
-          goalTypeById.get(entry.goal_id) ?? '',
-          entry.weight_kg,
-          entry.steps,
-          entry.calories,
-        ];
-
-        const customValues = customMetricColumns.map((metricId) => {
-          const metric = metricById.get(metricId);
-          const value = metricValueByEntryMetric.get(`${entry.goal_id}::${entry.entry_date}::${metricId}`);
-          if (!metric || !value) return null;
-          if (metric.type === 'boolean') return value.value_boolean;
-          if (metric.type === 'integer') return value.value_integer;
-          return value.value_decimal;
-        });
-
-        return [...baseValues, ...customValues].map(csvEscape).join(',');
-      });
-
-      const csv = [header.map(csvEscape).join(','), ...rows].join('\n');
-      setExportCsvText(csv);
-      setShowExportModal(true);
-    } catch {
-      showError({ message: 'Could not export your data. Please try again.' });
-    } finally {
-      setExportingData(false);
-    }
-  };
-
   const handleSelectGoal = async (goalId: string) => {
     try {
       const activated = await api.activateWeightTrackerGoal(goalId);
@@ -2347,15 +2256,17 @@ export default function WeightTrackerScreen() {
             <View style={styles.accordionBody}>
               <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Tracked Metrics</Text>
               {([
-                { key: 'weight',   label: 'Weight',   val: editSWeight, set: setEditSWeight },
-                { key: 'steps',    label: 'Steps',    val: editSSteps,  set: setEditSSteps  },
-                { key: 'calories', label: 'Calories', val: editSCal,    set: setEditSCal    },
-              ] as const).map(({ key, label, val, set }) => (
+                { key: 'weight',   label: 'Weight',   val: editSWeight },
+                { key: 'steps',    label: 'Steps',    val: editSSteps  },
+                { key: 'calories', label: 'Calories', val: editSCal    },
+              ] as const).map(({ key, label, val }) => (
                 <View key={key} style={styles.toggleRow}>
                   <Text style={styles.toggleLabel}>{label}</Text>
                   <Switch
                     value={val}
-                    onValueChange={(v) => (set as (v: boolean) => void)(v)}
+                    onValueChange={(v) => {
+                      void handleMetricToggle(key, v);
+                    }}
                     trackColor={{ true: C.accent }}
                     thumbColor={C.switchThumb}
                   />
@@ -2411,21 +2322,6 @@ export default function WeightTrackerScreen() {
                 <Text style={[styles.formulaNote, { marginTop: 4 }]}>Maximum of 3 custom metrics reached.</Text>
               )}
 
-              {savingSettings ? (
-                <ActivityIndicator color={C.accent} style={{ marginTop: 16 }} />
-              ) : (
-                <AppButton title="Save Settings" style={{ marginTop: 20 }} onPress={handleSaveSettings} />
-              )}
-
-              <AppButton title="Delete All Data" variant="danger" style={{ marginTop: 24 }} onPress={handleResetTracker} />
-
-              <AppButton
-                title={exportingData ? 'Preparing Export...' : 'Export My Data'}
-                variant="outline"
-                style={{ marginTop: 10 }}
-                onPress={handleExportData}
-                disabled={exportingData}
-              />
             </View>
           )}
 
@@ -2446,8 +2342,6 @@ export default function WeightTrackerScreen() {
         {/* ── Start New Goal Modal ── */}
         {renderNewGoalModal()}
 
-        {/* ── Export Data Modal ── */}
-        {renderExportModal()}
       </View>
     );
   }
@@ -2744,34 +2638,6 @@ export default function WeightTrackerScreen() {
     );
   }
 
-  function renderExportModal() {
-    return (
-      <ModalSheet
-        visible={showExportModal}
-        title="Export My Data"
-        onClose={() => setShowExportModal(false)}
-      >
-
-            <Text style={styles.formulaNote}>
-              Tap inside the field, then use Select All and Copy on your phone.
-            </Text>
-
-            <View style={styles.exportInput}>
-              <ScrollView
-                style={styles.exportScroll}
-                nestedScrollEnabled
-                showsVerticalScrollIndicator
-              >
-                <Text selectable style={styles.exportText}>
-                  {exportCsvText}
-                </Text>
-              </ScrollView>
-            </View>
-
-        <AppButton title="Done" style={{ marginTop: 12 }} onPress={() => setShowExportModal(false)} />
-      </ModalSheet>
-    );
-  }
 }
 
 // ─────────────────────────────────────────────────────────────
