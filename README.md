@@ -38,7 +38,7 @@ In the Supabase SQL editor, run this base schema first:
 ```sql
 create extension if not exists pgcrypto;
 
-create table if not exists programs (
+create table if not exists gymapp_programs (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   user_id text not null,
@@ -48,9 +48,9 @@ create table if not exists programs (
   constraint programs_user_order_unique unique (user_id, "order")
 );
 
-create table if not exists workouts (
+create table if not exists gymapp_workouts (
   id uuid primary key default gen_random_uuid(),
-  program_id uuid not null references programs(id) on delete cascade,
+  program_id uuid not null references gymapp_programs(id) on delete cascade,
   name text not null,
   user_id text not null,
   "order" integer not null default 1,
@@ -58,9 +58,9 @@ create table if not exists workouts (
   constraint workouts_program_order_unique unique (program_id, "order")
 );
 
-create table if not exists exercises (
+create table if not exists gymapp_exercises (
   id uuid primary key default gen_random_uuid(),
-  workout_id uuid not null references workouts(id) on delete cascade,
+  workout_id uuid not null references gymapp_workouts(id) on delete cascade,
   name text not null,
   sets integer not null default 1,
   rest_seconds integer not null default 120,
@@ -72,9 +72,9 @@ create table if not exists exercises (
   constraint exercises_workout_order_unique unique (workout_id, "order")
 );
 
-create table if not exists workout_sessions (
+create table if not exists gymapp_workout_sessions (
   id uuid primary key default gen_random_uuid(),
-  workout_id uuid not null references workouts(id) on delete cascade,
+  workout_id uuid not null references gymapp_workouts(id) on delete cascade,
   user_id text not null,
   status text not null check (status in ('active', 'cancelled', 'finished')),
   current_exercise_index integer not null default 0,
@@ -83,10 +83,10 @@ create table if not exists workout_sessions (
   created_at timestamptz not null default now()
 );
 
-create table if not exists workout_session_sets (
+create table if not exists gymapp_workout_session_sets (
   id uuid primary key default gen_random_uuid(),
-  session_id uuid not null references workout_sessions(id) on delete cascade,
-  exercise_id uuid not null references exercises(id) on delete cascade,
+  session_id uuid not null references gymapp_workout_sessions(id) on delete cascade,
+  exercise_id uuid not null references gymapp_exercises(id) on delete cascade,
   set_number integer not null,
   weight numeric not null default 0,
   reps integer not null,
@@ -97,8 +97,8 @@ create table if not exists workout_session_sets (
   constraint workout_session_sets_unique unique (session_id, exercise_id, set_number)
 );
 
-create table if not exists exercise_notes (
-  exercise_id uuid not null references exercises(id) on delete cascade,
+create table if not exists gymapp_exercise_notes (
+  exercise_id uuid not null references gymapp_exercises(id) on delete cascade,
   user_id text not null,
   notes text not null default '',
   updated_at timestamptz not null default now(),
@@ -106,16 +106,43 @@ create table if not exists exercise_notes (
   primary key (exercise_id, user_id)
 );
 
-create index if not exists idx_programs_user_id on programs(user_id);
-create index if not exists idx_workouts_program_id on workouts(program_id);
-create index if not exists idx_workouts_user_id on workouts(user_id);
-create index if not exists idx_exercises_workout_id on exercises(workout_id);
-create index if not exists idx_exercises_user_id on exercises(user_id);
-create index if not exists idx_workout_sessions_user_id on workout_sessions(user_id);
-create index if not exists idx_workout_sessions_workout_id on workout_sessions(workout_id);
-create index if not exists idx_workout_session_sets_session_id on workout_session_sets(session_id);
-create index if not exists idx_workout_session_sets_exercise_id on workout_session_sets(exercise_id);
-create index if not exists idx_workout_session_sets_user_id on workout_session_sets(user_id);
+create index if not exists idx_programs_user_id on gymapp_programs(user_id);
+create index if not exists idx_workouts_program_id on gymapp_workouts(program_id);
+create index if not exists idx_workouts_user_id on gymapp_workouts(user_id);
+create index if not exists idx_exercises_workout_id on gymapp_exercises(workout_id);
+create index if not exists idx_exercises_user_id on gymapp_exercises(user_id);
+create index if not exists idx_workout_sessions_user_id on gymapp_workout_sessions(user_id);
+create index if not exists idx_workout_sessions_workout_id on gymapp_workout_sessions(workout_id);
+create index if not exists idx_workout_session_sets_session_id on gymapp_workout_session_sets(session_id);
+create index if not exists idx_workout_session_sets_exercise_id on gymapp_workout_session_sets(exercise_id);
+create index if not exists idx_workout_session_sets_user_id on gymapp_workout_session_sets(user_id);
+```
+
+Supabase enables Row Level Security on new tables by default, so each
+`gymapp_` table is locked until a policy is added. The backend connects with
+the service-role key (which bypasses RLS), but add these policies so any direct
+anon/authenticated access is still scoped per user:
+
+```sql
+alter table gymapp_programs            enable row level security;
+alter table gymapp_workouts            enable row level security;
+alter table gymapp_exercises           enable row level security;
+alter table gymapp_workout_sessions    enable row level security;
+alter table gymapp_workout_session_sets enable row level security;
+alter table gymapp_exercise_notes      enable row level security;
+
+create policy users_own_programs on gymapp_programs
+  for all using (auth.uid()::text = user_id) with check (auth.uid()::text = user_id);
+create policy users_own_workouts on gymapp_workouts
+  for all using (auth.uid()::text = user_id) with check (auth.uid()::text = user_id);
+create policy users_own_exercises on gymapp_exercises
+  for all using (auth.uid()::text = user_id) with check (auth.uid()::text = user_id);
+create policy users_own_sessions on gymapp_workout_sessions
+  for all using (auth.uid()::text = user_id) with check (auth.uid()::text = user_id);
+create policy users_own_session_sets on gymapp_workout_session_sets
+  for all using (auth.uid()::text = user_id) with check (auth.uid()::text = user_id);
+create policy users_own_notes on gymapp_exercise_notes
+  for all using (auth.uid()::text = user_id) with check (auth.uid()::text = user_id);
 ```
 
 If you are upgrading an older schema, also run:
@@ -308,7 +335,7 @@ npx tsc -p mobile/tsconfig.json --noEmit
 
 ### Missing session or notes tables
 
-If the mobile app reports missing `workout_sessions`, `workout_session_sets`, or `exercise_notes`, rerun the base schema SQL in the Supabase SQL editor.
+If the mobile app reports missing `gymapp_workout_sessions`, `gymapp_workout_session_sets`, or `gymapp_exercise_notes`, rerun the base schema SQL in the Supabase SQL editor.
 
 ### Android phone over USB-C
 

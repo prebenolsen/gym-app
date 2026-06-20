@@ -87,17 +87,17 @@ const formatError = (err: unknown): string => {
 
 const deleteAllUserData = async (userId: string) => {
   const tablesToDelete = [
-    'workout_session_sets',
-    'workout_sessions',
-    'exercise_notes',
-    'exercises',
-    'workouts',
-    'programs',
-    'weight_tracker_custom_metric_values',
-    'weight_tracker_entries',
-    'weight_tracker_custom_metrics',
-    'weight_tracker_goals',
-    'weight_tracker_profile',
+    'gymapp_workout_session_sets',
+    'gymapp_workout_sessions',
+    'gymapp_exercise_notes',
+    'gymapp_exercises',
+    'gymapp_workouts',
+    'gymapp_programs',
+    'gymapp_weight_tracker_custom_metric_values',
+    'gymapp_weight_tracker_entries',
+    'gymapp_weight_tracker_custom_metrics',
+    'gymapp_weight_tracker_goals',
+    'gymapp_weight_tracker_profile',
   ] as const;
 
   for (const table of tablesToDelete) {
@@ -144,7 +144,7 @@ app.use(authenticateUser);
 app.get('/programs', async (req, res) => {
   try {
     const { data, error } = await supabase
-      .from('programs')
+      .from('gymapp_programs')
       .select('*')
       .eq('user_id', req.userId)
       .order('order', { ascending: true });
@@ -163,7 +163,7 @@ app.post('/programs', async (req, res) => {
 
     // Get the next order number
     const { data: existing } = await supabase
-      .from('programs')
+      .from('gymapp_programs')
       .select('order')
       .eq('user_id', req.userId)
       .order('order', { ascending: false })
@@ -173,14 +173,14 @@ app.post('/programs', async (req, res) => {
 
     // Check if this is the first program
     const { count: programCount } = await supabase
-      .from('programs')
+      .from('gymapp_programs')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', req.userId);
 
     const isFirstProgram = (programCount || 0) === 0;
 
     const { data, error } = await supabase
-      .from('programs')
+      .from('gymapp_programs')
       .insert([
         {
           name,
@@ -206,7 +206,7 @@ app.put('/programs/:id', async (req, res) => {
     const { name } = req.body;
 
     const { data, error } = await supabase
-      .from('programs')
+      .from('gymapp_programs')
       .update({ name })
       .eq('id', id)
       .eq('user_id', req.userId)
@@ -232,7 +232,7 @@ app.patch('/programs/:id/favorite', async (req, res) => {
     }
 
     const { data, error } = await supabase
-      .from('programs')
+      .from('gymapp_programs')
       .update({ is_favorite_program: is_favorite })
       .eq('id', id)
       .eq('user_id', req.userId)
@@ -253,7 +253,7 @@ app.delete('/programs/:id', async (req, res) => {
 
     // Ensure the caller owns the program before deleting.
     const { data: deletedProgram, error } = await supabase
-      .from('programs')
+      .from('gymapp_programs')
       .delete()
       .eq('id', id)
       .eq('user_id', req.userId)
@@ -280,7 +280,7 @@ app.get('/programs/:programId/workouts', async (req, res) => {
     const { programId } = req.params;
 
     const { data, error } = await supabase
-      .from('workouts')
+      .from('gymapp_workouts')
       .select('*')
       .eq('program_id', programId)
       .eq('user_id', req.userId)
@@ -301,7 +301,7 @@ app.post('/programs/:programId/workouts', async (req, res) => {
 
     // Get the next order number
     const { data: existing } = await supabase
-      .from('workouts')
+      .from('gymapp_workouts')
       .select('order')
       .eq('program_id', programId)
       .order('order', { ascending: false })
@@ -310,7 +310,7 @@ app.post('/programs/:programId/workouts', async (req, res) => {
     const nextOrder = ((existing && existing[0]?.order) || 0) + 1;
 
     const { data, error } = await supabase
-      .from('workouts')
+      .from('gymapp_workouts')
       .insert([
         {
           program_id: programId,
@@ -336,7 +336,7 @@ app.put('/workouts/:id', async (req, res) => {
     const { name } = req.body;
 
     const { data, error } = await supabase
-      .from('workouts')
+      .from('gymapp_workouts')
       .update({ name })
       .eq('id', id)
       .eq('user_id', req.userId)
@@ -357,7 +357,7 @@ app.delete('/workouts/:id', async (req, res) => {
 
     // Ensure the caller owns the workout before deleting.
     const { data: deletedWorkout, error } = await supabase
-      .from('workouts')
+      .from('gymapp_workouts')
       .delete()
       .eq('id', id)
       .eq('user_id', req.userId)
@@ -388,7 +388,7 @@ app.patch('/programs/:programId/workouts/reorder', async (req, res) => {
     }
 
     const { data: ownedProgram, error: ownedProgramError } = await supabase
-      .from('programs')
+      .from('gymapp_programs')
       .select('id')
       .eq('id', programId)
       .eq('user_id', req.userId)
@@ -407,7 +407,7 @@ app.patch('/programs/:programId/workouts/reorder', async (req, res) => {
       }
 
       const { data: updatedRows, error: updateError } = await supabase
-        .from('workouts')
+        .from('gymapp_workouts')
         .update({ order: item.order })
         .eq('id', item.id)
         .eq('program_id', programId)
@@ -435,7 +435,7 @@ app.get('/workouts/:workoutId/exercises', async (req, res) => {
     const { workoutId } = req.params;
 
     const { data, error } = await supabase
-      .from('exercises')
+      .from('gymapp_exercises')
       .select('*')
       .eq('workout_id', workoutId)
       .eq('user_id', req.userId)
@@ -479,7 +479,7 @@ app.post('/workouts/:workoutId/exercises', async (req, res) => {
 
     // Get the next order number
     const { data: existing } = await supabase
-      .from('exercises')
+      .from('gymapp_exercises')
       .select('order')
       .eq('workout_id', workoutId)
       .order('order', { ascending: false })
@@ -488,7 +488,7 @@ app.post('/workouts/:workoutId/exercises', async (req, res) => {
     const nextOrder = ((existing && existing[0]?.order) || 0) + 1;
 
     const { data, error } = await supabase
-      .from('exercises')
+      .from('gymapp_exercises')
       .insert([
         {
           workout_id: workoutId,
@@ -518,7 +518,7 @@ app.put('/exercises/:id', async (req, res) => {
     const updates: Record<string, unknown> = {};
 
     const { error: fetchError } = await supabase
-      .from('exercises')
+      .from('gymapp_exercises')
       .select('id')
       .eq('id', id)
       .eq('user_id', req.userId)
@@ -536,7 +536,7 @@ app.put('/exercises/:id', async (req, res) => {
     }
 
     const { data, error } = await supabase
-      .from('exercises')
+      .from('gymapp_exercises')
       .update(updates)
       .eq('id', id)
       .eq('user_id', req.userId)
@@ -556,7 +556,7 @@ app.delete('/exercises/:id', async (req, res) => {
     const { id } = req.params;
 
     const { error } = await supabase
-      .from('exercises')
+      .from('gymapp_exercises')
       .delete()
       .eq('id', id)
       .eq('user_id', req.userId);
@@ -580,7 +580,7 @@ app.patch('/workouts/:workoutId/exercises/reorder', async (req, res) => {
     }
 
     const { data: ownedWorkout, error: ownedWorkoutError } = await supabase
-      .from('workouts')
+      .from('gymapp_workouts')
       .select('id')
       .eq('id', workoutId)
       .eq('user_id', req.userId)
@@ -599,7 +599,7 @@ app.patch('/workouts/:workoutId/exercises/reorder', async (req, res) => {
       }
 
       const { data: updatedRows, error: updateError } = await supabase
-        .from('exercises')
+        .from('gymapp_exercises')
         .update({ order: item.order })
         .eq('id', item.id)
         .eq('workout_id', workoutId)
@@ -625,7 +625,7 @@ app.patch('/workouts/:workoutId/exercises/reorder', async (req, res) => {
 app.get('/workout-sessions', async (req, res) => {
   try {
     const { data, error } = await supabase
-      .from('workout_sessions')
+      .from('gymapp_workout_sessions')
       .select('*')
       .eq('user_id', req.userId)
       .order('created_at', { ascending: false });
@@ -641,7 +641,7 @@ app.get('/workout-sessions', async (req, res) => {
 app.get('/workout-sessions/active', async (req, res) => {
   try {
     const { data, error } = await supabase
-      .from('workout_sessions')
+      .from('gymapp_workout_sessions')
       .select('*')
       .eq('user_id', req.userId)
       .eq('status', 'active')
@@ -666,7 +666,7 @@ app.post('/workout-sessions/start', async (req, res) => {
     }
 
     const { data: activeSession, error: activeError } = await supabase
-      .from('workout_sessions')
+      .from('gymapp_workout_sessions')
       .select('*')
       .eq('user_id', req.userId)
       .eq('status', 'active')
@@ -685,7 +685,7 @@ app.post('/workout-sessions/start', async (req, res) => {
     }
 
     const { data, error } = await supabase
-      .from('workout_sessions')
+      .from('gymapp_workout_sessions')
       .insert([
         {
           workout_id,
@@ -712,7 +712,7 @@ app.patch('/workout-sessions/:id/current-exercise', async (req, res) => {
     const { current_exercise_index } = req.body;
 
     const { data, error } = await supabase
-      .from('workout_sessions')
+      .from('gymapp_workout_sessions')
       .update({ current_exercise_index })
       .eq('id', id)
       .eq('user_id', req.userId)
@@ -733,7 +733,7 @@ app.post('/workout-sessions/:id/cancel', async (req, res) => {
     const { id } = req.params;
 
     const { error } = await supabase
-      .from('workout_sessions')
+      .from('gymapp_workout_sessions')
       .update({ status: 'cancelled', ended_at: new Date().toISOString() })
       .eq('id', id)
       .eq('user_id', req.userId)
@@ -742,7 +742,7 @@ app.post('/workout-sessions/:id/cancel', async (req, res) => {
     if (error) throw error;
 
     await supabase
-      .from('workout_session_sets')
+      .from('gymapp_workout_session_sets')
       .update({ is_deleted: true })
       .eq('session_id', id)
       .eq('user_id', req.userId);
@@ -759,7 +759,7 @@ app.post('/workout-sessions/:id/finish', async (req, res) => {
     const { id } = req.params;
 
     const { data, error } = await supabase
-      .from('workout_sessions')
+      .from('gymapp_workout_sessions')
       .update({ status: 'finished', ended_at: new Date().toISOString() })
       .eq('id', id)
       .eq('user_id', req.userId)
@@ -786,7 +786,7 @@ app.get('/workout-sessions/:id/sets', async (req, res) => {
     }
 
     const { data, error } = await supabase
-      .from('workout_session_sets')
+      .from('gymapp_workout_session_sets')
       .select('*')
       .eq('session_id', id)
       .eq('exercise_id', exerciseId)
@@ -815,7 +815,7 @@ app.post('/workout-sessions/:id/sets', async (req, res) => {
     const normalizedWeight = normalizeWeightToDotDecimal(weight);
 
     const { data, error } = await supabase
-      .from('workout_session_sets')
+      .from('gymapp_workout_session_sets')
       .upsert(
         [
           {
@@ -852,7 +852,7 @@ app.get('/workouts/history/dates-with-workouts', async (req, res) => {
     const { startDate, endDate } = req.query;
 
     let query = supabase
-      .from('workout_sessions')
+      .from('gymapp_workout_sessions')
       .select('started_at, ended_at')
       .eq('user_id', req.userId)
       .eq('status', 'finished');
@@ -893,7 +893,7 @@ app.get('/workouts/history/by-date', async (req, res) => {
     }
 
     const { data: sessions, error } = await supabase
-      .from('workout_sessions')
+      .from('gymapp_workout_sessions')
       .select('id, workout_id, started_at, ended_at, status')
       .eq('user_id', req.userId)
       .eq('status', 'finished')
@@ -917,7 +917,7 @@ app.get('/workouts/history/by-date', async (req, res) => {
 
     if (workoutIds.length > 0) {
       const { data: workouts, error: workoutsError } = await supabase
-        .from('workouts')
+        .from('gymapp_workouts')
         .select('id, name')
         .in('id', workoutIds)
         .eq('user_id', req.userId);
@@ -961,7 +961,7 @@ app.get('/workouts/history/by-month', async (req, res) => {
     const endDateTime = `${endOfMonth.toISOString().slice(0, 10)}T23:59:59`;
 
     const { data: sessions, error } = await supabase
-      .from('workout_sessions')
+      .from('gymapp_workout_sessions')
       .select('id, workout_id, started_at, ended_at, status')
       .eq('user_id', req.userId)
       .eq('status', 'finished')
@@ -985,7 +985,7 @@ app.get('/workouts/history/by-month', async (req, res) => {
 
     if (workoutIds.length > 0) {
       const { data: workouts, error: workoutsError } = await supabase
-        .from('workouts')
+        .from('gymapp_workouts')
         .select('id, name')
         .in('id', workoutIds)
         .eq('user_id', req.userId);
@@ -1015,7 +1015,7 @@ app.get('/workout-sessions/:sessionId/details', async (req, res) => {
     const { sessionId } = req.params;
 
     const { data: session, error: sessionError } = await supabase
-      .from('workout_sessions')
+      .from('gymapp_workout_sessions')
       .select('*')
       .eq('id', sessionId)
       .eq('user_id', req.userId)
@@ -1029,7 +1029,7 @@ app.get('/workout-sessions/:sessionId/details', async (req, res) => {
 
     // Get all sets for this session
     const { data: sets, error: setsError } = await supabase
-      .from('workout_session_sets')
+      .from('gymapp_workout_session_sets')
       .select('*')
       .eq('session_id', sessionId)
       .eq('user_id', req.userId)
@@ -1052,7 +1052,7 @@ app.get('/workout-sessions/:sessionId/details', async (req, res) => {
 
     if (exerciseIds.length > 0) {
       const { data: exercises, error: exercisesError } = await supabase
-        .from('exercises')
+        .from('gymapp_exercises')
         .select('id, name')
         .in('id', exerciseIds)
         .eq('user_id', req.userId);
@@ -1085,7 +1085,7 @@ app.get('/workouts/:workoutId/last-performance', async (req, res) => {
     const { workoutId } = req.params;
 
     const { data: finishedSessions, error: sessionError } = await supabase
-      .from('workout_sessions')
+      .from('gymapp_workout_sessions')
       .select('id, ended_at, started_at')
       .eq('workout_id', workoutId)
       .eq('user_id', req.userId)
@@ -1108,7 +1108,7 @@ app.get('/workouts/:workoutId/last-performance', async (req, res) => {
     });
 
     const { data: sets, error: setsError } = await supabase
-      .from('workout_session_sets')
+      .from('gymapp_workout_session_sets')
       .select('session_id, exercise_id, set_number, weight, reps, created_at, saved_at')
       .in('session_id', sessionIds)
       .eq('user_id', req.userId)
@@ -1184,17 +1184,17 @@ app.get('/workouts/:workoutId/last-performance', async (req, res) => {
 app.get('/stats', async (req, res) => {
   try {
     const { count: programCount } = await supabase
-      .from('programs')
+      .from('gymapp_programs')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', req.userId);
 
     const { count: workoutCount } = await supabase
-      .from('workouts')
+      .from('gymapp_workouts')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', req.userId);
 
     const { count: exerciseCount } = await supabase
-      .from('exercises')
+      .from('gymapp_exercises')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', req.userId);
 
@@ -1217,7 +1217,7 @@ app.get('/stats/workouts-7-days', async (req, res) => {
     const sevenDaysAgoISO = sevenDaysAgo.toISOString();
 
     const { count, error } = await supabase
-      .from('workout_sessions')
+      .from('gymapp_workout_sessions')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', req.userId)
       .eq('status', 'finished')
@@ -1236,14 +1236,14 @@ app.get('/stats/workouts-7-days', async (req, res) => {
 app.get('/exercises/history', async (req, res) => {
   try {
     const { data: sets, error } = await supabase
-      .from('workout_session_sets')
+      .from('gymapp_workout_session_sets')
       .select('session_id, exercise_id, weight')
       .eq('is_deleted', false);
 
     if (error) throw error;
 
     const { data: sessions, error: sessionsError } = await supabase
-      .from('workout_sessions')
+      .from('gymapp_workout_sessions')
       .select('id, started_at')
       .eq('user_id', req.userId)
       .eq('status', 'finished');
@@ -1284,7 +1284,7 @@ app.get('/exercises/history', async (req, res) => {
     const result = [];
     for (const [exerciseId, stats] of exerciseMap.entries()) {
       const { data: exercise } = await supabase
-        .from('exercises')
+        .from('gymapp_exercises')
         .select('name')
         .eq('id', exerciseId)
         .single();
@@ -1327,7 +1327,7 @@ app.get('/exercises/:exerciseId/progress', async (req, res) => {
 
     // Get all sets for this exercise in finished sessions
     const { data: sets, error: setsError } = await supabase
-      .from('workout_session_sets')
+      .from('gymapp_workout_session_sets')
       .select('session_id, weight, reps, set_number')
       .eq('exercise_id', exerciseId)
       .eq('is_deleted', false);
@@ -1346,7 +1346,7 @@ app.get('/exercises/:exerciseId/progress', async (req, res) => {
     }
 
     const { data: sessions, error: sessionsError } = await supabase
-      .from('workout_sessions')
+      .from('gymapp_workout_sessions')
       .select('id, started_at')
       .eq('user_id', req.userId)
       .eq('status', 'finished')
@@ -1405,7 +1405,7 @@ app.get('/exercises/:exerciseId/progress', async (req, res) => {
 
     // Get exercise name
     const { data: exercise } = await supabase
-      .from('exercises')
+      .from('gymapp_exercises')
       .select('name')
       .eq('id', exerciseId)
       .single();
@@ -1454,7 +1454,7 @@ app.get('/exercises/:exerciseId/notes', async (req, res) => {
     const { exerciseId } = req.params;
 
     const { data, error } = await supabase
-      .from('exercise_notes')
+      .from('gymapp_exercise_notes')
       .select('notes')
       .eq('exercise_id', exerciseId)
       .eq('user_id', req.userId)
@@ -1479,7 +1479,7 @@ app.patch('/exercises/:exerciseId/notes', async (req, res) => {
     }
 
     const { data, error } = await supabase
-      .from('exercise_notes')
+      .from('gymapp_exercise_notes')
       .upsert(
         [
           {
@@ -1513,7 +1513,7 @@ app.get('/health', (req, res) => {
 
 const resolveActiveGoalId = async (userId: string): Promise<string | null> => {
   const { data: activeGoal } = await supabase
-    .from('weight_tracker_goals')
+    .from('gymapp_weight_tracker_goals')
     .select('id')
     .eq('user_id', userId)
     .eq('is_active', true)
@@ -1525,7 +1525,7 @@ const resolveActiveGoalId = async (userId: string): Promise<string | null> => {
 app.get('/weight-tracker/profile', async (req, res) => {
   try {
     const { data, error } = await supabase
-      .from('weight_tracker_profile')
+      .from('gymapp_weight_tracker_profile')
       .select('*')
       .eq('user_id', req.userId)
       .maybeSingle();
@@ -1558,7 +1558,7 @@ app.post('/weight-tracker/profile', async (req, res) => {
     }
 
     const { data, error } = await supabase
-      .from('weight_tracker_profile')
+      .from('gymapp_weight_tracker_profile')
       .upsert(payload, { onConflict: 'user_id' })
       .select()
       .single();
@@ -1573,7 +1573,7 @@ app.post('/weight-tracker/profile', async (req, res) => {
 app.get('/weight-tracker/goals', async (req, res) => {
   try {
     const { data, error } = await supabase
-      .from('weight_tracker_goals')
+      .from('gymapp_weight_tracker_goals')
       .select('*')
       .eq('user_id', req.userId)
       .order('started_on', { ascending: false })
@@ -1606,7 +1606,7 @@ app.post('/weight-tracker/goals', async (req, res) => {
     }
 
     const { error: deactivateError } = await supabase
-      .from('weight_tracker_goals')
+      .from('gymapp_weight_tracker_goals')
       .update({
         is_active: false,
         ended_on: started_on,
@@ -1618,7 +1618,7 @@ app.post('/weight-tracker/goals', async (req, res) => {
     if (deactivateError) throw deactivateError;
 
     const { data: createdGoal, error: createError } = await supabase
-      .from('weight_tracker_goals')
+      .from('gymapp_weight_tracker_goals')
       .insert({
         user_id: req.userId,
         goal_type,
@@ -1644,7 +1644,7 @@ app.post('/weight-tracker/goals/:goalId/activate', async (req, res) => {
     const { goalId } = req.params;
 
     const { data: targetGoal, error: targetError } = await supabase
-      .from('weight_tracker_goals')
+      .from('gymapp_weight_tracker_goals')
       .select('*')
       .eq('id', goalId)
       .eq('user_id', req.userId)
@@ -1654,7 +1654,7 @@ app.post('/weight-tracker/goals/:goalId/activate', async (req, res) => {
     const today = new Date().toISOString().split('T')[0];
 
     const { error: deactivateError } = await supabase
-      .from('weight_tracker_goals')
+      .from('gymapp_weight_tracker_goals')
       .update({
         is_active: false,
         ended_on: today,
@@ -1666,7 +1666,7 @@ app.post('/weight-tracker/goals/:goalId/activate', async (req, res) => {
     if (deactivateError) throw deactivateError;
 
     const { data: activatedGoal, error: activateError } = await supabase
-      .from('weight_tracker_goals')
+      .from('gymapp_weight_tracker_goals')
       .update({
         is_active: true,
         ended_on: null,
@@ -1689,7 +1689,7 @@ app.delete('/weight-tracker/goals/:goalId', async (req, res) => {
     const { goalId } = req.params;
 
     const { data: targetGoal, error: targetError } = await supabase
-      .from('weight_tracker_goals')
+      .from('gymapp_weight_tracker_goals')
       .select('id')
       .eq('id', goalId)
       .eq('user_id', req.userId)
@@ -1697,7 +1697,7 @@ app.delete('/weight-tracker/goals/:goalId', async (req, res) => {
     if (targetError) throw targetError;
 
     const { error: deleteError } = await supabase
-      .from('weight_tracker_goals')
+      .from('gymapp_weight_tracker_goals')
       .delete()
       .eq('id', targetGoal.id)
       .eq('user_id', req.userId);
@@ -1726,7 +1726,7 @@ app.get('/weight-tracker/entries', async (req, res) => {
     const cutoffDate = cutoff.toISOString().split('T')[0];
 
     const { data, error } = await supabase
-      .from('weight_tracker_entries')
+      .from('gymapp_weight_tracker_entries')
       .select('*')
       .eq('user_id', req.userId)
       .eq('goal_id', resolvedGoalId)
@@ -1773,7 +1773,7 @@ app.post('/weight-tracker/entries', async (req, res) => {
     if (calories !== undefined) payload.calories = calories === '' ? null : calories;
 
     const { data, error } = await supabase
-      .from('weight_tracker_entries')
+      .from('gymapp_weight_tracker_entries')
       .upsert(payload, { onConflict: 'user_id,goal_id,entry_date' })
       .select()
       .single();
@@ -1796,7 +1796,7 @@ app.delete('/weight-tracker/entries/:entryDate', async (req, res) => {
     }
 
     const { error } = await supabase
-      .from('weight_tracker_entries')
+      .from('gymapp_weight_tracker_entries')
       .delete()
       .eq('user_id', req.userId)
       .eq('goal_id', resolvedGoalId)
@@ -1813,31 +1813,31 @@ app.delete('/weight-tracker/entries/:entryDate', async (req, res) => {
 app.delete('/weight-tracker/reset', async (req, res) => {
   try {
     const { error: valuesError } = await supabase
-      .from('weight_tracker_custom_metric_values')
+      .from('gymapp_weight_tracker_custom_metric_values')
       .delete()
       .eq('user_id', req.userId);
     if (valuesError) throw valuesError;
 
     const { error: metricsError } = await supabase
-      .from('weight_tracker_custom_metrics')
+      .from('gymapp_weight_tracker_custom_metrics')
       .delete()
       .eq('user_id', req.userId);
     if (metricsError) throw metricsError;
 
     const { error: entriesError } = await supabase
-      .from('weight_tracker_entries')
+      .from('gymapp_weight_tracker_entries')
       .delete()
       .eq('user_id', req.userId);
     if (entriesError) throw entriesError;
 
     const { error: goalsError } = await supabase
-      .from('weight_tracker_goals')
+      .from('gymapp_weight_tracker_goals')
       .delete()
       .eq('user_id', req.userId);
     if (goalsError) throw goalsError;
 
     const { error: profileError } = await supabase
-      .from('weight_tracker_profile')
+      .from('gymapp_weight_tracker_profile')
       .delete()
       .eq('user_id', req.userId);
     if (profileError) throw profileError;
@@ -1853,7 +1853,7 @@ app.delete('/weight-tracker/reset', async (req, res) => {
 app.get('/weight-tracker/custom-metrics', async (req, res) => {
   try {
     const { data, error } = await supabase
-      .from('weight_tracker_custom_metrics')
+      .from('gymapp_weight_tracker_custom_metrics')
       .select('*')
       .eq('user_id', req.userId)
       .order('order', { ascending: true });
@@ -1877,7 +1877,7 @@ app.post('/weight-tracker/custom-metrics', async (req, res) => {
     }
 
     const { count } = await supabase
-      .from('weight_tracker_custom_metrics')
+      .from('gymapp_weight_tracker_custom_metrics')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', req.userId);
 
@@ -1887,7 +1887,7 @@ app.post('/weight-tracker/custom-metrics', async (req, res) => {
     }
 
     const { data: existing } = await supabase
-      .from('weight_tracker_custom_metrics')
+      .from('gymapp_weight_tracker_custom_metrics')
       .select('order')
       .eq('user_id', req.userId)
       .order('order', { ascending: false })
@@ -1896,7 +1896,7 @@ app.post('/weight-tracker/custom-metrics', async (req, res) => {
     const nextOrder = ((existing && existing[0]?.order) || 0) + 1;
 
     const { data, error } = await supabase
-      .from('weight_tracker_custom_metrics')
+      .from('gymapp_weight_tracker_custom_metrics')
       .insert({ user_id: req.userId, name: name.trim(), type, order: nextOrder })
       .select()
       .single();
@@ -1911,7 +1911,7 @@ app.delete('/weight-tracker/custom-metrics/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { error } = await supabase
-      .from('weight_tracker_custom_metrics')
+      .from('gymapp_weight_tracker_custom_metrics')
       .delete()
       .eq('id', id)
       .eq('user_id', req.userId);
@@ -1938,7 +1938,7 @@ app.get('/weight-tracker/custom-metric-values', async (req, res) => {
     const cutoffDate = cutoff.toISOString().split('T')[0];
 
     const { data, error } = await supabase
-      .from('weight_tracker_custom_metric_values')
+      .from('gymapp_weight_tracker_custom_metric_values')
       .select('*')
       .eq('user_id', req.userId)
       .eq('goal_id', resolvedGoalId)
@@ -1978,7 +1978,7 @@ app.post('/weight-tracker/custom-metric-values', async (req, res) => {
     }
 
     const { data, error } = await supabase
-      .from('weight_tracker_custom_metric_values')
+      .from('gymapp_weight_tracker_custom_metric_values')
       .upsert(
         {
           user_id: req.userId,

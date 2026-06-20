@@ -15,14 +15,18 @@ npm install
 
 ## Create the Supabase tables
 
-The mobile app depends on more than the original MVP tables. Create the full base schema from `README.md` in the Supabase SQL editor so these tables exist:
+The mobile app depends on more than the original MVP tables. Create the full base schema from `README.md` in the Supabase SQL editor so these tables exist (all tables are prefixed `gymapp_`):
 
-- `programs`
-- `workouts`
-- `exercises`
-- `workout_sessions`
-- `workout_session_sets`
-- `exercise_notes`
+- `gymapp_programs`
+- `gymapp_workouts`
+- `gymapp_exercises`
+- `gymapp_workout_sessions`
+- `gymapp_workout_session_sets`
+- `gymapp_exercise_notes`
+
+Supabase enables Row Level Security by default on new tables, so run the RLS
+policies from `README.md` too — otherwise the tables are locked to the
+anon/authenticated keys.
 
 If you are migrating an older database, also run:
 

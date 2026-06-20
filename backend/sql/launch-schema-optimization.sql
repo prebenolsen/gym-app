@@ -15,11 +15,11 @@ end;
 $$;
 
 -- ─────────────────────────────────────────────────────────────
--- Table: programs
+-- Table: gymapp_programs
 -- Critical #1: order uniqueness is DEFERRABLE to support reorder swaps.
 -- Important #7: user_id is uuid.
 -- ─────────────────────────────────────────────────────────────
-create table programs (
+create table gymapp_programs (
   id                   uuid        primary key default gen_random_uuid(),
   name                 text        not null,
   user_id              uuid        not null,
@@ -30,14 +30,14 @@ create table programs (
 );
 
 -- ─────────────────────────────────────────────────────────────
--- Table: workouts
+-- Table: gymapp_workouts
 -- Critical #1: order uniqueness is DEFERRABLE to support reorder swaps.
 -- Nice-to-have #10: last_session_at denormalized for fast recent workout queries.
 -- Important #7: user_id is uuid.
 -- ─────────────────────────────────────────────────────────────
-create table workouts (
+create table gymapp_workouts (
   id               uuid        primary key default gen_random_uuid(),
-  program_id       uuid        not null references programs(id) on delete cascade,
+  program_id       uuid        not null references gymapp_programs(id) on delete cascade,
   name             text        not null,
   user_id          uuid        not null,
   "order"           integer     not null default 1,
@@ -47,14 +47,14 @@ create table workouts (
 );
 
 -- ─────────────────────────────────────────────────────────────
--- Table: exercises
+-- Table: gymapp_exercises
 -- Critical #1: order uniqueness is DEFERRABLE to support reorder swaps.
 -- Nice-to-have #8: remove legacy custom_muscle_group singular column.
 -- Important #7: user_id is uuid.
 -- ─────────────────────────────────────────────────────────────
-create table exercises (
+create table gymapp_exercises (
   id                    uuid        primary key default gen_random_uuid(),
-  workout_id            uuid        not null references workouts(id) on delete cascade,
+  workout_id            uuid        not null references gymapp_workouts(id) on delete cascade,
   name                  text        not null,
   sets                  integer     not null default 1,
   rest_seconds          integer     not null default 120,
@@ -83,14 +83,14 @@ create table exercises (
 );
 
 -- ─────────────────────────────────────────────────────────────
--- Table: workout_sessions
+-- Table: gymapp_workout_sessions
 -- Critical #2: explicit index for workout_id added later.
 -- Nice-to-have #9: updated_at column and trigger.
 -- Important #7: user_id is uuid.
 -- ─────────────────────────────────────────────────────────────
-create table workout_sessions (
+create table gymapp_workout_sessions (
   id                      uuid        primary key default gen_random_uuid(),
-  workout_id              uuid        not null references workouts(id) on delete cascade,
+  workout_id              uuid        not null references gymapp_workouts(id) on delete cascade,
   user_id                 uuid        not null,
   status                  text        not null default 'active'
                                         check (status in ('active', 'cancelled', 'finished')),
@@ -102,19 +102,19 @@ create table workout_sessions (
 );
 
 create trigger workout_sessions_updated_at
-  before update on workout_sessions
+  before update on gymapp_workout_sessions
   for each row execute function set_updated_at();
 
 -- ─────────────────────────────────────────────────────────────
--- Table: workout_session_sets
+-- Table: gymapp_workout_session_sets
 -- Critical #3: composite index added later.
 -- Important #4: active-row partial index added later.
 -- Important #7: user_id is uuid.
 -- ─────────────────────────────────────────────────────────────
-create table workout_session_sets (
+create table gymapp_workout_session_sets (
   id          uuid        primary key default gen_random_uuid(),
-  session_id  uuid        not null references workout_sessions(id) on delete cascade,
-  exercise_id uuid        not null references exercises(id) on delete cascade,
+  session_id  uuid        not null references gymapp_workout_sessions(id) on delete cascade,
+  exercise_id uuid        not null references gymapp_exercises(id) on delete cascade,
   set_number  integer     not null,
   weight      numeric     not null,
   reps        integer     not null,
@@ -126,12 +126,12 @@ create table workout_session_sets (
 );
 
 -- ─────────────────────────────────────────────────────────────
--- Table: exercise_notes
+-- Table: gymapp_exercise_notes
 -- Important #7: user_id is uuid.
 -- ─────────────────────────────────────────────────────────────
-create table exercise_notes (
+create table gymapp_exercise_notes (
   id          uuid        primary key default gen_random_uuid(),
-  exercise_id uuid        not null references exercises(id) on delete cascade,
+  exercise_id uuid        not null references gymapp_exercises(id) on delete cascade,
   user_id     uuid        not null,
   notes       text        not null default '',
   updated_at  timestamptz not null default now(),
@@ -140,11 +140,11 @@ create table exercise_notes (
 );
 
 -- ─────────────────────────────────────────────────────────────
--- Table: weight_tracker_profile (one row per user)
+-- Table: gymapp_weight_tracker_profile (one row per user)
 -- Important #6: active_goal_id removed (derive from goals where is_active=true).
 -- Important #7: user_id is uuid.
 -- ─────────────────────────────────────────────────────────────
-create table weight_tracker_profile (
+create table gymapp_weight_tracker_profile (
   id                  uuid         primary key default gen_random_uuid(),
   user_id             uuid         not null,
   gender              text         null check (gender in ('male', 'female')),
@@ -169,10 +169,10 @@ create table weight_tracker_profile (
 );
 
 -- ─────────────────────────────────────────────────────────────
--- Table: weight_tracker_goals (goal projects per user)
+-- Table: gymapp_weight_tracker_goals (goal projects per user)
 -- Important #7: user_id is uuid.
 -- ─────────────────────────────────────────────────────────────
-create table weight_tracker_goals (
+create table gymapp_weight_tracker_goals (
   id               uuid         primary key default gen_random_uuid(),
   user_id          uuid         not null,
   goal_type        text         not null default 'track' check (goal_type in ('lose', 'gain', 'track')),
@@ -187,18 +187,18 @@ create table weight_tracker_goals (
 
 -- Ensure one active goal per user.
 create unique index weight_tracker_goals_one_active_per_user
-  on weight_tracker_goals (user_id)
+  on gymapp_weight_tracker_goals (user_id)
   where is_active = true;
 
 -- ─────────────────────────────────────────────────────────────
--- Table: weight_tracker_entries
+-- Table: gymapp_weight_tracker_entries
 -- Important #5: additional date-centric index added later.
 -- Important #7: user_id is uuid.
 -- ─────────────────────────────────────────────────────────────
-create table weight_tracker_entries (
+create table gymapp_weight_tracker_entries (
   id               uuid         primary key default gen_random_uuid(),
   user_id          uuid         not null,
-  goal_id          uuid         not null references weight_tracker_goals(id) on delete cascade,
+  goal_id          uuid         not null references gymapp_weight_tracker_goals(id) on delete cascade,
   entry_date       date         not null,
   weight_kg        numeric(6,2) null check (weight_kg is null or weight_kg > 0),
   steps            integer      null check (steps is null or steps >= 0),
@@ -209,10 +209,10 @@ create table weight_tracker_entries (
 );
 
 -- ─────────────────────────────────────────────────────────────
--- Table: weight_tracker_custom_metrics
+-- Table: gymapp_weight_tracker_custom_metrics
 -- Important #7: user_id is uuid.
 -- ─────────────────────────────────────────────────────────────
-create table weight_tracker_custom_metrics (
+create table gymapp_weight_tracker_custom_metrics (
   id         uuid        primary key default gen_random_uuid(),
   user_id    uuid        not null,
   name       text        not null,
@@ -223,15 +223,15 @@ create table weight_tracker_custom_metrics (
 );
 
 -- ─────────────────────────────────────────────────────────────
--- Table: weight_tracker_custom_metric_values
+-- Table: gymapp_weight_tracker_custom_metric_values
 -- Important #7: user_id is uuid.
 -- ─────────────────────────────────────────────────────────────
-create table weight_tracker_custom_metric_values (
+create table gymapp_weight_tracker_custom_metric_values (
   id            uuid        primary key default gen_random_uuid(),
   user_id       uuid        not null,
-  goal_id       uuid        not null references weight_tracker_goals(id) on delete cascade,
+  goal_id       uuid        not null references gymapp_weight_tracker_goals(id) on delete cascade,
   entry_date    date        not null,
-  metric_id     uuid        not null references weight_tracker_custom_metrics(id) on delete cascade,
+  metric_id     uuid        not null references gymapp_weight_tracker_custom_metrics(id) on delete cascade,
   value_boolean boolean     null,
   value_integer integer     null,
   value_decimal numeric     null,
@@ -243,29 +243,29 @@ create table weight_tracker_custom_metric_values (
 -- ─────────────────────────────────────────────────────────────
 -- Indexes
 -- ─────────────────────────────────────────────────────────────
-create index idx_programs_user_id                on programs(user_id);
-create index idx_workouts_program_id             on workouts(program_id);
-create index idx_workouts_user_id                on workouts(user_id);
-create index idx_workouts_last_session_at        on workouts(last_session_at desc nulls last);
-create index idx_exercises_workout_id            on exercises(workout_id);
-create index idx_exercises_user_id               on exercises(user_id);
-create index idx_sessions_user_status            on workout_sessions(user_id, status);
-create index idx_sessions_started_at             on workout_sessions(started_at);
-create index idx_sessions_workout_id             on workout_sessions(workout_id);
-create index idx_session_sets_session            on workout_session_sets(session_id);
-create index idx_session_sets_exercise           on workout_session_sets(exercise_id);
-create index idx_session_sets_user               on workout_session_sets(user_id);
-create index idx_session_sets_session_exercise   on workout_session_sets(session_id, exercise_id, set_number);
-create index idx_session_sets_active             on workout_session_sets(session_id, exercise_id, set_number)
+create index idx_programs_user_id                on gymapp_programs(user_id);
+create index idx_workouts_program_id             on gymapp_workouts(program_id);
+create index idx_workouts_user_id                on gymapp_workouts(user_id);
+create index idx_workouts_last_session_at        on gymapp_workouts(last_session_at desc nulls last);
+create index idx_exercises_workout_id            on gymapp_exercises(workout_id);
+create index idx_exercises_user_id               on gymapp_exercises(user_id);
+create index idx_sessions_user_status            on gymapp_workout_sessions(user_id, status);
+create index idx_sessions_started_at             on gymapp_workout_sessions(started_at);
+create index idx_sessions_workout_id             on gymapp_workout_sessions(workout_id);
+create index idx_session_sets_session            on gymapp_workout_session_sets(session_id);
+create index idx_session_sets_exercise           on gymapp_workout_session_sets(exercise_id);
+create index idx_session_sets_user               on gymapp_workout_session_sets(user_id);
+create index idx_session_sets_session_exercise   on gymapp_workout_session_sets(session_id, exercise_id, set_number);
+create index idx_session_sets_active             on gymapp_workout_session_sets(session_id, exercise_id, set_number)
   where is_deleted = false;
-create index idx_notes_exercise_user             on exercise_notes(exercise_id, user_id);
-create index idx_wt_profile_user                 on weight_tracker_profile(user_id);
-create index idx_wt_goals_user_date              on weight_tracker_goals(user_id, started_on desc);
-create index idx_wt_entries_user_goal_date       on weight_tracker_entries(user_id, goal_id, entry_date desc);
-create index idx_wt_entries_date                 on weight_tracker_entries(entry_date desc) include (user_id, weight_kg);
-create index idx_wt_custom_metrics_user          on weight_tracker_custom_metrics(user_id);
-create index idx_wt_custom_values_user_goal      on weight_tracker_custom_metric_values(user_id, goal_id, entry_date desc);
-create index idx_wt_custom_values_metric         on weight_tracker_custom_metric_values(metric_id);
+create index idx_notes_exercise_user             on gymapp_exercise_notes(exercise_id, user_id);
+create index idx_wt_profile_user                 on gymapp_weight_tracker_profile(user_id);
+create index idx_wt_goals_user_date              on gymapp_weight_tracker_goals(user_id, started_on desc);
+create index idx_wt_entries_user_goal_date       on gymapp_weight_tracker_entries(user_id, goal_id, entry_date desc);
+create index idx_wt_entries_date                 on gymapp_weight_tracker_entries(entry_date desc) include (user_id, weight_kg);
+create index idx_wt_custom_metrics_user          on gymapp_weight_tracker_custom_metrics(user_id);
+create index idx_wt_custom_values_user_goal      on gymapp_weight_tracker_custom_metric_values(user_id, goal_id, entry_date desc);
+create index idx_wt_custom_values_metric         on gymapp_weight_tracker_custom_metric_values(metric_id);
 
 -- ─────────────────────────────────────────────────────────────
 -- Triggers
@@ -273,7 +273,7 @@ create index idx_wt_custom_values_metric         on weight_tracker_custom_metric
 create or replace function sync_workout_last_session()
 returns trigger language plpgsql as $$
 begin
-  update workouts
+  update gymapp_workouts
   set last_session_at = new.started_at
   where id = new.workout_id
     and (last_session_at is null or last_session_at < new.started_at);
@@ -282,75 +282,83 @@ end;
 $$;
 
 create trigger trg_sync_workout_last_session
-  after insert on workout_sessions
+  after insert on gymapp_workout_sessions
   for each row execute function sync_workout_last_session();
 
 -- ─────────────────────────────────────────────────────────────
 -- Row Level Security
+-- Supabase enables RLS on new tables by default, so without the
+-- policies below every table is locked (no rows readable/writable)
+-- for the anon/authenticated keys. The `enable row level security`
+-- statements are idempotent — kept here so the script is correct
+-- whether or not RLS was already auto-enabled.
+-- NOTE: the backend connects with the service-role key, which
+-- bypasses RLS; these policies protect any direct anon/authenticated
+-- access to the gymapp_ tables.
 -- ─────────────────────────────────────────────────────────────
-alter table programs                            enable row level security;
-alter table workouts                            enable row level security;
-alter table exercises                           enable row level security;
-alter table workout_sessions                    enable row level security;
-alter table workout_session_sets                enable row level security;
-alter table exercise_notes                      enable row level security;
-alter table weight_tracker_profile              enable row level security;
-alter table weight_tracker_entries              enable row level security;
-alter table weight_tracker_goals                enable row level security;
-alter table weight_tracker_custom_metrics       enable row level security;
-alter table weight_tracker_custom_metric_values enable row level security;
+alter table gymapp_programs                            enable row level security;
+alter table gymapp_workouts                            enable row level security;
+alter table gymapp_exercises                           enable row level security;
+alter table gymapp_workout_sessions                    enable row level security;
+alter table gymapp_workout_session_sets                enable row level security;
+alter table gymapp_exercise_notes                      enable row level security;
+alter table gymapp_weight_tracker_profile              enable row level security;
+alter table gymapp_weight_tracker_entries              enable row level security;
+alter table gymapp_weight_tracker_goals                enable row level security;
+alter table gymapp_weight_tracker_custom_metrics       enable row level security;
+alter table gymapp_weight_tracker_custom_metric_values enable row level security;
 
-create policy users_own_programs on programs
+create policy users_own_programs on gymapp_programs
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-create policy users_own_workouts on workouts
+create policy users_own_workouts on gymapp_workouts
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-create policy users_own_exercises on exercises
+create policy users_own_exercises on gymapp_exercises
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-create policy users_own_sessions on workout_sessions
+create policy users_own_sessions on gymapp_workout_sessions
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-create policy users_own_session_sets on workout_session_sets
+create policy users_own_session_sets on gymapp_workout_session_sets
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-create policy users_own_notes on exercise_notes
+create policy users_own_notes on gymapp_exercise_notes
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-create policy weight_tracker_profile_user_isolation on weight_tracker_profile
+create policy weight_tracker_profile_user_isolation on gymapp_weight_tracker_profile
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-create policy weight_tracker_goals_user_isolation on weight_tracker_goals
+create policy weight_tracker_goals_user_isolation on gymapp_weight_tracker_goals
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-create policy weight_tracker_entries_user_isolation on weight_tracker_entries
+create policy weight_tracker_entries_user_isolation on gymapp_weight_tracker_entries
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-create policy weight_tracker_custom_metrics_user_isolation on weight_tracker_custom_metrics
+create policy weight_tracker_custom_metrics_user_isolation on gymapp_weight_tracker_custom_metrics
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-create policy weight_tracker_custom_metric_values_user_isolation on weight_tracker_custom_metric_values
+create policy weight_tracker_custom_metric_values_user_isolation on gymapp_weight_tracker_custom_metric_values
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
@@ -358,9 +366,9 @@ create policy weight_tracker_custom_metric_values_user_isolation on weight_track
 -- ─────────────────────────────────────────────────────────────
 -- Future planning note (#11)
 -- ─────────────────────────────────────────────────────────────
--- workout_session_sets is a high-write table.
+-- gymapp_workout_session_sets is a high-write table.
 -- For scale (tens of millions of rows), plan a dedicated migration to RANGE partition by saved_at.
 -- Example:
---   CREATE TABLE workout_session_sets (...) PARTITION BY RANGE (saved_at);
---   CREATE TABLE workout_session_sets_2026_01 PARTITION OF workout_session_sets
+--   CREATE TABLE gymapp_workout_session_sets (...) PARTITION BY RANGE (saved_at);
+--   CREATE TABLE workout_session_sets_2026_01 PARTITION OF gymapp_workout_session_sets
 --     FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');

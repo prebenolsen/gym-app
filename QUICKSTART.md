@@ -10,16 +10,18 @@ npm install
 
 Create a Supabase project first, then open the SQL editor and create the tables used by the mobile app.
 
-At minimum you need:
+At minimum you need (all tables are prefixed `gymapp_`):
 
-- `programs`
-- `workouts`
-- `exercises`
-- `workout_sessions`
-- `workout_session_sets`
-- `exercise_notes`
+- `gymapp_programs`
+- `gymapp_workouts`
+- `gymapp_exercises`
+- `gymapp_workout_sessions`
+- `gymapp_workout_session_sets`
+- `gymapp_exercise_notes`
 
-Use the full SQL block in `README.md` for the base schema.
+Use the full SQL block in `README.md` for the base schema, including the RLS
+policies — Supabase enables Row Level Security by default, so the tables are
+locked until those policies are created.
 
 If you are upgrading an older database, also run:
 
