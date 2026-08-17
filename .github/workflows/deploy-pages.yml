@@ -55,21 +55,19 @@ jobs:
 
           echo "path=$base" >> "$GITHUB_OUTPUT"
 
-      # EXPO_PUBLIC_* values are compiled into the client bundle, so they must be
-      # present at build time. The Supabase anon key is designed to be public
-      # (row-level security is the real guard) but is still read from a secret so
-      # it is not committed. Fail loudly rather than shipping a bundle that
-      # cannot reach its backend.
+      # Both values are compiled into the client bundle, so they must be present
+      # at build time. The anon key is designed to be public -- Row Level
+      # Security is the real guard -- but is still read from a secret so it is
+      # not committed. Fail loudly rather than shipping a bundle that throws on
+      # startup.
       - name: Check required configuration
         env:
           SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
-          API_BASE_URL: ${{ vars.EXPO_PUBLIC_API_BASE_URL }}
         run: |
           missing=""
-          [ -z "$SUPABASE_URL" ]    && missing="$missing\n  - secret EXPO_PUBLIC_SUPABASE_URL"
+          [ -z "$SUPABASE_URL" ] && missing="$missing\n  - secret EXPO_PUBLIC_SUPABASE_URL"
           [ -z "$SUPABASE_ANON_KEY" ] && missing="$missing\n  - secret EXPO_PUBLIC_SUPABASE_ANON_KEY"
-          [ -z "$API_BASE_URL" ]    && missing="$missing\n  - variable EXPO_PUBLIC_API_BASE_URL"
 
           if [ -n "$missing" ]; then
             echo "::error::Missing Pages build configuration:$(printf "$missing")"
@@ -77,19 +75,11 @@ jobs:
             exit 1
           fi
 
-          case "$API_BASE_URL" in
-            http://localhost*|http://127.0.0.1*)
-              echo "::error::EXPO_PUBLIC_API_BASE_URL is '$API_BASE_URL'. A browser cannot reach your machine's localhost -- point it at the publicly reachable backend."
-              exit 1
-              ;;
-          esac
-
       - name: Build web PWA
         env:
           EXPO_BASE_URL: ${{ steps.base.outputs.path }}
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
-          EXPO_PUBLIC_API_BASE_URL: ${{ vars.EXPO_PUBLIC_API_BASE_URL }}
         run: npm run build:web
 
       # GitHub Pages has no rewrite rules, so the SPA fallback is a 404 page.

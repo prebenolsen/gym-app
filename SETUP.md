@@ -30,25 +30,16 @@ fresh database. It creates the full schema in one pass, so these tables exist:
 - `weak_weight_tracker_custom_metrics`
 - `weak_weight_tracker_custom_metric_values`
 
-## Create `.env`
+## Create `mobile/.env`
+
+The app talks straight to Supabase, so these two are all it needs:
 
 ```env
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-EXPO_PUBLIC_API_BASE_URL=http://localhost:3000
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_KEY=your-service-role-key
-PORT=3000
-NODE_ENV=development
 ```
 
 ## Start services
-
-Backend:
-
-```bash
-npm run backend:dev
-```
 
 Mobile app:
 
@@ -67,23 +58,22 @@ npm run mobile:ios
 
 When testing on a physical Android phone over USB-C:
 
-1. Keep `EXPO_PUBLIC_API_BASE_URL=http://localhost:3000` in `.env`
-2. Start Expo with:
+1. Start Expo with:
 
 	```bash
 	cd mobile
 	npx expo start -c --localhost
 	```
 
-3. Run:
+2. Run:
 
 	```bash
 	adb reverse --remove-all
 	adb reverse tcp:8081 tcp:8081
-	adb reverse tcp:3000 tcp:3000
 	```
 
-This is required because the mobile API client treats localhost as the explicit USB-debug mode.
+Only the Metro bundler port needs forwarding — the app reaches Supabase over the
+phone's own network connection.
 
 ## Database notes
 

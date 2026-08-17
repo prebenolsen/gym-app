@@ -356,6 +356,48 @@ create policy weak_weight_tracker_custom_metric_values_user_isolation on weak_we
   with check (auth.uid() = user_id);
 
 -- ─────────────────────────────────────────────────────────────
+-- Account deletion
+-- ─────────────────────────────────────────────────────────────
+-- The app has no server, so there is nowhere to hold a service-role key and
+-- call the admin API. This runs with the definer's privileges instead, and can
+-- only ever affect the caller's own data -- it takes no arguments and hard-codes
+-- auth.uid(), so it cannot be pointed at anyone else.
+--
+-- user_id is a plain uuid with no foreign key to auth.users, so deleting the
+-- auth user would strand every weak_* row. Both happen here, in one
+-- transaction, so a failure part-way cannot leave orphaned data behind.
+create or replace function weak_delete_account()
+returns void language plpgsql security definer set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+begin
+  if uid is null then
+    raise exception 'weak_delete_account() requires an authenticated caller';
+  end if;
+
+  -- Child-first; the rest follow by on delete cascade, but being explicit keeps
+  -- this correct if a foreign key is ever relaxed.
+  delete from weak_workout_session_sets                   where user_id = uid;
+  delete from weak_workout_sessions                       where user_id = uid;
+  delete from weak_exercise_notes                         where user_id = uid;
+  delete from weak_exercises                              where user_id = uid;
+  delete from weak_workouts                               where user_id = uid;
+  delete from weak_programs                               where user_id = uid;
+  delete from weak_weight_tracker_custom_metric_values    where user_id = uid;
+  delete from weak_weight_tracker_entries                 where user_id = uid;
+  delete from weak_weight_tracker_custom_metrics          where user_id = uid;
+  delete from weak_weight_tracker_goals                   where user_id = uid;
+  delete from weak_weight_tracker_profile                 where user_id = uid;
+
+  delete from auth.users where id = uid;
+end;
+$$;
+
+revoke all on function weak_delete_account() from public, anon;
+grant execute on function weak_delete_account() to authenticated;
+
+-- ─────────────────────────────────────────────────────────────
 -- Future planning note (#11)
 -- ─────────────────────────────────────────────────────────────
 -- weak_workout_session_sets is a high-write table.

@@ -14,7 +14,9 @@
     "build": "tsc",
     "dev": "tsc --watch"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@supabase/supabase-js": "^2.56.0"
+  },
   "devDependencies": {
     "typescript": "^5.0.0"
   }

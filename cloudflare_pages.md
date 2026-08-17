@@ -15,12 +15,12 @@ Expo app as an installable web PWA on Cloudflare Pages. The mobile app
 | `package.json` (root) | Added `build:web` that builds the `shared` workspace, then exports the web app. |
 | `mobile/public/index.html` | HTML shell: manifest link, iOS meta tags, launch splash, SW registration. |
 | `mobile/public/manifest.json` | PWA manifest (name, icons, theme colour, standalone display, portrait lock). |
-| `mobile/public/sw.js` | Minimal, safe service worker (same-origin GETs only; never touches Supabase/API). |
+| `mobile/public/sw.js` | Minimal, safe service worker (same-origin GETs only; never touches Supabase). |
 | `mobile/public/offline.html` | Offline fallback page. |
 | `mobile/public/_redirects` | SPA fallback so deep links / refreshes don't 404. |
 | `mobile/public/icons/*` | PWA icons generated from the brand logo (192 / 512, maskable, apple-touch, favicons). |
 | `mobile/serve.json` | Local preview server rules (mirrors `_redirects`). Not part of the build output. |
-| `.env.example` | Documented that `EXPO_PUBLIC_*` are shared by web, and the API URL must be public in production. |
+| `.env.example` | Documented that `EXPO_PUBLIC_*` are compiled into the client bundle. |
 
 Everything Expo puts in `mobile/public/` is copied verbatim to the build output
 root (`mobile/dist/`), so `manifest.json`, `sw.js`, `_redirects` and `icons/`
@@ -35,28 +35,25 @@ why no post-build HTML injection step is needed.
 
 ---
 
-## 1. ⚠️ Read this first: the backend API
+## 1. Read this first: nothing else to host
 
-The app has **two** backends:
+> **GitHub Pages is the primary deployment target** — see
+> [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) and the
+> README. This document is kept for deploying the same static build to Cloudflare
+> Pages instead.
 
-1. **Supabase** — used directly from the browser for auth. Works on web as-is.
-2. **Your own Node backend** (`backend/`) — the app talks to it via
-   `EXPO_PUBLIC_API_BASE_URL` (defaults to `http://localhost:3000`).
+Supabase is the only backing service. The client queries it directly with the anon
+key, and Row Level Security scopes the data, so there is no API server to deploy and
+no CORS to configure — Supabase already allows browser origins.
 
-On a phone over USB this is `localhost` via `adb reverse`. **In a browser
-`localhost` will not work** — the deployed web app must point at a *publicly
-reachable* backend URL. So before/when you deploy:
+Two things to set on the Supabase side once the site is live:
 
-- Deploy your `backend/` somewhere public (Render, Fly.io, Railway, a VPS, a
-  Cloudflare Worker/Tunnel, etc.) over **HTTPS**.
-- Set `EXPO_PUBLIC_API_BASE_URL` to that URL in Cloudflare (see step 3).
-- **Enable CORS on the backend** for your Pages origin
-  (e.g. `https://gym-app.pages.dev` and any custom domain). Browsers enforce
-  CORS; phones don't, so this is a web-only requirement. If you see requests
-  failing with CORS errors in the browser console, this is why.
-
-If the backend is not yet public, the site will still build and load, login via
-Supabase may work, but any screen that calls your API will error.
+- Add the deployed origin (e.g. `https://gym-app.pages.dev` and any custom domain)
+  to **URL Configuration → Redirect URLs**, so confirmation and password-reset
+  links return to the app.
+- Make sure the `weak_*` tables and `weak_delete_account()` exist by running
+  `backend/sql/launch-schema-optimization.sql`. RLS is what protects the data, so
+  the site is only safe once those policies are in place.
 
 ---
 
@@ -86,12 +83,11 @@ Preview environments:
 |----------|-------|-------|
 | `EXPO_PUBLIC_SUPABASE_URL` | `https://<your-project>.supabase.co` | Same as your `.env`. |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | your Supabase **anon** key | Public by design; **never** the service key. |
-| `EXPO_PUBLIC_API_BASE_URL` | `https://api.yourdomain.com` | Your public backend (see step 1). |
 | `NODE_VERSION` | `20` | Expo SDK 54 requires Node 20+. |
 
 > `EXPO_PUBLIC_*` values are compiled into the client bundle and are publicly
-> visible — that is expected and fine for the Supabase **anon** key and the API
-> URL. Do **not** put `SUPABASE_SERVICE_KEY` or any backend secret here.
+> visible — expected and fine for the Supabase **anon** key, since RLS is what
+> protects the data. Do **not** put `SUPABASE_SERVICE_KEY` here.
 
 Click **Save and Deploy**.
 
@@ -132,7 +128,6 @@ npm install
 # 2. Provide env vars for the build. Create mobile/.env:
 #      EXPO_PUBLIC_SUPABASE_URL=https://<your-project>.supabase.co
 #      EXPO_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
-#      EXPO_PUBLIC_API_BASE_URL=https://api.yourdomain.com
 #    (expo reads mobile/.env automatically during the build)
 
 # 3. Production build exactly like Cloudflare will run it
@@ -164,13 +159,13 @@ npm run web:dev                    # expo start --web
 
 ## 5. After deployment
 
-- Visit the `*.pages.dev` URL, confirm login and that API-backed screens work
-  (if not, re-check step 1 — backend public URL + CORS).
+- Visit the `*.pages.dev` URL and confirm login plus a data-backed screen. If rows
+  are missing, check the schema and RLS policies were applied (step 1).
 - Install the PWA on a phone: open the site in mobile Chrome/Safari →
   "Add to Home Screen".
 - **Custom domain** (optional): Pages project → **Custom domains** → add your
-  domain; Cloudflare handles HTTPS. Remember to add it to Supabase redirect URLs
-  (step 3) and your backend CORS allowlist.
+  domain; Cloudflare handles HTTPS. Remember to add it to the Supabase redirect
+  URLs (step 3).
 
 ---
 
@@ -202,6 +197,5 @@ Build output directory:  mobile/dist
 Environment variables (Production + Preview):
   EXPO_PUBLIC_SUPABASE_URL       = https://<project>.supabase.co
   EXPO_PUBLIC_SUPABASE_ANON_KEY  = <anon key>
-  EXPO_PUBLIC_API_BASE_URL       = https://<your public backend>
   NODE_VERSION                   = 20
 ```
