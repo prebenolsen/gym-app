@@ -1,0 +1,5 @@
+# SPA fallback for Cloudflare Pages.
+# Every path that isn't a real file is served the single-page app shell,
+# so deep links and hard refreshes don't 404. Real assets (manifest.json,
+# sw.js, /icons/*, /_expo/*) are matched before this rule and served directly.
+/*    /index.html    200

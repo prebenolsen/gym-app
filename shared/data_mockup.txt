@@ -1,22 +1,22 @@
 -- ============================================================
 -- 0️⃣  Clean up old mock data for this user
 -- ============================================================
-DELETE FROM workout_session_sets
+DELETE FROM weak_workout_session_sets
 WHERE user_id = '70414ff9-b11a-4199-89b7-9bae27211a8c';
-DELETE FROM workout_sessions
+DELETE FROM weak_workout_sessions
 WHERE user_id = '70414ff9-b11a-4199-89b7-9bae27211a8c';
-DELETE FROM exercises
+DELETE FROM weak_exercises
 WHERE user_id = '70414ff9-b11a-4199-89b7-9bae27211a8c';
-DELETE FROM workouts
+DELETE FROM weak_workouts
 WHERE user_id = '70414ff9-b11a-4199-89b7-9bae27211a8c';
-DELETE FROM programs
+DELETE FROM weak_programs
 WHERE user_id = '70414ff9-b11a-4199-89b7-9bae27211a8c';
 
 -- ============================================================
 -- 1️⃣  Program
 -- ============================================================
 WITH new_program AS (
-    INSERT INTO programs (name, user_id, "order", is_favorite_program)
+    INSERT INTO weak_programs (name, user_id, "order", is_favorite_program)
     VALUES ('Push Pull Legs', '70414ff9-b11a-4199-89b7-9bae27211a8c', 1, TRUE)
     RETURNING id
 ),
@@ -24,7 +24,7 @@ WITH new_program AS (
 -- 2️⃣  Workouts
 -- ============================================================
 new_workouts AS (
-    INSERT INTO workouts (program_id, name, user_id, "order")
+    INSERT INTO weak_workouts (program_id, name, user_id, "order")
     SELECT id, 'Push', '70414ff9-b11a-4199-89b7-9bae27211a8c', 1 FROM new_program
     UNION ALL
     SELECT id, 'Pull', '70414ff9-b11a-4199-89b7-9bae27211a8c', 2 FROM new_program
@@ -35,7 +35,7 @@ new_workouts AS (
 -- ============================================================
 -- 3️⃣  Exercises
 -- ============================================================
-INSERT INTO exercises (workout_id, name, sets, rest_seconds, user_id, "order")
+INSERT INTO weak_exercises (workout_id, name, sets, rest_seconds, user_id, "order")
 SELECT w.id, ex.name, ex.sets, ex.rest, '70414ff9-b11a-4199-89b7-9bae27211a8c', ex.ordering
 FROM new_workouts w,
 LATERAL (
@@ -107,7 +107,7 @@ BEGIN
 
         -- which workout (0=Push,1=Pull,2=Legs)
         SELECT * INTO w
-        FROM workouts
+        FROM weak_workouts
         WHERE user_id = uid
         ORDER BY "order"
         OFFSET (session_num % 3) LIMIT 1;
@@ -115,7 +115,7 @@ BEGIN
         -- space sessions ~2 days apart going backwards from now
         day_offset := (total_sessions - 1 - session_num) * 2;
 
-        INSERT INTO workout_sessions (workout_id, user_id, status, started_at)
+        INSERT INTO weak_workout_sessions (workout_id, user_id, status, started_at)
         VALUES (
             w.id, uid, 'finished',
             NOW() - day_offset * INTERVAL '1 day'
@@ -198,7 +198,7 @@ BEGIN
         -- Insert sets for every exercise in this workout
         ----------------------------------------------------------------
         FOR ex IN
-            SELECT * FROM exercises WHERE workout_id = w.id ORDER BY "order"
+            SELECT * FROM weak_exercises WHERE workout_id = w.id ORDER BY "order"
         LOOP
             -- Map exercise name → weight and base reps
             cur_weight := CASE ex.name
@@ -237,7 +237,7 @@ BEGIN
                     - CASE WHEN set_num = set_count AND random() < 0.6 THEN 1 ELSE 0 END;
                 reps_actual := greatest(1, reps_actual);
 
-                INSERT INTO workout_session_sets
+                INSERT INTO weak_workout_session_sets
                     (session_id, exercise_id, user_id, set_number, weight, reps)
                 VALUES
                     (session_id, ex.id, uid, set_num, cur_weight, reps_actual);

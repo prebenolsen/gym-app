@@ -105,23 +105,26 @@ npm run web:dev
 Production build and local preview:
 
 ```bash
-npm run web:build
+npm run build:web
 ```
 
 ```bash
 npm run web:serve
 ```
 
-`web:build` writes a static site to `mobile/dist/`, which any static host will serve
-(Vercel, Netlify, Cloudflare Pages, `nginx`). Two hosting requirements:
+`build:web` compiles the `shared` workspace first — `@gym-app/shared` resolves to
+`shared/dist`, so a clean checkout fails without it — then writes a static site to
+`mobile/dist/`, which any static host will serve. Cloudflare Pages is the deployment
+target in use; see [cloudflare_pages.md](cloudflare_pages.md). Two hosting
+requirements:
 
 - **Serve it over HTTPS.** Service workers and the install prompt are refused on
   plain HTTP, `localhost` excepted.
 - **Rewrite unknown paths to `/index.html`, but serve real files first.** The build
   is a single-page app (`expo.web.output: "single"`), so deep links 404 without a
   SPA fallback — while `/offline.html`, `/sw.js` and `/manifest.json` must still be
-  served as themselves. `mobile/serve.json` encodes both rules for the local
-  `web:serve` preview; mirror them in your host's config.
+  served as themselves. `mobile/public/_redirects` encodes this for Cloudflare
+  Pages, and `mobile/serve.json` does the same for the local `web:serve` preview.
 
 Set `EXPO_PUBLIC_API_BASE_URL` to the deployed backend URL before building — the
 bundle reads it at build time, and a browser cannot reach `localhost:3000` from a
@@ -138,6 +141,7 @@ root of the build output:
 | `index.html` | Expo's HTML template plus the manifest link, iOS meta tags, and launch splash |
 | `sw.js` | Service worker: offline app shell, cached static bundles |
 | `offline.html` | Fallback page when the shell is not cached and the network is gone |
+| `_redirects` | Cloudflare Pages SPA fallback |
 | `icons/` | Icons generated from `shared/assets/logo-weak-cursiv-k-barbell-under.svg` |
 
 `mobile/serve.json` sits outside `public/` — it configures the local preview server
@@ -172,7 +176,7 @@ gym/
 │   │   ├── components/    # NumberSpinner, etc.
 │   │   ├── App.tsx
 │   │   └── root.tsx
-│   ├── public/            # PWA: manifest, service worker, icons, HTML shell
+│   ├── public/            # PWA: manifest, service worker, icons, HTML shell, _redirects
 │   ├── app.json
 │   ├── serve.json         # Local preview server rules
 │   └── package.json
@@ -209,7 +213,7 @@ npm run mobile:ios         # Launch iOS flow
 
 # Web / PWA
 npm run web:dev            # Expo dev server in the browser
-npm run web:build          # Static PWA build into mobile/dist
+npm run build:web          # Static PWA build into mobile/dist (Cloudflare build command)
 npm run web:serve          # Preview the build at http://localhost:8080
 
 # Validation
@@ -314,8 +318,7 @@ npx tsc -p mobile/tsconfig.json --noEmit
 ### Supabase connection problems
 
 - Verify `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_URL`, and `SUPABASE_SERVICE_KEY` in `.env`
-- Make sure the base schema above has been created
-- If you upgraded from an older schema, run `backend/sql/add-custom-exercise-muscle-group.sql`
+- Make sure `backend/sql/launch-schema-optimization.sql` has been run against the database
 
 ### Missing session or notes tables
 
