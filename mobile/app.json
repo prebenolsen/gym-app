@@ -16,6 +16,23 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.anonymous.gymapp"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "name": "Weak Gym Tracker",
+      "shortName": "Weak",
+      "description": "Track programs, workouts, sets and body weight.",
+      "lang": "en",
+      "dir": "ltr",
+      "favicon": "./public/icons/favicon-32.png",
+      "scope": "/",
+      "startUrl": "/",
+      "display": "standalone",
+      "orientation": "portrait",
+      "themeColor": "#F3F0ED",
+      "backgroundColor": "#F3F0ED",
+      "barStyle": "default"
     }
   }
 }

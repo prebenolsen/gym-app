@@ -1,41 +1,47 @@
+-- SUPERSEDED — DO NOT RUN.
+-- Historical reference only. The authoritative schema is
+-- backend/sql/launch-schema-optimization.sql, which differs from this file
+-- (uuid user_id, weight-tracker tables, deferrable order constraints).
+-- Kept for context; safe to delete.
+
 -- Core tables
-CREATE TABLE programs (
+CREATE TABLE weak_programs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   user_id TEXT NOT NULL,
   "order" INTEGER NOT NULL DEFAULT 1,
   is_favorite_program BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT NOW(),
-  CONSTRAINT programs_user_order_unique UNIQUE(user_id, "order")
+  CONSTRAINT weak_programs_user_order_unique UNIQUE(user_id, "order")
 );
 
-CREATE TABLE workouts (
+CREATE TABLE weak_workouts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  program_id UUID NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+  program_id UUID NOT NULL REFERENCES weak_programs(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   user_id TEXT NOT NULL,
   "order" INTEGER NOT NULL DEFAULT 1,
   is_favorite BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT NOW(),
-  CONSTRAINT workouts_program_order_unique UNIQUE(program_id, "order")
+  CONSTRAINT weak_workouts_program_order_unique UNIQUE(program_id, "order")
 );
 
-CREATE TABLE exercises (
+CREATE TABLE weak_exercises (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  workout_id UUID NOT NULL REFERENCES workouts(id) ON DELETE CASCADE,
+  workout_id UUID NOT NULL REFERENCES weak_workouts(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   sets INTEGER NOT NULL DEFAULT 1,
   rest_seconds INTEGER NOT NULL DEFAULT 120,
   user_id TEXT NOT NULL,
   "order" INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMP DEFAULT NOW(),
-  CONSTRAINT exercises_workout_order_unique UNIQUE(workout_id, "order")
+  CONSTRAINT weak_exercises_workout_order_unique UNIQUE(workout_id, "order")
 );
 
 -- Workout session tracking
-CREATE TABLE workout_sessions (
+CREATE TABLE weak_workout_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  workout_id UUID NOT NULL REFERENCES workouts(id) ON DELETE CASCADE,
+  workout_id UUID NOT NULL REFERENCES weak_workouts(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('active', 'cancelled', 'finished')),
   current_exercise_index INTEGER NOT NULL DEFAULT 0,
@@ -44,10 +50,10 @@ CREATE TABLE workout_sessions (
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE workout_session_sets (
+CREATE TABLE weak_workout_session_sets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id UUID NOT NULL REFERENCES workout_sessions(id) ON DELETE CASCADE,
-  exercise_id UUID NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+  session_id UUID NOT NULL REFERENCES weak_workout_sessions(id) ON DELETE CASCADE,
+  exercise_id UUID NOT NULL REFERENCES weak_exercises(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL,
   set_number INTEGER NOT NULL,
   weight NUMERIC(10,2) NOT NULL,
@@ -55,13 +61,13 @@ CREATE TABLE workout_session_sets (
   is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
   saved_at TIMESTAMP NOT NULL DEFAULT NOW(),
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  CONSTRAINT workout_session_sets_unique_set UNIQUE(session_id, exercise_id, set_number)
+  CONSTRAINT weak_workout_session_sets_unique_set UNIQUE(session_id, exercise_id, set_number)
 );
 
 -- Exercise notes
-CREATE TABLE exercise_notes (
+CREATE TABLE weak_exercise_notes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  exercise_id UUID NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+  exercise_id UUID NOT NULL REFERENCES weak_exercises(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   notes TEXT DEFAULT '',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -70,47 +76,47 @@ CREATE TABLE exercise_notes (
 );
 
 -- Indexes for performance
-CREATE INDEX idx_programs_user_id ON programs(user_id);
-CREATE INDEX idx_workouts_program_id ON workouts(program_id);
-CREATE INDEX idx_workouts_user_id ON workouts(user_id);
-CREATE INDEX idx_exercises_workout_id ON exercises(workout_id);
-CREATE INDEX idx_exercises_user_id ON exercises(user_id);
-CREATE INDEX idx_workout_sessions_user_status ON workout_sessions(user_id, status);
-CREATE INDEX idx_workout_session_sets_session_exercise ON workout_session_sets(session_id, exercise_id);
+CREATE INDEX idx_weak_programs_user_id ON weak_programs(user_id);
+CREATE INDEX idx_weak_workouts_program_id ON weak_workouts(program_id);
+CREATE INDEX idx_weak_workouts_user_id ON weak_workouts(user_id);
+CREATE INDEX idx_weak_exercises_workout_id ON weak_exercises(workout_id);
+CREATE INDEX idx_weak_exercises_user_id ON weak_exercises(user_id);
+CREATE INDEX idx_weak_workout_sessions_user_status ON weak_workout_sessions(user_id, status);
+CREATE INDEX idx_weak_workout_session_sets_session_exercise ON weak_workout_session_sets(session_id, exercise_id);
 
 -- Row Level Security
-ALTER TABLE programs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE workouts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE exercises ENABLE ROW LEVEL SECURITY;
-ALTER TABLE workout_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE workout_session_sets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE exercise_notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE weak_programs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE weak_workouts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE weak_exercises ENABLE ROW LEVEL SECURITY;
+ALTER TABLE weak_workout_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE weak_workout_session_sets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE weak_exercise_notes ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
-CREATE POLICY "users_own_programs" ON programs
+CREATE POLICY "weak_users_own_programs" ON weak_programs
   FOR ALL USING (auth.uid()::text = user_id) WITH CHECK (auth.uid()::text = user_id);
 
-CREATE POLICY "users_own_workouts" ON workouts
+CREATE POLICY "weak_users_own_workouts" ON weak_workouts
   FOR ALL USING (auth.uid()::text = user_id) WITH CHECK (auth.uid()::text = user_id);
 
-CREATE POLICY "users_own_exercises" ON exercises
+CREATE POLICY "weak_users_own_exercises" ON weak_exercises
   FOR ALL USING (auth.uid()::text = user_id) WITH CHECK (auth.uid()::text = user_id);
 
-CREATE POLICY "users_own_sessions" ON workout_sessions
+CREATE POLICY "weak_users_own_sessions" ON weak_workout_sessions
   FOR ALL USING (auth.uid()::text = user_id) WITH CHECK (auth.uid()::text = user_id);
 
-CREATE POLICY "users_own_session_sets" ON workout_session_sets
+CREATE POLICY "weak_users_own_session_sets" ON weak_workout_session_sets
   FOR ALL USING (
-    session_id IN (SELECT id FROM workout_sessions WHERE auth.uid()::text = user_id)
+    session_id IN (SELECT id FROM weak_workout_sessions WHERE auth.uid()::text = user_id)
   );
 
-CREATE POLICY "Users can access their own exercise notes" ON exercise_notes
+CREATE POLICY "Users can access their own exercise notes" ON weak_exercise_notes
   FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 -- Optional: Reset tables (for development/testing)
--- TRUNCATE TABLE public.workout_session_sets RESTART IDENTITY CASCADE;
--- TRUNCATE TABLE public.workout_sessions RESTART IDENTITY CASCADE;
--- TRUNCATE TABLE public.exercises RESTART IDENTITY CASCADE;
--- TRUNCATE TABLE public.workouts RESTART IDENTITY CASCADE;
--- TRUNCATE TABLE public.programs RESTART IDENTITY CASCADE;
--- TRUNCATE TABLE public.exercise_notes RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE public.weak_workout_session_sets RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE public.weak_workout_sessions RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE public.weak_exercises RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE public.weak_workouts RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE public.weak_programs RESTART IDENTITY CASCADE;
+-- TRUNCATE TABLE public.weak_exercise_notes RESTART IDENTITY CASCADE;

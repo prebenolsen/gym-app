@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="%LANG_ISO_CODE%">
+  <head>
+    <meta charset="utf-8" />
+    <!-- maximum-scale + user-scalable stop iOS Safari from zooming when an input is focused. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no"
+    />
+    <title>%WEB_TITLE%</title>
+
+    <!-- PWA: installability. theme-color and description are injected by Expo from app.json -> expo.web -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="color-scheme" content="light" />
+
+    <!-- Installed app, Android/Chromium -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="Weak" />
+
+    <!-- Installed app, iOS. iOS ignores the manifest and reads these instead. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Weak" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png" />
+    <link rel="icon" type="image/svg+xml" href="/icons/logo.svg" />
+
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+
+    <style id="pwa-shell">
+      /* Matches the app's default background (mobile/src/theme.ts, light + auburn)
+         so the launch screen hands over to React without a colour jump. */
+      html,
+      body {
+        margin: 0;
+        background-color: #f3f0ed;
+      }
+      body {
+        /* Kill rubber-band scrolling and the 300ms tap delay so it feels native when installed. */
+        overscroll-behavior: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        -webkit-text-size-adjust: 100%;
+      }
+      #splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f3f0ed;
+        transition: opacity 250ms ease-out;
+        z-index: 9999;
+      }
+      #splash img {
+        width: min(58vw, 260px);
+        height: auto;
+      }
+      #noscript {
+        color: #6b7280;
+        font: 16px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        padding: 24px;
+        text-align: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript>
+      <div id="noscript">Weak needs JavaScript enabled to run.</div>
+    </noscript>
+
+    <!-- Shown until React mounts. Removed by the script below. -->
+    <div id="splash"><img src="/icons/logo.svg" alt="Weak" /></div>
+
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+
+    <script>
+      // Hide the launch splash as soon as the app paints its first element.
+      (function () {
+        var splash = document.getElementById('splash');
+        var root = document.getElementById('root');
+        if (!splash || !root) return;
+
+        var done = false;
+        function hide() {
+          if (done) return;
+          done = true;
+          splash.style.opacity = '0';
+          setTimeout(function () {
+            if (splash.parentNode) splash.parentNode.removeChild(splash);
+          }, 250);
+        }
+
+        if (root.childElementCount > 0) {
+          hide();
+        } else {
+          var observer = new MutationObserver(function () {
+            if (root.childElementCount > 0) {
+              observer.disconnect();
+              hide();
+            }
+          });
+          observer.observe(root, { childList: true });
+          // Never trap the user behind the splash if the bundle fails to mount.
+          setTimeout(function () {
+            observer.disconnect();
+            hide();
+          }, 8000);
+        }
+      })();
+    </script>
+
+    <script>
+      // Register the service worker only for real builds. `__DEV__` is defined by the
+      // Metro bundle, which has executed by the time `load` fires, so a dev server
+      // never gets a caching worker -- and any worker left over from a previous
+      // production preview on the same origin is torn down.
+      window.addEventListener('load', function () {
+        if (!('serviceWorker' in navigator)) return;
+
+        var isDev = typeof window.__DEV__ !== 'undefined' && window.__DEV__ === true;
+
+        if (isDev) {
+          navigator.serviceWorker.getRegistrations().then(function (registrations) {
+            registrations.forEach(function (registration) {
+              registration.unregister();
+            });
+          });
+          return;
+        }
+
+        navigator.serviceWorker.register('/sw.js').catch(function (error) {
+          console.warn('Service worker registration failed:', error);
+        });
+      });
+    </script>
+  </body>
+</html>

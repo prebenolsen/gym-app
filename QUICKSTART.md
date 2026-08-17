@@ -8,23 +8,21 @@ npm install
 
 ## 2. Create the database tables
 
-Create a Supabase project first, then open the SQL editor and create the tables used by the mobile app.
+Create a Supabase project first, then open the SQL editor and run
+`backend/sql/launch-schema-optimization.sql` against the fresh database. That one
+file creates every table the app needs:
 
-At minimum you need:
-
-- `programs`
-- `workouts`
-- `exercises`
-- `workout_sessions`
-- `workout_session_sets`
-- `exercise_notes`
-
-Use the full SQL block in `README.md` for the base schema.
-
-If you are upgrading an older database, also run:
-
-- `backend/sql/add-custom-exercise-muscle-group.sql`
-- `backend/sql/enable-rls.sql`
+- `weak_programs`
+- `weak_workouts`
+- `weak_exercises`
+- `weak_workout_sessions`
+- `weak_workout_session_sets`
+- `weak_exercise_notes`
+- `weak_weight_tracker_profile`
+- `weak_weight_tracker_goals`
+- `weak_weight_tracker_entries`
+- `weak_weight_tracker_custom_metrics`
+- `weak_weight_tracker_custom_metric_values`
 
 ## 3. Configure environment
 

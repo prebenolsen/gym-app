@@ -30,26 +30,26 @@ begin
   end if;
 
   -- Delete in child-first order for clean reseeding of this one user.
-  delete from exercise_notes where user_id = uid;
-  delete from weight_tracker_custom_metric_values where user_id = uid;
-  delete from weight_tracker_custom_metrics where user_id = uid;
-  delete from weight_tracker_entries where user_id = uid;
-  delete from weight_tracker_profile where user_id = uid;
-  delete from weight_tracker_goals where user_id = uid;
-  delete from workout_session_sets where user_id = uid;
-  delete from workout_sessions where user_id = uid;
-  delete from exercises where user_id = uid;
-  delete from workouts where user_id = uid;
-  delete from programs where user_id = uid;
+  delete from weak_exercise_notes where user_id = uid;
+  delete from weak_weight_tracker_custom_metric_values where user_id = uid;
+  delete from weak_weight_tracker_custom_metrics where user_id = uid;
+  delete from weak_weight_tracker_entries where user_id = uid;
+  delete from weak_weight_tracker_profile where user_id = uid;
+  delete from weak_weight_tracker_goals where user_id = uid;
+  delete from weak_workout_session_sets where user_id = uid;
+  delete from weak_workout_sessions where user_id = uid;
+  delete from weak_exercises where user_id = uid;
+  delete from weak_workouts where user_id = uid;
+  delete from weak_programs where user_id = uid;
 end $$;
 
 with new_program as (
-  insert into programs (name, user_id, "order", is_favorite_program)
+  insert into weak_programs (name, user_id, "order", is_favorite_program)
   values ('Push Pull Legs', current_setting('app.seed_uid')::uuid, 1, true)
   returning id
 ),
 new_workouts as (
-  insert into workouts (program_id, name, user_id, "order")
+  insert into weak_workouts (program_id, name, user_id, "order")
   select id, 'Push', current_setting('app.seed_uid')::uuid, 1 from new_program
   union all
   select id, 'Pull', current_setting('app.seed_uid')::uuid, 2 from new_program
@@ -57,7 +57,7 @@ new_workouts as (
   select id, 'Legs', current_setting('app.seed_uid')::uuid, 3 from new_program
   returning id, name
 )
-insert into exercises (workout_id, name, sets, rest_seconds, user_id, "order")
+insert into weak_exercises (workout_id, name, sets, rest_seconds, user_id, "order")
 select w.id, ex.name, ex.sets, ex.rest, current_setting('app.seed_uid')::uuid, ex.ordering
 from new_workouts w,
 lateral (
@@ -74,7 +74,7 @@ lateral (
 ) as ex(w_name, name, sets, rest, ordering)
 where w.name = ex.w_name;
 
-insert into weight_tracker_goals (
+insert into weak_weight_tracker_goals (
   user_id,
   goal_type,
   weekly_target_kg,
@@ -101,7 +101,7 @@ do update set
   start_weight_kg = excluded.start_weight_kg,
   updated_at = now();
 
-insert into weight_tracker_profile (user_id, onboarding_complete)
+insert into weak_weight_tracker_profile (user_id, onboarding_complete)
 values (
   current_setting('app.seed_uid')::uuid,
   true
@@ -113,12 +113,12 @@ do update set
 
 with active_goal as (
   select id
-  from weight_tracker_goals
+  from weak_weight_tracker_goals
   where user_id = current_setting('app.seed_uid')::uuid and is_active = true
   order by started_on desc, created_at desc
   limit 1
 )
-insert into weight_tracker_entries (user_id, goal_id, entry_date, weight_kg, steps)
+insert into weak_weight_tracker_entries (user_id, goal_id, entry_date, weight_kg, steps)
 select current_setting('app.seed_uid')::uuid, g.id, v.entry_date, v.weight_kg, v.steps
 from active_goal g
 cross join (
@@ -184,7 +184,7 @@ do update set
   updated_at = now();
 
 with upsert_metric as (
-  insert into weight_tracker_custom_metrics (user_id, name, type, "order")
+  insert into weak_weight_tracker_custom_metrics (user_id, name, type, "order")
   values (current_setting('app.seed_uid')::uuid, 'Good day', 'boolean', 1)
   on conflict (user_id, name)
   do update set
@@ -192,12 +192,12 @@ with upsert_metric as (
     "order" = excluded."order"
   returning id
 )
-insert into weight_tracker_custom_metric_values (user_id, goal_id, entry_date, metric_id, value_boolean)
+insert into weak_weight_tracker_custom_metric_values (user_id, goal_id, entry_date, metric_id, value_boolean)
 select
   current_setting('app.seed_uid')::uuid,
   (
     select id
-    from weight_tracker_goals
+    from weak_weight_tracker_goals
     where user_id = current_setting('app.seed_uid')::uuid and is_active = true
     order by started_on desc, created_at desc
     limit 1
@@ -316,7 +316,7 @@ begin
 
   for session_num in 0..(total_sessions - 1) loop
     select * into w
-    from workouts
+    from weak_workouts
     where user_id = uid
     order by "order"
     offset (session_num % 3) limit 1;
@@ -326,7 +326,7 @@ begin
     session_started_at := now() - day_offset * interval '1 day' - (floor(random() * 4))::int * interval '1 hour';
     session_duration_mins := 30 + (floor(random() * 16))::int;
 
-    insert into workout_sessions (workout_id, user_id, status, started_at, ended_at)
+    insert into weak_workout_sessions (workout_id, user_id, status, started_at, ended_at)
     values (
       w.id,
       uid,
@@ -398,7 +398,7 @@ begin
     end if;
 
     for ex in
-      select * from exercises where workout_id = w.id order by "order"
+      select * from weak_exercises where workout_id = w.id order by "order"
     loop
       cur_weight := case ex.name
         when 'Barbell Bench Press' then bench_w
@@ -435,7 +435,7 @@ begin
           - case when set_num = set_count and random() < 0.6 then 1 else 0 end;
         reps_actual := greatest(1, reps_actual);
 
-        insert into workout_session_sets
+        insert into weak_workout_session_sets
           (session_id, exercise_id, user_id, set_number, weight, reps)
         values
           (session_id, ex.id, uid, set_num, cur_weight, reps_actual);
