@@ -4,7 +4,11 @@ import { NavigationContainer } from '@react-navigation/native';
 import { BottomTabBar, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Text, View, StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaProvider,
+  SafeAreaView,
+  initialWindowMetrics,
+} from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import HomeScreen from './screens/HomeScreen';
@@ -189,19 +193,26 @@ const SettingsStackNavigator = () => {
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <PreferencesProvider>
-        <AuthProvider>
-          <AppToastProvider>
-            <ErrorDialogProvider>
-              <ConfirmDialogProvider>
-                <ConfirmDialogInitializer>
-                  <AppRoutes />
-                </ConfirmDialogInitializer>
-              </ConfirmDialogProvider>
-            </ErrorDialogProvider>
-          </AppToastProvider>
-        </AuthProvider>
-      </PreferencesProvider>
+      {/* Required by the SafeAreaView in AppRoutes. On native the insets come from
+          the native module, but on web there is none, so without this provider
+          SafeAreaView throws "No safe area value available" and React unmounts the
+          whole tree -- a blank page. initialMetrics avoids a first frame with zero
+          insets on native; it is null on web, where the provider measures instead. */}
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <PreferencesProvider>
+          <AuthProvider>
+            <AppToastProvider>
+              <ErrorDialogProvider>
+                <ConfirmDialogProvider>
+                  <ConfirmDialogInitializer>
+                    <AppRoutes />
+                  </ConfirmDialogInitializer>
+                </ConfirmDialogProvider>
+              </ErrorDialogProvider>
+            </AppToastProvider>
+          </AuthProvider>
+        </PreferencesProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
