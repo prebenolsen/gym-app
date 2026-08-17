@@ -1,12 +1,11 @@
 {
-  "id": "/",
   "name": "Weak Gym Tracker",
   "short_name": "Weak",
   "description": "Track programs, workouts, sets and body weight.",
   "lang": "en",
   "dir": "ltr",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": ".",
+  "scope": ".",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "portrait",
@@ -16,31 +15,31 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-maskable-192.png",
+      "src": "icons/icon-maskable-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icons/icon-maskable-512.png",
+      "src": "icons/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icons/logo.svg",
+      "src": "icons/logo.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

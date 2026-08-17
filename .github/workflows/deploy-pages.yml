@@ -1,0 +1,174 @@
+name: Deploy PWA to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege that still lets actions/deploy-pages publish.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; let an in-flight one finish rather than
+# cancelling it and leaving Pages half-updated.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # A project site lives at https://<user>.github.io/<repo>/, so every bundled
+      # asset URL needs that subpath prefixed or the app 404s. A user/org site
+      # (<user>.github.io) and a custom domain (CNAME) are both served at the root
+      # and must get an empty base path instead.
+      - name: Resolve Pages base path
+        id: base
+        run: |
+          repo="${GITHUB_REPOSITORY#*/}"
+          owner_lower="$(echo "${GITHUB_REPOSITORY%%/*}" | tr '[:upper:]' '[:lower:]')"
+          repo_lower="$(echo "$repo" | tr '[:upper:]' '[:lower:]')"
+
+          if [ -f mobile/public/CNAME ]; then
+            base=""
+            echo "CNAME present -> custom domain, serving from root."
+          elif [ "$repo_lower" = "${owner_lower}.github.io" ]; then
+            base=""
+            echo "User/org site -> serving from root."
+          else
+            base="/$repo"
+            echo "Project site -> serving from subpath '$base'."
+          fi
+
+          echo "path=$base" >> "$GITHUB_OUTPUT"
+
+      # EXPO_PUBLIC_* values are compiled into the client bundle, so they must be
+      # present at build time. The Supabase anon key is designed to be public
+      # (row-level security is the real guard) but is still read from a secret so
+      # it is not committed. Fail loudly rather than shipping a bundle that
+      # cannot reach its backend.
+      - name: Check required configuration
+        env:
+          SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          API_BASE_URL: ${{ vars.EXPO_PUBLIC_API_BASE_URL }}
+        run: |
+          missing=""
+          [ -z "$SUPABASE_URL" ]    && missing="$missing\n  - secret EXPO_PUBLIC_SUPABASE_URL"
+          [ -z "$SUPABASE_ANON_KEY" ] && missing="$missing\n  - secret EXPO_PUBLIC_SUPABASE_ANON_KEY"
+          [ -z "$API_BASE_URL" ]    && missing="$missing\n  - variable EXPO_PUBLIC_API_BASE_URL"
+
+          if [ -n "$missing" ]; then
+            echo "::error::Missing Pages build configuration:$(printf "$missing")"
+            echo "Set these under Settings -> Secrets and variables -> Actions." >&2
+            exit 1
+          fi
+
+          case "$API_BASE_URL" in
+            http://localhost*|http://127.0.0.1*)
+              echo "::error::EXPO_PUBLIC_API_BASE_URL is '$API_BASE_URL'. A browser cannot reach your machine's localhost -- point it at the publicly reachable backend."
+              exit 1
+              ;;
+          esac
+
+      - name: Build web PWA
+        env:
+          EXPO_BASE_URL: ${{ steps.base.outputs.path }}
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_API_BASE_URL: ${{ vars.EXPO_PUBLIC_API_BASE_URL }}
+        run: npm run build:web
+
+      # GitHub Pages has no rewrite rules, so the SPA fallback is a 404 page.
+      # It redirects to the app root rather than serving the shell in place:
+      # index.html links its manifest and icons relatively, and those would
+      # resolve against the wrong directory on a nested path.
+      - name: Add SPA fallback and disable Jekyll
+        env:
+          BASE_PATH: ${{ steps.base.outputs.path }}
+        run: |
+          cd mobile/dist
+
+          # Jekyll drops files and folders beginning with an underscore, which
+          # would delete Expo's entire _expo/ bundle directory.
+          touch .nojekyll
+
+          cat > 404.html <<HTML
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8" />
+              <title>Weak</title>
+              <meta name="robots" content="noindex" />
+              <script>
+                window.location.replace('${BASE_PATH}/' + window.location.hash);
+              </script>
+              <meta http-equiv="refresh" content="0; url=${BASE_PATH}/" />
+            </head>
+            <body></body>
+          </html>
+          HTML
+
+          echo "Output root:"
+          ls -a | sed 's/^/  /'
+
+      - name: Verify the build is deployable
+        env:
+          BASE_PATH: ${{ steps.base.outputs.path }}
+        run: |
+          cd mobile/dist
+          fail=0
+          for f in index.html manifest.json sw.js offline.html 404.html .nojekyll \
+                   icons/icon-192.png icons/icon-512.png icons/icon-maskable-512.png \
+                   icons/apple-touch-icon.png; do
+            [ -f "$f" ] || { echo "::error::Missing expected output file: $f"; fail=1; }
+          done
+
+          # The bundle <script> must carry the base path, or the app loads nothing.
+          if ! grep -q "src=\"${BASE_PATH}/_expo/static/js/web/" index.html; then
+            echo "::error::index.html does not reference the bundle at '${BASE_PATH}/_expo/...'. Base path was not applied."
+            grep -o 'src="[^"]*_expo[^"]*"' index.html || true
+            fail=1
+          fi
+
+          # Expo emits root-absolute URLs that already carry the base path; anything
+          # else root-absolute is a hand-written path that breaks under a subpath.
+          if [ -n "$BASE_PATH" ]; then
+            stray="$(grep -oE '(href|src)="/[^"]*' index.html | grep -v "=\"${BASE_PATH}/" || true)"
+            if [ -n "$stray" ]; then
+              echo "::error::index.html has root-absolute URLs missing the '${BASE_PATH}' prefix; these 404 under a subpath."
+              printf '%s\n' "$stray" | sed 's/^/  /'
+              fail=1
+            fi
+          fi
+
+          exit $fail
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: mobile/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

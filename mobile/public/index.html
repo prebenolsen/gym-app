@@ -10,7 +10,7 @@
     <title>%WEB_TITLE%</title>
 
     <!-- PWA: installability. theme-color and description are injected by Expo from app.json -> expo.web -->
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="manifest.json" />
     <meta name="color-scheme" content="light" />
 
     <!-- Installed app, Android/Chromium -->
@@ -21,11 +21,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Weak" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png" />
 
-    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png" />
-    <link rel="icon" type="image/svg+xml" href="/icons/logo.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+    <link rel="icon" type="image/svg+xml" href="icons/logo.svg" />
 
     <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
     <style id="expo-reset">
@@ -90,7 +90,7 @@
     </noscript>
 
     <!-- Shown until React mounts. Removed by the script below. -->
-    <div id="splash"><img src="/icons/logo.svg" alt="Weak" /></div>
+    <div id="splash"><img src="icons/logo.svg" alt="Weak" /></div>
 
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
@@ -150,7 +150,7 @@
           return;
         }
 
-        navigator.serviceWorker.register('/sw.js').catch(function (error) {
+        navigator.serviceWorker.register('sw.js').catch(function (error) {
           console.warn('Service worker registration failed:', error);
         });
       });
