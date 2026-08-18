@@ -1404,6 +1404,7 @@ const createStyles = (themeColors: typeof colors) =>
     },
     bottomActionsBar: {
       flexDirection: 'row',
+      justifyContent: 'center',
       gap: 10,
     },
     exerciseProgressRow: {

@@ -729,6 +729,60 @@ const MUSCLE_MAPPING_TERMS: Record<string, MuscleGroup> = {
 const escapeRegex = (value: string): string =>
   value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+// Movement words that get glued onto a muscle name when the space is left out
+// ("chestpress", "hamstringcurl"). Stripping one exposes the muscle term.
+const MOVEMENT_SUFFIXES = [
+  'extension',
+  'extensions',
+  'pulldown',
+  'pulldowns',
+  'pushdown',
+  'pushdowns',
+  'kickback',
+  'kickbacks',
+  'crunch',
+  'crunches',
+  'machine',
+  'presses',
+  'bridge',
+  'bridges',
+  'raise',
+  'raises',
+  'press',
+  'curl',
+  'curls',
+  'thrust',
+  'thrusts',
+  'flyes',
+  'flies',
+  'fly',
+  'row',
+  'rows',
+  'dip',
+  'dips',
+];
+
+const MIN_COMPOUND_PREFIX_LENGTH = 3;
+
+// "chestpress" -> "chest". Returns null when the token is not a compound.
+const stripMovementSuffix = (token: string): string | null => {
+  let longestMatch: string | null = null;
+
+  for (const suffix of MOVEMENT_SUFFIXES) {
+    if (
+      token.endsWith(suffix) &&
+      token.length - suffix.length >= MIN_COMPOUND_PREFIX_LENGTH &&
+      (longestMatch === null || suffix.length > longestMatch.length)
+    ) {
+      longestMatch = suffix;
+    }
+  }
+
+  return longestMatch === null
+    ? null
+    : token.slice(0, token.length - longestMatch.length);
+};
+
 export const suggestMuscleGroupsFromInput = (input: string): MuscleGroup[] => {
   const normalized = input
     .toLowerCase()
@@ -743,7 +797,10 @@ export const suggestMuscleGroupsFromInput = (input: string): MuscleGroup[] => {
   const tokens = normalized.split(' ').filter(Boolean);
   const suffixTerms = tokens.map((_, index) => tokens.slice(index).join(' '));
   const partialTerms = tokens;
-  const searchTerms = [...new Set([...suffixTerms, ...partialTerms])]
+  const compoundTerms = tokens
+    .map(stripMovementSuffix)
+    .filter((term): term is string => term !== null);
+  const searchTerms = [...new Set([...suffixTerms, ...partialTerms, ...compoundTerms])]
     .filter((term) => term.length >= 2)
     .sort((a, b) => b.length - a.length);
 

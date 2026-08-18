@@ -144,11 +144,16 @@ const getDaysSince = (isoDate: string): number => {
 const getDaysSortValue = (days: number | null): number =>
   days === null ? Number.POSITIVE_INFINITY : days;
 
-const formatDaysSince = (days: number | null): string =>
-  days === null ? 'Never' : `${days}d`;
+const formatDaysSince = (days: number | null): string => {
+  if (days === null) return 'Never';
+  if (days === 0) return 'Today';
+  return `${days}d`;
+};
 
-const formatDaysSinceLabel = (days: number | null): string =>
-  days === null ? 'Never' : `${formatDaysSince(days)} ago`;
+const formatDaysSinceLabel = (days: number | null): string => {
+  if (days === null || days === 0) return formatDaysSince(days);
+  return `${formatDaysSince(days)} ago`;
+};
 
 const getWorkoutMessage = (count: number): string => {
   switch (count) {

@@ -1645,45 +1645,69 @@ export default function WeightTrackerScreen() {
       return value.value_boolean ? C.accent : falseMetricColor;
     };
 
-    const dateColumnWidth = estimateColumnWidth(
+    const rawDateColumnWidth = estimateColumnWidth(
       ['Date', ...sortedEntries.map((entry) => formatDate(entry.entry_date))],
       { minWidth: 68, maxWidth: 88 },
     );
-    const weightColumnWidth = showCols.weight
+    const rawWeightColumnWidth = showCols.weight
       ? estimateColumnWidth(
           ['Weight', ...sortedEntries.map((entry) => entry.weight_kg != null ? formatWeight(entry.weight_kg, 1) : '–')],
           { minWidth: 70, maxWidth: 110 },
         )
       : 0;
-    const stepsColumnWidth = showCols.steps
+    const rawStepsColumnWidth = showCols.steps
       ? estimateColumnWidth(
           ['Steps', ...sortedEntries.map((entry) => entry.steps != null ? entry.steps.toLocaleString() : '–')],
           { minWidth: 68, maxWidth: 128 },
         )
       : 0;
-    const caloriesColumnWidth = showCols.calories
+    const rawCaloriesColumnWidth = showCols.calories
       ? estimateColumnWidth(
           ['Kcal', ...sortedEntries.map((entry) => entry.calories != null ? String(entry.calories) : '–')],
           { minWidth: 60, maxWidth: 108 },
         )
       : 0;
-    const customMetricColumns = customMetrics.map((metric) => ({
+    const rawCustomMetricColumns = customMetrics.map((metric) => ({
       id: metric.id,
       width: estimateColumnWidth(
         [metric.name, ...sortedEntries.map((entry) => formatCustomMetricCell(entry.entry_date, metric))],
         { minWidth: 64, maxWidth: 220 },
       ),
     }));
+    const rawLogTableWidth = [
+      rawDateColumnWidth,
+      rawWeightColumnWidth,
+      rawStepsColumnWidth,
+      rawCaloriesColumnWidth,
+      ...rawCustomMetricColumns.map((metric) => metric.width),
+    ].reduce((total, width) => total + width, 0);
+    const visibleLogTableWidth = SCREEN_WIDTH - 64;
+    const canScrollLogTable = rawLogTableWidth > visibleLogTableWidth + 1;
+    // When the columns fit, stretch them proportionally so the table fills the
+    // card instead of bunching up against the left edge.
+    const logColumnScale =
+      canScrollLogTable || rawLogTableWidth === 0
+        ? 1
+        : visibleLogTableWidth / rawLogTableWidth;
+    const scaleLogColumn = (width: number): number =>
+      width === 0 ? 0 : Math.floor(width * logColumnScale);
+
+    const dateColumnWidth = scaleLogColumn(rawDateColumnWidth);
+    const weightColumnWidth = scaleLogColumn(rawWeightColumnWidth);
+    const stepsColumnWidth = scaleLogColumn(rawStepsColumnWidth);
+    const caloriesColumnWidth = scaleLogColumn(rawCaloriesColumnWidth);
+    const customMetricColumns = rawCustomMetricColumns.map((metric) => ({
+      id: metric.id,
+      width: scaleLogColumn(metric.width),
+    }));
     const customMetricWidthById = new Map(customMetricColumns.map((metric) => [metric.id, metric.width]));
     const logTableWidth = [
       dateColumnWidth,
-      showCols.weight ? weightColumnWidth : 0,
-      showCols.steps ? stepsColumnWidth : 0,
-      showCols.calories ? caloriesColumnWidth : 0,
+      weightColumnWidth,
+      stepsColumnWidth,
+      caloriesColumnWidth,
       ...customMetricColumns.map((metric) => metric.width),
     ].reduce((total, width) => total + width, 0);
-    const visibleLogTableWidth = SCREEN_WIDTH - 64;
-    const canScrollLogTable = logTableWidth > visibleLogTableWidth + 1;
 
     return (
       <View style={styles.screen}>

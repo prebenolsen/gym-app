@@ -126,8 +126,11 @@ const getDaysSince = (isoDate: string): number => {
   return Math.max(0, Math.floor((todayStart - dateStart) / DAY_MS));
 };
 
-const formatDaysSince = (days: number | null): string =>
-  days === null ? 'Never' : `${days}d`;
+const formatDaysSince = (days: number | null): string => {
+  if (days === null) return 'Never';
+  if (days === 0) return 'Today';
+  return `${days}d`;
+};
 
 const PROGRAM_NAME_PATTERN = /^Program\s+(\d+)$/;
 
