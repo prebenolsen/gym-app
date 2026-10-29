@@ -2,22 +2,22 @@
 -- 0️⃣  Clean up old mock data for this user
 -- ============================================================
 DELETE FROM weak_workout_session_sets
-WHERE user_id = '70414ff9-b11a-4199-89b7-9bae27211a8c';
+WHERE user_id = '89245b09-5780-4e1d-a74c-64a9bcc147f4';
 DELETE FROM weak_workout_sessions
-WHERE user_id = '70414ff9-b11a-4199-89b7-9bae27211a8c';
+WHERE user_id = '89245b09-5780-4e1d-a74c-64a9bcc147f4';
 DELETE FROM weak_exercises
-WHERE user_id = '70414ff9-b11a-4199-89b7-9bae27211a8c';
+WHERE user_id = '89245b09-5780-4e1d-a74c-64a9bcc147f4';
 DELETE FROM weak_workouts
-WHERE user_id = '70414ff9-b11a-4199-89b7-9bae27211a8c';
+WHERE user_id = '89245b09-5780-4e1d-a74c-64a9bcc147f4';
 DELETE FROM weak_programs
-WHERE user_id = '70414ff9-b11a-4199-89b7-9bae27211a8c';
+WHERE user_id = '89245b09-5780-4e1d-a74c-64a9bcc147f4';
 
 -- ============================================================
 -- 1️⃣  Program
 -- ============================================================
 WITH new_program AS (
     INSERT INTO weak_programs (name, user_id, "order", is_favorite_program)
-    VALUES ('Push Pull Legs', '70414ff9-b11a-4199-89b7-9bae27211a8c', 1, TRUE)
+    VALUES ('Push Pull Legs', '89245b09-5780-4e1d-a74c-64a9bcc147f4', 1, TRUE)
     RETURNING id
 ),
 -- ============================================================
@@ -25,18 +25,18 @@ WITH new_program AS (
 -- ============================================================
 new_workouts AS (
     INSERT INTO weak_workouts (program_id, name, user_id, "order")
-    SELECT id, 'Push', '70414ff9-b11a-4199-89b7-9bae27211a8c', 1 FROM new_program
+    SELECT id, 'Push', '89245b09-5780-4e1d-a74c-64a9bcc147f4'::uuid, 1 FROM new_program
     UNION ALL
-    SELECT id, 'Pull', '70414ff9-b11a-4199-89b7-9bae27211a8c', 2 FROM new_program
+    SELECT id, 'Pull', '89245b09-5780-4e1d-a74c-64a9bcc147f4'::uuid, 2 FROM new_program
     UNION ALL
-    SELECT id, 'Legs', '70414ff9-b11a-4199-89b7-9bae27211a8c', 3 FROM new_program
+    SELECT id, 'Legs', '89245b09-5780-4e1d-a74c-64a9bcc147f4'::uuid, 3 FROM new_program
     RETURNING id, name
 )
 -- ============================================================
 -- 3️⃣  Exercises
 -- ============================================================
 INSERT INTO weak_exercises (workout_id, name, sets, rest_seconds, user_id, "order")
-SELECT w.id, ex.name, ex.sets, ex.rest, '70414ff9-b11a-4199-89b7-9bae27211a8c', ex.ordering
+SELECT w.id, ex.name, ex.sets, ex.rest, '89245b09-5780-4e1d-a74c-64a9bcc147f4', ex.ordering
 FROM new_workouts w,
 LATERAL (
     VALUES
@@ -69,7 +69,7 @@ WHERE w.name = ex.w_name;
 -- ============================================================
 DO $$
 DECLARE
-    uid          CONSTANT TEXT    := '70414ff9-b11a-4199-89b7-9bae27211a8c';
+    uid          CONSTANT UUID    := '89245b09-5780-4e1d-a74c-64a9bcc147f4';
     total_sessions CONSTANT INT   := 52;   -- ~4 months of 3×/week
 
     session_id   UUID;
